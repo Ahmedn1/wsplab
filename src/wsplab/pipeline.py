@@ -98,6 +98,14 @@ class RunResult:
         """Run the edited network."""
         return self.runner.call(self.weights)(inputs)
 
+    def generate(self, message: str, **sampling) -> str:
+        """Ask the edited language model something."""
+        from .runners.base import Prompt
+
+        options = {"temperature": 0.7, "top_p": 0.8, "max_tokens": 512, **sampling}
+        prompt = Prompt("user", self.runner.render(message), 0)
+        return self.runner.generate(self.weights, [prompt], 1, options)[0][0].text
+
 
 @dataclass
 class Job:
@@ -138,15 +146,22 @@ def build_edit(job: Job, base: Path, edited_dir: Path, out: Path, *, meta: dict 
     return patch, P.apply(patch, checkpoint, target)
 
 
-def edited_builder(job: Job, base: Path, store: WeightStore):
+def edited_builder(job: Job, base: Path, store: WeightStore, keep: int = 2):
+    """The edited model for a forward pass, built once per distinct edit. Only the latest few stay on disk: a language
+    model's edited shard is a full copy."""
+
     def build() -> Path:
-        out = job.folder / "checkpoints" / (store.digest() or "none")
+        if not store.edited():
+            return base
+        root = job.folder / "checkpoints"
+        out = root / store.digest()
         model = out / "model.safetensors"
         folder = out / "model"
         if model.exists() or folder.exists():
             return model if model.exists() else folder
-        if not store.edited():
-            return base
+        older = sorted(root.glob("*"), key=lambda p: p.stat().st_mtime) if root.is_dir() else []
+        for stale in older[:max(0, len(older) - keep + 1)]:
+            shutil.rmtree(stale)
         return build_edit(job, base, store.dir, out)[1]
 
     return build
@@ -471,10 +486,84 @@ def spending_exhausted(spending) -> bool:
     return False
 
 
+def resolve_model(model: str, revision: str | None = None) -> Path:
+    """A local folder as it is, otherwise a Hugging Face repo id."""
+    path = Path(model)
+    if path.exists():
+        return path
+    from huggingface_hub import snapshot_download
+
+    return Path(snapshot_download(model, revision=revision, allow_patterns=[
+        "*.safetensors", "*.safetensors.index.json", "*.json", "*.txt", "*.jinja", "*.model"]))
+
+
+def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "edit", budget: int = 25, max_runs: int = 300,
+           description: str | None = None, name: str | None = None, thinking: bool = False, revision: str | None = None,
+           generator: str = "vllm", device: str = "cuda", folder=None, frozen=None, prompt=None, task_sentence: str | None = None,
+           regressions: dict | None = None, control: bool = True, limits: Limits | None = None, sandbox: str = "bwrap",
+           policy: Policy | None = None, z: float = 2.0, prelude: str = "", messages: Messages = V5, semantic: bool = False,
+           runner=None, forward_limits=None, pass_time: str = "several minutes", full_attention=None) -> RunResult:
+    """Run the whole job on a language model. `eval` is a suite: "math", or an LMSuite of your own data."""
+    from .arch_text import default_frozen, describe, text_tensors
+    from .eval.lm_suite import LMEvaluation, LMSuite, math_suite
+    from .passes import ForwardLimits, LMForward
+
+    suite: LMSuite = math_suite() if eval == "math" else eval
+    folder = Path(folder or tempfile.mkdtemp(prefix="run-", dir=_runs_dir()))
+    folder.mkdir(parents=True, exist_ok=True)
+    limits = limits or Limits()
+    if limits.memory_gb is None:
+        limits.memory_gb = available_memory_gb()
+    weights = resolve_model(model, revision)
+    checkpoint = Checkpoint(weights)
+    config = checkpoint.config
+    text = config.get("text_config") or config
+    names = text_tensors(checkpoint.names())
+    frozen = default_frozen(names) if frozen is None else tuple(frozen)
+    runner = runner or LM(weights, thinking=thinking, generator=generator, device=device)
+    layers = text["num_hidden_layers"]
+    types = text.get("layer_types") or ["full_attention"] * layers
+    full = tuple(full_attention if full_attention is not None else
+                 [i for i, t in enumerate(types) if t in ("full_attention", "attention")])
+    lim = forward_limits or ForwardLimits(n_layers=layers, full_attention=full, max_tokens=suite.sampling["max_tokens"],
+                                          tf_max_tokens=suite.sampling["max_tokens"])
+    practice_dir = folder / "practice"
+    suite.export(practice_dir)
+    rows = {r["id"]: r for r in suite.practice}
+
+    slots = {"network": description or describe(name or str(model).rsplit("/", 1)[-1], config), "benchmark": suite.benchmark,
+             "protocol": suite.describe_protocol(thinking), "practice": suite.describe_practice(),
+             "out_of_scope": "the final norm and the embedding / output matrix" if frozen else None,
+             "max_tokens": f"{lim.max_tokens:,}", "n_layers": layers, "gen_max": f"{lim.gen_max:,}",
+             "both_max": f"{lim.gen_max // 2:,}", "act_tokens": f"{lim.act_max_tokens:,}", "tf_texts": f"{lim.tf_max_texts:,}",
+             "tf_tokens": f"{lim.tf_max_tokens:,}", "tf_total": f"{lim.tf_total_tokens:,}", "pass_time": pass_time}
+    if task_sentence:
+        slots["task_sentence"] = task_sentence
+
+    def tools(job: Job, base: Path, store: WeightStore) -> dict:
+        work = job.folder / "work"
+        (work / "eval_prompt_format.txt").write_text(runner.render("<the problem>"))
+        return {"forward": LMForward(runner, practice=rows, grader=suite.grader, limits=lim, sampling=suite.sampling, work=work,
+                                     base=base, edited=edited_builder(job, base, store), edit_digest=store.digest,
+                                     user_message=suite.user_message)}
+
+    builder = _make_builder(prompt, f"lm_{mode}", _prompt_slots(slots, limits, budget, max_runs), note, budget > 0)
+    if semantic:
+        builder.addendum = prompt_addendum("llama")
+        prelude = kernel_prelude() + prelude
+    job = Job(weights=weights, kind="lm", mode=mode, folder=folder, editor=get_editor(editor), prompt=builder,
+              practice_dir=practice_dir, tools_factory=tools, evaluation=LMEvaluation(runner, suite),
+              regressions={k: LMEvaluation(runner, v) for k, v in (regressions or {}).items()}, limits=limits, frozen=frozen,
+              names=names, budget=budget, max_runs=max_runs, access="kernel", sandbox=sandbox, policy=policy or Policy(),
+              messages=messages, control=control and mode == "edit", z=z, runner=runner, prelude=prelude,
+              meta={"kind": "lm", "base": {"repo": str(model), "revision": revision}})
+    return execute(job, weights)
+
+
 def _runs_dir() -> Path:
     path = home() / "runs"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
-__all__ = ["RunResult", "SearchResult", "run", "search"]
+__all__ = ["RunResult", "SearchResult", "run", "run_lm", "search"]
