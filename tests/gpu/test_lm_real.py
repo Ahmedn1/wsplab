@@ -84,10 +84,40 @@ def test_activation_capture_is_consistent_with_a_read(lm):
     assert np.allclose(acts["hidden_mean_answer"][0, 1], full["hidden_15"][0, n:].mean(0), atol=0.1)
 
 
+def test_long_texts_fit_on_a_small_gpu(lm):
+    """Full-vocabulary logits for 8k tokens would need tens of GB. Found on a live run, where the allocator began to fail."""
+    text = "The quick brown fox jumps over the lazy dog. " * 800
+    n = len(lm.tok(text, add_special_tokens=False).input_ids)
+    assert n > 8000
+    out = lm.read(QWEN, [text, text], {"token_logprobs": True, "topk": 5, "hidden_states": [15, 24], "mlp_act": [15]})
+    assert out["token_logprobs"].shape == (2, n - 1) and out["topk_ids"].shape == (2, n, 5)
+    assert out["hidden_24"].shape == (2, n, 1024) and np.isfinite(out["token_logprobs"]).all()
+    assert out["token_logprobs"][0, -1] != 0
+
+
+def test_chunked_logprobs_equal_the_models_own(lm):
+    text = lm.render("What is the capital of France?") + "The capital of France is Paris."
+    got = lm.read(QWEN, [text], {"token_logprobs": True, "topk": 3})
+    model = lm._load(QWEN)
+    ids = torch.tensor([lm.tok(text, add_special_tokens=False).input_ids], device=lm.device)
+    with torch.no_grad():
+        want = torch.log_softmax(model(input_ids=ids).logits.float(), -1)
+    picked = want[0, :-1].gather(-1, ids[0, 1:, None])[:, 0].cpu().numpy()
+    top = want[0].argmax(-1).cpu().numpy()
+    del model, want, ids
+    import gc
+
+    gc.collect()
+    torch.cuda.empty_cache()
+    assert np.allclose(got["token_logprobs"][0], picked, atol=1e-2)
+    assert (got["topk_ids"][0, :, 0] == top).mean() > 0.95
+
+
 def test_reading_activations_leaves_the_gpu_free_for_vllm(lm):
     """The model must really be gone afterwards, or vLLM starts short of memory: found by a real run, never by a fake one."""
+    free_before = torch.cuda.mem_get_info()[0]
     lm.read(QWEN, ["hello there"], {"token_logprobs": True, "hidden_states": [1]})
-    assert torch.cuda.memory_reserved() < 64 * 2**20
+    assert torch.cuda.mem_get_info()[0] > free_before - 64 * 2**20
 
 
 def test_hf_generation_applies_the_presence_penalty(lm):

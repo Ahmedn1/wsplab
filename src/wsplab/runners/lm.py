@@ -12,6 +12,7 @@ import functools
 import gc
 import json
 import os
+import pickle
 import subprocess
 import sys
 import tempfile
@@ -19,9 +20,12 @@ from pathlib import Path
 
 import numpy as np
 
+from ..upstream import home
 from .base import Generation, Prompt
 
 MAX_RESULT_BYTES = 6 << 30
+TOKENS_PER_BATCH = 8192
+LOGIT_CHUNK = 1024
 STARTUP_RETRIES = 3
 
 
@@ -184,7 +188,8 @@ class LM:
                 return module, model.get_input_embeddings()
         raise ValueError("could not find the decoder layers of this model")
 
-    def _forward_capture(self, model, ids, mask, hidden: list[int], mlp: list[int], attn: list[int]) -> tuple:
+    def _forward_capture(self, model, ids, mask, hidden: list[int], mlp: list[int], attn: list[int],
+                         need_logits: bool = False) -> tuple:
         import torch
 
         layers, embed = self._parts(model)
@@ -207,16 +212,72 @@ class LM:
         for layer in attn:
             handles.append(layers[layer].self_attn.register_forward_hook(
                 lambda _m, _i, o, k=f"attn_{layer}": got.__setitem__(k, o[1])))
+        norm_out: dict = {}
         try:
             with torch.no_grad():
-                out = model(input_ids=ids, attention_mask=mask, output_attentions=bool(attn))
+                # Asking for one position's logits keeps the output layer from running on every token at once: at a
+                # 248k vocabulary and 8k tokens that alone is more than a 16 GB card holds.
+                out = model(input_ids=ids, attention_mask=mask, output_attentions=bool(attn), logits_to_keep=1,
+                            output_hidden_states=need_logits)
         finally:
             for h in handles:
                 h.remove()
-        return out.logits, got
+        if need_logits:
+            norm_out["x"] = out.hidden_states[-1]  # after the final norm, unlike the hooks' residual stream
+        return got, norm_out
+
+    def _full_logits(self, model, norm_out, ids, rows, width_b, n, longest, topk, request, out) -> None:
+        """Log-probabilities through the output layer a slice of positions at a time."""
+        import torch
+
+        head = model.get_output_embeddings()
+        cap = getattr(model.config.get_text_config(), "final_logit_softcapping", None)
+        x = norm_out["x"]
+        for r in range(ids.shape[0]):
+            row = rows.start + r
+            for a in range(0, width_b, LOGIT_CHUNK):
+                b = min(a + LOGIT_CHUNK, width_b)
+                with torch.no_grad():
+                    logits = head(x[r, a:b]).float()
+                    if cap:
+                        logits = torch.tanh(logits / cap) * cap
+                    logprobs = torch.log_softmax(logits, -1)
+                if request.get("token_logprobs"):
+                    stop = min(b, width_b - 1)
+                    if stop > a:
+                        token = logprobs[:stop - a].gather(-1, ids[r, a + 1:stop + 1, None])[:, 0]
+                        out.setdefault("token_logprobs", np.zeros((n, longest - 1), np.float32))[row, a:stop] = token.cpu().numpy()
+                if topk:
+                    top = logprobs.topk(topk, -1)
+                    out.setdefault("topk_logprobs", np.zeros((n, longest, topk), np.float32))[row, a:b] = top.values.cpu().numpy()
+                    out.setdefault("topk_ids", np.zeros((n, longest, topk), np.int64))[row, a:b] = top.indices.cpu().numpy()
+
+    def _in_worker(self, method: str, *args) -> dict[str, np.ndarray]:
+        """Run a read in a process of its own, as vLLM does, so the parent never holds a CUDA context: vLLM needs nearly all of
+        the card next."""
+        folder = home() / "tmp"
+        folder.mkdir(parents=True, exist_ok=True)
+        options = {"tokenizer": self.tokenizer_path, "thinking": self.thinking, "device": self.device,
+                   "batch_size": self.batch_size}
+        with tempfile.TemporaryDirectory(dir=folder) as tmp:
+            path = os.path.join(tmp, "request.pkl")
+            with open(path, "wb") as f:
+                pickle.dump({"options": options, "method": method, "args": args, "out": os.path.join(tmp, "out.npz")}, f)
+            done = subprocess.run([sys.executable, "-m", "wsplab.runners.hf_worker", path], capture_output=True, text=True)
+            if done.returncode:
+                raise RuntimeError(f"read worker failed: {_root_cause(done.stderr)}")
+            with np.load(os.path.join(tmp, "out.npz"), allow_pickle=False) as z:
+                return {k: z[k] for k in z.files}
+
+    def read(self, weights, texts: list[str], request: dict) -> dict[str, np.ndarray]:
+        return self._in_worker("read_here", str(weights), texts, request)
+
+    def activations(self, weights, prompts: list[Prompt], answers: list[Generation], layers: list[int], mlp: bool,
+                    max_tokens: int) -> dict[str, np.ndarray]:
+        return self._in_worker("activations_here", str(weights), prompts, answers, layers, mlp, max_tokens)
 
     @_frees_gpu
-    def read(self, weights, texts: list[str], request: dict) -> dict[str, np.ndarray]:
+    def read_here(self, weights, texts: list[str], request: dict) -> dict[str, np.ndarray]:
         import torch
 
         hidden, mlp = list(request.get("hidden_states") or []), list(request.get("mlp_act") or [])
@@ -231,25 +292,25 @@ class LM:
         if estimate > MAX_RESULT_BYTES:
             raise ValueError(f"the result would take {estimate / 2**30:.1f} GB, more than the 6 GB limit of a pass")
         out: dict[str, np.ndarray] = {"lengths": lengths, "input_ids": np.zeros((n, longest), np.int64)}
-        for i in range(0, n, self.batch_size):
-            batch = encoded[i:i + self.batch_size]
+        i = 0
+        while i < n:
+            size = self.batch_size
+            while size > 1 and size * max(len(e) for e in encoded[i:i + size]) > TOKENS_PER_BATCH:
+                size -= 1
+            batch = encoded[i:i + size]
+            start, i = i, i + len(batch)
             width_b = max(len(e) for e in batch)
             ids = torch.zeros(len(batch), width_b, dtype=torch.long, device=self.device)
             mask = torch.zeros_like(ids)
             for r, e in enumerate(batch):
                 ids[r, :len(e)] = torch.tensor(e, device=self.device)
                 mask[r, :len(e)] = 1
-            logits, got = self._forward_capture(model, ids, mask, hidden, mlp, attn)
-            logprobs = torch.log_softmax(logits.float(), -1)
-            rows = slice(i, i + len(batch))
+            want_logits = bool(request.get("token_logprobs") or topk)
+            got, norm_out = self._forward_capture(model, ids, mask, hidden, mlp, attn, want_logits)
+            rows = slice(start, start + len(batch))
             out["input_ids"][rows, :width_b] = ids.cpu().numpy()
-            if request.get("token_logprobs"):
-                token = logprobs[:, :-1].gather(-1, ids[:, 1:, None])[..., 0]
-                out.setdefault("token_logprobs", np.zeros((n, longest - 1), np.float32))[rows, :width_b - 1] = token.cpu().numpy()
-            if topk:
-                top = logprobs.topk(topk, -1)
-                out.setdefault("topk_logprobs", np.zeros((n, longest, topk), np.float32))[rows, :width_b] = top.values.cpu().numpy()
-                out.setdefault("topk_ids", np.zeros((n, longest, topk), np.int64))[rows, :width_b] = top.indices.cpu().numpy()
+            if want_logits:
+                self._full_logits(model, norm_out, ids, rows, width_b, n, longest, topk, request, out)
             for key, value in got.items():
                 array = value.float().cpu().numpy()
                 if key.startswith("attn_"):
@@ -261,8 +322,8 @@ class LM:
         return out
 
     @_frees_gpu
-    def activations(self, weights, prompts: list[Prompt], answers: list[Generation], layers: list[int], mlp: bool,
-                    max_tokens: int) -> dict[str, np.ndarray]:
+    def activations_here(self, weights, prompts: list[Prompt], answers: list[Generation], layers: list[int], mlp: bool,
+                         max_tokens: int) -> dict[str, np.ndarray]:
         """Works on the token ids the model generated, never on retokenized text, which can differ."""
         import torch
 
@@ -275,7 +336,7 @@ class LM:
             head = self.tok(prompt.text, add_special_tokens=False).input_ids
             tail = answer.token_ids[:max_tokens]
             ids = torch.tensor([head + tail], device=self.device)
-            _, got = self._forward_capture(model, ids, torch.ones_like(ids), layers, mlp_layers, [])
+            got, _ = self._forward_capture(model, ids, torch.ones_like(ids), layers, mlp_layers, [])
             last = len(head) - 1
 
             def gather(names):
