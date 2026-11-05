@@ -1,0 +1,27 @@
+{
+ "repo": "RikiyaT/lm_understand-logs",
+ "commit": "4d09ba6d6a7e891dd8063974dfe81b3d78e3494f",
+ "files": {
+  "LICENSE": "395f7febedfda6b5498ca36cfe3344d3986659ce4385dd8b03d2d75604250a8e",
+  "README.md": "b1c51eeb9b9e2935ff227fdc7796c2a67bd3a55014cf99291224f9cc7b93d342",
+  "harness/instructions.md": "b33fe0624137cd6f190e42a8659046baf16261f3c29cd6455734523ba473afeb",
+  "harness/sandbox.py": "f3e81f9ae9edac578a64b4f7d19e742beea2950866da969b41c576512cfbc46d",
+  "exp7_sycophancy/runs/attention_tool/sandbox/prelude.py": "aa0c84d341ab9b2582b29b85a38b7b663cabc3062d9cb8297aa6414e346f2826",
+  "exp8_math/README.md": "473e386ade21ff52240103003b6b125e4362d9fa11010916c1b770ddb0edcbbd",
+  "exp8_math/code/apply_edit.py": "d2b627a6cf344f309cca4bcab4ff6ccc6ad1c8f29cabda78d11f99c19d1b1c5d",
+  "exp8_math/code/build_ckpt.py": "da0759bd0a150392b7aaa330f9d242429f47b49c0f900d0d890c91832c9217db",
+  "exp8_math/code/evaluate.py": "c93f477c02b3ae0d6b37abe3afad8bb7353e273322ff963eec7ff2270012035d",
+  "exp8_math/code/make_edit_diff.py": "2bf84b497e308e07be94d969d6763cd8396de44cb0aaf5213a6b1075999287a1",
+  "exp8_math/code/mathqa.py": "f0d576a1adc625dede7bff749b3bf8c9a5a8f6bae43d51e2d0ee36d694e89843",
+  "exp8_math/code/merge.py": "2ecd0420c929f721f547b8f189cf0a24343d960ed3b0e9b2892d9c7c8cede021",
+  "exp8_math/code/profiles.py": "ba4be365e44c3e165b9c3982af9dbcd8ec94f7fd0430e5fd9de1d57f249a4ae4",
+  "exp8_math/code/st_numpy.py": "3c4e532fb8edf374e1a4636aa806a04d062f824943eaf4bca0d3af5b0e7dca40",
+  "exp8_math/notices/001_pass_size.txt": "9dccaf85de47449e5be9eea61192393d05e708ea69dd2215a6d7a61a7ff2ac12",
+  "exp8_math/notices/002_tool_facts.txt": "1c1948f70fee560a180a2411f4449d242db6bb03d6abe82900fe11924856db15",
+  "exp8_math/notices/003_submit_best.txt": "83ece657bc6f01353007acd655ad613586810f5ab1f8bf5b0be822f4f6da5eba",
+  "exp8_math/notices/004_failure_counts.txt": "224e0686d748b667f16652797b8ea0b24bde73d24a8d5d870c172e1f1dcd1d5f",
+  "exp8_math/runs/p50c/turns/t001/prompt.txt": "b676831fd616c469722e7e34accec542c12a5558eb7ff62e5d4a1722d6031aac",
+  "exp8_math/runs/p50c/message.txt": "ce36e273b668e4edb8fa44effaab055cbece7e3b4acbce7ffcc77dde024c8b74",
+  "exp8_math/gemma_followup/runs/g50b/turns/t001/prompt.txt": "aaf9fb3a78eade48a20bfec7b712a6e46a90422cc5036146dd52ab14b67e176f"
+ }
+}

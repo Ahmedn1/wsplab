@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wsplab"
+version = "0.1.0.dev0"
+description = "Weight-space programming: let an LLM read, edit and write neural network weights, end to end."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Ahmed Dawod" }]
+dependencies = ["numpy>=2.0"]
+
+[project.optional-dependencies]
+torch = ["torch>=2.6"]
+kernel = ["torch>=2.6", "scipy", "scikit-learn", "pandas", "sympy", "networkx", "safetensors", "tokenizers"]
+lm = ["torch>=2.6", "transformers>=4.57", "safetensors", "tokenizers"]
+vllm = ["vllm"]
+eval = ["math-verify==0.9.0", "datasets"]
+hub = ["huggingface-hub>=0.30"]
+openai = ["openai>=1.60"]
+anthropic = ["anthropic>=0.60"]
+all = ["wsplab[torch,kernel,lm,eval,hub,openai,anthropic]"]
+dev = ["pytest>=8", "ruff>=0.11", "build"]
+
+[project.scripts]
+wsplab = "wsplab.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wsplab"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/wsplab", "LICENSE", "NOTICE", "README.md", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+  "network: needs network access to the pinned upstream repo",
+  "gpu: needs a CUDA GPU",
+  "model: downloads a real model checkpoint",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 110
+src = ["src", "tests"]
