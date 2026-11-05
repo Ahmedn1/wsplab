@@ -78,7 +78,7 @@ def test_a_crashed_run_resumes_where_it_stopped(tmp_path, sandbox):
 
     held.score = counted_held
     kw["evaluate"] = held
-    first = [f"Printing a marker.\n```python\nopen('/work/marker', 'w').write('x')\nsecret = 1\n```"]
+    first = ["Printing a marker.\n```python\nopen('/work/marker', 'w').write('x')\nsecret = 1\n```"]
     with pytest.raises(KeyboardInterrupt):
         wsplab.run(broken(), editor=Crashing(first), **kw)
     assert count["n"] == 1

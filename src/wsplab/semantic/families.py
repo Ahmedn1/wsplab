@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from types import SimpleNamespace
-from typing import Callable
+from collections.abc import Callable
 
 from .refs import Parts, Ref
 

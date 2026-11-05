@@ -45,7 +45,8 @@ wsplab setup                              # builds the sandbox environment, once
 wsplab doctor                             # says what this machine can run
 ```
 
-Editing sessions run in [bubblewrap](https://github.com/containers/bubblewrap) on Linux. Python 3.12 or later.
+`constraints-gpu.txt` lists the versions tested together for language models: add `-c constraints-gpu.txt`. No CUDA toolkit is
+needed. Editing sessions run in [bubblewrap](https://github.com/containers/bubblewrap) on Linux. Python 3.12 or later.
 
 ## A network of your own
 

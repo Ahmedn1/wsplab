@@ -7,7 +7,7 @@ import hashlib
 import json
 import time
 from pathlib import Path
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 

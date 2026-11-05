@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable
+from collections.abc import Callable
 
 from .graders import INSTRUCTION, Grader, get_grader
 from .suites import Scores

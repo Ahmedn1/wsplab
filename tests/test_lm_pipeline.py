@@ -129,6 +129,28 @@ def test_one_run_function_covers_language_models(tmp_path):
     assert r.verdict == "no_fix_found"
 
 
+def test_default_runner_is_built_when_none_is_given(tmp_path, monkeypatch):
+    """The everyday call passes no runner, and must reach the real one."""
+    try:
+        sandbox_python()
+    except KernelError:
+        pytest.skip("no sandbox environment")
+    import wsplab.runners as runners
+
+    made = {}
+
+    class Recording(FakeLM):
+        def __init__(self, tokenizer, **options):
+            super().__init__()
+            made.update(options, tokenizer=str(tokenizer))
+
+    monkeypatch.setattr(runners, "LM", Recording)
+    r = wsplab.run(str(lm_folder(tmp_path)), eval=suite(), editor=ScriptedEditor(["Nothing to do."]), budget=0, thinking=True,
+                   generator="hf", device="cpu", folder=tmp_path / "run", limits=Limits(seconds=60, memory_gb=4))
+    assert r.verdict == "no_fix_found"
+    assert made["thinking"] is True and made["generator"] == "hf" and made["tokenizer"].endswith("lm")
+
+
 def test_language_model_options_need_an_eval(tmp_path):
     with pytest.raises(TypeError, match="language model options"):
         wsplab.run("x", description="d", editor=ScriptedEditor([]), thinking=True)

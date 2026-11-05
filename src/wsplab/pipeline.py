@@ -542,6 +542,7 @@ def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "ed
     from .arch_text import default_frozen, describe, text_tensors
     from .eval.lm_suite import LMEvaluation, LMSuite, math_suite
     from .passes import ForwardLimits, LMForward
+    from .runners import LM
 
     suite: LMSuite = math_suite() if eval == "math" else eval
     folder = Path(folder or tempfile.mkdtemp(prefix="run-", dir=_runs_dir()))

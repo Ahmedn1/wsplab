@@ -6,7 +6,7 @@ from __future__ import annotations
 import importlib.util
 import os
 from pathlib import Path
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 

@@ -4,7 +4,7 @@ M.module["layers.0"].unit[3]. Everything lowers to whole-tensor save_edit. Addre
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import Callable
+from collections.abc import Callable
 
 from .families import Builder, detect, geometry, gpt2_style, llama_style
 from .refs import Parts, Ref
