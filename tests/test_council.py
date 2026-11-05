@@ -134,6 +134,48 @@ def test_votes_are_mapped_back_through_each_voters_own_order():
     assert "Beta" in c.reply("s", [{"role": "user", "content": "go"}]).text
 
 
+def test_a_voter_who_forgets_the_ranking_line_is_asked_once_more():
+    """Found on a live run: a member reasoned for 2,200 characters and never wrote the line, and its vote was silently lost."""
+
+    class Forgetful:
+        name = "forgetful"
+
+        def __init__(self):
+            self.calls = 0
+
+        def reply(self, system, messages):
+            self.calls += 1
+            if self.calls == 1:
+                return Reply(edit("x + 2", "Beta."))
+            if self.calls == 2:
+                return Reply("A long and careful analysis with no conclusion line.")
+            return Reply("RANKING: A > B")
+
+    a = named("a", [edit("x + 1", "Alpha."), "RANKING: A > B"])
+    forgetful = Forgetful()
+    c = Council([a, forgetful], Spending(**CAP), seed=1)
+    c.reply("s", [{"role": "user", "content": "go"}])
+    assert forgetful.calls == 3
+    assert all(b["order"] for b in c.rounds[0].ballots)
+
+
+def test_a_voter_who_never_ranks_abstains_after_one_retry():
+    class Silent:
+        name = "silent"
+
+        def __init__(self):
+            self.calls = 0
+
+        def reply(self, system, messages):
+            self.calls += 1
+            return Reply(edit("x + 2", "Beta.") if self.calls == 1 else "I decline to rank these.")
+
+    silent = Silent()
+    c = Council([named("a", [edit("x + 1"), "RANKING: A"]), silent], Spending(**CAP))
+    c.reply("s", [{"role": "user", "content": "go"}])
+    assert silent.calls == 3 and c.rounds[0].ballots[1]["order"] == []
+
+
 def test_a_tie_goes_to_the_chairs_ranking():
     class Fixed:
         def __init__(self, name, proposal, favourite):

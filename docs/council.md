@@ -20,6 +20,19 @@ Three repeats on one small task can only show large effects, so none of these di
 neither council beat its best member, and both cost more. A council's vote did overrule a weaker chair in some runs. Choosing the
 editor mattered at least as much as voting, and the most expensive model was not the best one here.
 
+A second comparison added other providers on the same task. Each member of the cross-provider council chaired one run.
+
+| Arm | Reached the clean score | Mean score | Mean cost |
+|---|---|---|---|
+| `claude-opus-5-5` alone | 3 of 3 | 95.91% | $0.38 |
+| `gemini-4-argon` alone | 3 of 3 | 95.77% | About $0.62 |
+| `gpt-6.1-terra` alone (from above) | 3 of 3 | 95.77% | $0.09 |
+| Claude, Gemini and terra council | 3 of 3 | 95.84% | $0.74 |
+
+The council reached the clean score with every chair, but so did each of its members alone, so this task cannot show whether it adds
+anything. Mixing providers did make members disagree more often. Voters also ranked their own proposal first in 8 of 11 cases
+despite anonymous ballots, more than chance would give, so anonymity may not fully hide authorship. Both are small samples.
+
 ## Voting on scripts
 
 ```python

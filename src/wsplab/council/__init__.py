@@ -170,9 +170,19 @@ class Council:
         template = APPROVAL if self.method == "approval" else BALLOT
         joiner = ", " if self.method == "approval" else " > "
         ask = template.format(proposals=listed, example=joiner.join(labels))
-        reply = self.metered[member].reply(system, [*messages, {"role": "user", "content": ask}])
+        conversation = [*messages, {"role": "user", "content": ask}]
+        reply = self.metered[member].reply(system, conversation)
+        order = read_ballot(reply.text, labels)
+        reason = reply.text
+        if not order:
+            # A voter can reason at length and forget the last line. That is a vote worth one more short call, not an abstention.
+            again = conversation + [{"role": "assistant", "content": reply.text},
+                                    {"role": "user", "content": f"End with the ranking line, for example:\nRANKING: {joiner.join(labels)}"}]
+            reply = self.metered[member].reply(system, again)
+            order = read_ballot(reply.text, labels)
+            reason += "\n\n" + reply.text
         name = self.members[member].name
-        return Ballot(name, read_ballot(reply.text, labels), self.weights.get(name, 1.0), reply.text)
+        return Ballot(name, order, self.weights.get(name, 1.0), reason)
 
     def _log(self, record: Round) -> None:
         if self.folder is None:
