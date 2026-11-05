@@ -98,7 +98,8 @@ class Patch:
             name = t.get("name")
             if not isinstance(name, str) or not name or name in seen:
                 raise PatchError(f"manifest: bad or repeated tensor name {name!r}")
-            if "/" in name or "\\" in name or name.startswith(".") or "\0" in name:
+            parts = name.replace("\\", "/").split("/")
+            if name.startswith(("/", ".")) or "\0" in name or ".." in parts or "." in parts or "" in parts:
                 raise PatchError(f"manifest: unsafe tensor name {name!r}")
             seen.add(name)
             if t.get("form") not in FORMS:

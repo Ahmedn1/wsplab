@@ -135,6 +135,8 @@ class Job:
     runner: object
     prelude: str = ""
     meta: dict = field(default_factory=dict)
+    binds: dict = field(default_factory=dict)
+    force_tools: bool = False
 
 
 def build_edit(job: Job, base: Path, edited_dir: Path, out: Path, *, meta: dict | None = None) -> tuple[P.Patch, Path]:
@@ -172,9 +174,9 @@ def run_session(job: Job, base: Path) -> tuple[str | None, object, Path]:
     work.mkdir(parents=True, exist_ok=True)
     config = KernelConfig(model=base, work=work, practice=job.practice_dir, mode=job.mode, frozen=job.frozen,
                           refuse_rescale=job.mode == "edit", names=job.names, prelude=job.prelude, limits=job.limits,
-                          sandbox=job.sandbox)
+                          sandbox=job.sandbox, binds=job.binds)
     with SandboxKernel(config) as kernel:
-        tools = job.tools_factory(job, base, kernel.store) if job.budget else {}
+        tools = job.tools_factory(job, base, kernel.store) if job.budget or job.force_tools else {}
         session = Session(job.prompt.build(), job.editor, kernel, tools, budget=job.budget, max_runs=job.max_runs,
                           folder=job.folder / "session", messages=job.messages, policy=job.policy)
         result = session.run()
@@ -310,13 +312,17 @@ def run(model, *, build=None, description: str, note: str | None = None, mode: s
         editor=None, budget: int = 25, max_runs: int = 300, access: str = "kernel", folder=None, frozen=(), prompt=None,
         task_sentence: str | None = None, regressions: dict | None = None, control: bool = True, limits: Limits | None = None,
         sandbox: str = "bwrap", policy: Policy | None = None, device: str = "cpu", z: float = 2.0, prelude: str = "",
-        messages: Messages = V5, no_eval: bool = False, semantic: bool = False) -> RunResult:
+        messages: Messages = V5, no_eval: bool = False, semantic: bool = False, tools=None, binds: dict | None = None,
+        weights_names: list | None = None) -> RunResult:
     """Run the whole job on any PyTorch network.
 
     `build` says how to run the weights: a function returning an nn.Module, "path/model.py:function", or
     {"mlp": [sizes], "activation": "tanh"}. `practice` and `evaluate` are Scorers: the editor sees the first and is judged
     on the second. If only `evaluate` is an ArrayScorer, it is split in two. `note` is your own words to the editor.
     `semantic` gives the editor M, the semantic layer, in its kernel, and says so in the prompt.
+
+    `tools` replaces the forward tool: a function (work folder, base weights, store, edited model builder) -> {fence: PassTool},
+    for networks that need passes of their own, such as playing games. `binds` adds read-only {host path: path in the sandbox}.
     """
     if mode not in ("read", "edit", "write"):
         raise ValueError(f"unknown mode {mode!r}")
@@ -341,7 +347,7 @@ def run(model, *, build=None, description: str, note: str | None = None, mode: s
     if practice is not None:
         practice_dir = folder / "practice"
         practice.export(practice_dir)
-    if budget and (runner is None or practice is None):
+    if budget and tools is None and (runner is None or practice is None):
         raise ValueError("forward passes need `build` and `practice`; pass budget=0 for a weights-only session")
 
     slots = {"network": description, "benchmark": getattr(evaluate, "name", "held-out data"),
@@ -362,7 +368,9 @@ def run(model, *, build=None, description: str, note: str | None = None, mode: s
     else:
         template = f"generic_{mode}"
 
-    def tools(job: Job, base: Path, store: WeightStore) -> dict:
+    def default_tools(job: Job, base: Path, store: WeightStore) -> dict:
+        if tools is not None:
+            return tools(job.folder / "work", base, store, edited_builder(job, base, store))
         return {"forward": TorchForward(job.runner, practice, work=job.folder / "work", base=base,
                                         edited=edited_builder(job, base, store), edit_digest=store.digest)}
 
@@ -373,9 +381,9 @@ def run(model, *, build=None, description: str, note: str | None = None, mode: s
                                                        shape=Checkpoint(weights).shape).family)
         prelude = kernel_prelude() + prelude
     job = Job(weights=weights, kind="generic", mode=mode, folder=folder, editor=get_editor(editor), prompt=builder,
-              practice_dir=practice_dir, tools_factory=tools, evaluation=evaluation,
+              practice_dir=practice_dir, tools_factory=default_tools, evaluation=evaluation,
               regressions={k: TorchEvaluation(runner, v, k) for k, v in (regressions or {}).items()}, limits=limits,
-              frozen=tuple(frozen), names=None, budget=budget, max_runs=max_runs, access=access, sandbox=sandbox,
+              frozen=tuple(frozen), names=weights_names, binds=binds or {}, force_tools=tools is not None, budget=budget, max_runs=max_runs, access=access, sandbox=sandbox,
               policy=policy or Policy(), messages=messages, control=control and mode == "edit", z=z, runner=runner,
               prelude=prelude, meta={"kind": "generic"})
     return execute(job, weights)

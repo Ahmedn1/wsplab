@@ -46,6 +46,7 @@ class KernelConfig:
     limits: Limits = field(default_factory=Limits)
     sandbox: str = "bwrap"
     python: str | None = None
+    binds: dict = field(default_factory=dict)
 
 
 class KernelError(RuntimeError):
@@ -133,6 +134,8 @@ class SandboxKernel:
             cmd += ["--ro-bind", str(real), str(real)]
         if c.practice is not None:
             cmd += ["--ro-bind", str(Path(c.practice).resolve()), "/practice"]
+        for host, inside in c.binds.items():
+            cmd += ["--ro-bind", str(Path(host).resolve()), str(inside)]
         cmd += ["/opt/venv/bin/python", "-I", "-c", code % "/opt/wsplab", config]
         if c.limits.memory_gb and _memory_cgroup_works():
             cap = int(c.limits.memory_gb * 2**30)

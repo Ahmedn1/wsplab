@@ -213,7 +213,7 @@ def test_tampered_manifest_is_refused(tmp_path):
         P.Patch.load(folder)
 
 
-@pytest.mark.parametrize("name", ["../evil", "a/b", "..\\x", ".hidden", ""])
+@pytest.mark.parametrize("name", ["../evil", "a/../../b", "/etc/passwd", "..\\x", ".hidden", "a//b", ""])
 def test_path_traversal_names_are_refused(tmp_path, name):
     _, _, folder = make_patch(tmp_path)
     m = json.loads((folder / "manifest.json").read_text())
@@ -222,6 +222,14 @@ def test_path_traversal_names_are_refused(tmp_path, name):
     (folder / "patch.json").unlink()
     with pytest.raises(P.PatchError, match="tensor name"):
         P.Patch.load(folder)
+
+
+def test_jax_style_names_with_slashes_work(tmp_path):
+    base = write_model(tmp_path / "a.safetensors", {"actor/dense1/kernel": ("F32", np.ones((4, 3), np.float32))})
+    w = base.float("actor/dense1/kernel")
+    w[0, 0] = 2
+    patch = P.from_submission(base, {"actor/dense1/kernel": w}, tmp_path / "p")
+    assert Checkpoint(P.apply(patch, base, tmp_path / "o.safetensors")).float("actor/dense1/kernel")[0, 0] == 2
 
 
 def test_index_outside_tensor_is_refused(tmp_path):

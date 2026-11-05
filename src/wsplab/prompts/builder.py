@@ -100,6 +100,7 @@ class PromptBuilder:
     sections: dict[str, str] = field(default_factory=dict)
     passes: bool = True
     addendum: str | None = None
+    exact: bool = False
 
     def __post_init__(self):
         if (self.base is None) == (self.template is None):
@@ -108,6 +109,8 @@ class PromptBuilder:
     @property
     def fidelity(self) -> str:
         """paper: the base template; custom: the user changed its text. A note or slot values change neither."""
+        if self.exact:
+            return "exact"
         if self.template is not None or self.sections:
             return "custom"
         return "paper+semantic" if self.addendum else "paper"
@@ -129,6 +132,8 @@ class PromptBuilder:
         return text
 
     def build(self) -> str:
+        if self.exact:
+            return self.template
         default = DEFAULT_READ_SENTENCE if self.base and self.base.endswith("_read") else DEFAULT_TASK_SENTENCE
         slots = {"task_sentence": default, **self.slots}
         template = self._text()

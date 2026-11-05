@@ -12,6 +12,7 @@ import numpy as np
 
 _BLOCK = re.compile(r"^```edits[ \t]*\n(.*?)^```[ \t]*$", re.M | re.S)
 _STATEMENT = re.compile(r"^(?P<name>[\w./-]+)\s*\[(?P<index>[^\]]*)\]\s*(?P<op>=|\*=|\+=|-=)\s*(?P<value>.+)$", re.S)
+_ZERO = re.compile(r"^ZERO\s+(?P<name>[\w./-]+)$")
 MAX_VALUE = 1e6
 
 
@@ -78,6 +79,14 @@ def apply_edits(block: str, load) -> Applied:
     result = Applied()
     for text in statements(block):
         try:
+            whole = _ZERO.match(text)
+            if whole:
+                name = whole["name"]
+                if name not in result.tensors:
+                    result.tensors[name] = np.array(load(name), dtype=np.float64)
+                result.tensors[name][...] = 0
+                result.statements += 1
+                continue
             m = _STATEMENT.match(text)
             if m is None:
                 raise ValueError("not a statement")
