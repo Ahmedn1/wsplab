@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -19,7 +20,7 @@ from .io.safetensors import Checkpoint
 from .kernel import KernelConfig, Limits, SandboxKernel
 from .passes import TorchForward
 from .passes.edits import apply_edits, last_block, render_weights
-from .prompts import PromptBuilder
+from .prompts import SYSTEM, PromptBuilder
 from .runners.torch import TorchRunner, state_to_checkpoint, zero_checkpoint
 from .semantic import SemanticMap, kernel_prelude, prompt_addendum
 from .session import V5, Messages, Policy, Session
@@ -167,7 +168,6 @@ def run_session(job: Job, base: Path) -> tuple[str | None, object, Path]:
 
 def run_inline(job: Job, base: Path) -> tuple[str | None, object, Path]:
     """One reply, no tools: the weights are in the prompt and the edits come back in an `edits` block."""
-    from .prompts import SYSTEM
     from .session import State
 
     folder = job.folder / "session" / "turns" / "t001"
@@ -212,6 +212,8 @@ def execute(job: Job, original: Path) -> RunResult:
     answer, state, edited_dir = start(job, original)
     meta = {**job.meta, "editor": job.editor.name, "prompt_fidelity": job.prompt.fidelity,
             "prompt_sha256": job.prompt.sha256(), "harness": HARNESS, "tool_free": True, "mode": job.mode}
+    if hasattr(job.editor, "evidence"):
+        meta["council"] = job.editor.evidence()
     calls = folder / "session" / "tool_calls.jsonl"
     if calls.exists():
         meta["transcript_sha256"] = sha256_file(calls)
@@ -223,6 +225,13 @@ def execute(job: Job, original: Path) -> RunResult:
 
     final_out = folder / "result"
     patch, model = build_edit(job, original, edited_dir, final_out, meta=meta)
+    return judge(job, original, baseline, regress_base, patch, model, final_out, meta, answer, state)
+
+
+def judge(job: Job, original: Path, baseline, regress_base: dict, patch: P.Patch, model: Path, final_out: Path, meta: dict,
+          answer, state) -> RunResult:
+    """Score an edit on the evaluation, and reach the verdict."""
+    measured = job.evaluation is not None
     final = control = None
     regress: dict[str, Paired] = {}
     comparison = None
@@ -357,10 +366,115 @@ def run(model, *, build=None, description: str, note: str | None = None, mode: s
     return execute(job, weights)
 
 
+@dataclass
+class SearchResult:
+    """`success_rate` is the share of runs whose edit beat the base model on the selection set, with z >= `z`."""
+
+    result: RunResult
+    success_rate: float
+    candidates: list[dict]
+    selection: dict
+
+
+def search(model, *, editors: list, runs: int | None = None, build, description: str, practice=None, evaluate,
+           selection: str = "metric", spending=None, method: str = "borda", folder=None, z: float = 2.0, seed: int = 0,
+           **options) -> SearchResult:
+    """Several independent sessions, then one winner. The practice data is split: editors work on one part and candidates
+    are compared on the other, so only the winner ever meets the evaluation.
+
+    `selection` is "metric" (the best score on the selection set) or "vote" (the editors vote on the finished candidates,
+    the `weights` scope of a council). `spending` is required: this runs a whole session per candidate.
+    """
+    from .council import vote
+    from .editors.cost import Metered
+    from .session.state import State
+
+    if spending is None:
+        raise ValueError("search runs many sessions: give spending=Spending(max_tokens=... or max_usd=...)")
+    if selection not in ("metric", "vote"):
+        raise ValueError('selection must be "metric" or "vote"')
+    folder = Path(folder or tempfile.mkdtemp(prefix="search-", dir=_runs_dir()))
+    folder.mkdir(parents=True, exist_ok=True)
+    if practice is None:
+        practice, evaluate = evaluate.split(0.5)
+    work_set, select_set = practice.split(0.5, seed)
+    check_disjoint(select_set, evaluate)
+    check_disjoint(work_set, evaluate)
+    runner = TorchRunner(build, options.get("device", "cpu"))
+    base = prepare_weights(model, folder)
+    selector = TorchEvaluation(runner, select_set)
+    baseline = selector.evaluate(base)
+    count = runs or len(editors)
+    candidates = []
+    for k in range(count):
+        editor = get_editor(editors[k % len(editors)])
+        metered = Metered(editor, spending)
+        one = run(base, build=build, description=description, practice=work_set, evaluate=None, no_eval=True,
+                  editor=metered, folder=folder / f"run_{k}", **options)
+        row = {"run": k, "editor": editor.name, "folder": str(one.folder), "patch": str(one.patch), "answer": one.answer,
+               "stop_reason": getattr(one.state, "stop_reason", None)}
+        changed = P.Patch.load(one.patch).manifest["changed_entries_total"]
+        row["changed_entries"] = changed
+        if changed:
+            scores = selector.evaluate(one.weights)
+            comparison = _paired(baseline, scores)
+            row.update(score=scores.mean, gain=comparison.difference, standard_error=comparison.standard_error,
+                       z=comparison.z())
+        else:
+            row.update(score=baseline.mean, gain=0.0, standard_error=0.0, z=0.0)
+        candidates.append(row)
+        if spending_exhausted(spending):
+            break
+    success = sum(c["z"] >= z for c in candidates) / len(candidates)
+    usable = [c for c in candidates if c["changed_entries"]]
+    decision: dict = {"method": selection}
+    if not usable:
+        winner = candidates[0]
+    elif selection == "metric":
+        winner = max(usable, key=lambda c: c["score"])
+    else:
+        text = [f"Changed entries: {c['changed_entries']:,}\nGain on the selection set: {c['gain']:+.4f} +/- "
+                f"{c['standard_error']:.4f}\n\nThe editor's account:\n{c['answer']}" for c in usable]
+        members = [get_editor(e) for e in editors]
+        decision.update(vote(text, members, system=SYSTEM, spending=spending, method=method, seed=seed,
+                             measured=[c["score"] for c in usable],
+                             messages=[{"role": "user", "content": f"The network: {description}"}]))
+        winner = usable[decision["winner"]]
+    decision["run"] = winner["run"]
+
+    final_out = folder / "winner"
+    patch = P.Patch.load(winner["patch"])
+    model_path = final_out / ("model.safetensors" if Path(base).is_file() else "model")
+    final_out.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(winner["patch"], final_out / "patch", dirs_exist_ok=True)
+    P.apply(patch, Checkpoint(base), model_path)
+    meta = {**patch.meta, "search": {"runs": len(candidates), "success_rate": success, "selection": selection}}
+    job = Job(weights=base, kind="generic", mode="edit", folder=folder, editor=get_editor(editors[0]),
+              prompt=PromptBuilder(template="unused"), practice_dir=None, tools_factory=None,
+              evaluation=TorchEvaluation(runner, evaluate), regressions={}, limits=Limits(), frozen=(), names=None, budget=0,
+              max_runs=0, access="kernel", sandbox="none", policy=Policy(), messages=V5,
+              control=options.get("control", True), z=z, runner=runner)
+    result = judge(job, base, job.evaluation.evaluate(base), {}, P.Patch.load(final_out / "patch"), model_path, final_out, meta,
+                   winner["answer"], State())
+    summary = {"success_rate": success, "selection": decision, "candidates": candidates}
+    (folder / "search.json").write_text(json.dumps(summary, indent=1) + "\n")
+    return SearchResult(result, success, candidates, decision)
+
+
+def spending_exhausted(spending) -> bool:
+    from .editors.cost import BudgetExceeded
+
+    try:
+        spending.check()
+    except BudgetExceeded:
+        return True
+    return False
+
+
 def _runs_dir() -> Path:
     path = home() / "runs"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
-__all__ = ["RunResult", "run"]
+__all__ = ["RunResult", "SearchResult", "run", "search"]

@@ -119,8 +119,18 @@ def cmd_run(a) -> int:
     evaluate = load_scorer(a.eval, a.metric, "eval")
     practice = load_scorer(a.practice, a.metric)
     limits = Limits(seconds=a.run_seconds, memory_gb=a.memory_gb)
+    if len(a.editor) > 1:
+        if a.max_tokens is None and a.max_usd is None:
+            raise ValueError("a council multiplies LLM calls: set --max-tokens or --max-usd")
+        from .council import Council
+        from .editors import Spending, get_editor
+
+        editor = Council([get_editor(e) for e in a.editor], Spending(max_tokens=a.max_tokens, max_usd=a.max_usd),
+                         method=a.vote)
+    else:
+        editor = a.editor[0]
     result = wsplab.run(a.model, build=parse_build(a.build), description=a.description, note=a.note, mode=a.mode,
-                        practice=practice, evaluate=evaluate, editor=a.editor, budget=a.budget, max_runs=a.max_runs,
+                        practice=practice, evaluate=evaluate, editor=editor, budget=a.budget, max_runs=a.max_runs,
                         access=a.access, folder=a.out, sandbox=a.sandbox, control=not a.no_control, no_eval=a.no_eval,
                         limits=limits, frozen=tuple(a.frozen or ()))
     print(f"verdict: {result.verdict}")
@@ -226,7 +236,11 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--eval", help=".npz with inputs and targets: the editor never sees it")
     c.add_argument("--practice", help=".npz with inputs and targets: the editor works on it")
     c.add_argument("--metric", default="accuracy", choices=["accuracy", "neg_mse"])
-    c.add_argument("--editor", required=True, help="anthropic:<model>, openai:<model>, codex:<model> or script:<file.json>")
+    c.add_argument("--editor", required=True, action="append",
+                   help="anthropic:<model>, openai:<model>, codex:<model> or script:<file.json>; repeat it for a council")
+    c.add_argument("--vote", choices=["borda", "plurality", "approval"], default="borda", help="how a council votes")
+    c.add_argument("--max-tokens", type=int, help="stop a council at this many tokens")
+    c.add_argument("--max-usd", type=float, help="stop a council at this cost")
     c.add_argument("--budget", type=int, default=25, help="forward passes the editor may spend")
     c.add_argument("--max-runs", type=int, default=300)
     c.add_argument("--access", choices=["kernel", "inline"], default="kernel")

@@ -1,7 +1,7 @@
 """wsplab: weight-space programming, end to end."""
 
 __version__ = "0.1.0.dev0"
-__all__ = ["RunResult", "run"]
+__all__ = ["RunResult", "SearchResult", "run", "search"]
 
 
 def __getattr__(name: str):

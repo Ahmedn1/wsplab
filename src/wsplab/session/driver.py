@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Callable, Protocol
 
 from ..editors.base import Editor, EditorRefused, Usage
+from ..editors.cost import BudgetExceeded
 from ..passes.base import PassFailed, PassInvalid, PassTool
 from ..prompts import SYSTEM
 from .messages import V5, Messages
@@ -79,6 +80,8 @@ class Session:
         self.after_reply = after_reply
         self._prefix: list[str] = []
         self._kinds = {"python", *self.tools}
+        if hasattr(editor, "attach"):
+            editor.attach(self)
 
     # Things that can happen to a running session -------------------------------------------------------------------
     def notice(self, text: str, name: str | None = None) -> None:
@@ -116,7 +119,7 @@ class Session:
                 self.state.turn -= 1
                 message = self.messages.refused
                 continue
-            except Stop as e:
+            except (Stop, BudgetExceeded) as e:
                 self.state.stop_reason = str(e)
                 break
             self.state.flag_streak = 0
@@ -214,7 +217,8 @@ class Session:
             return self.messages.runs_exhausted.format(limit=s.max_runs)
         s.runs += 1
         t0 = time.time()
-        out = self.kernel.run(code)
+        approves = getattr(self.editor, "approves", None)
+        out = self.kernel.run(code) if approves is None else self.kernel.run(code, allow_edits=approves(code))
         self._log(kind="python", s=round(time.time() - t0, 2), code=code, out=out)
         return self.messages.python_output.format(k=s.runs, limit=s.max_runs, out=out)
 
