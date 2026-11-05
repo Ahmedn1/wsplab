@@ -35,6 +35,43 @@ class ForwardLimits:
     attn_max_tokens: int = 2048
 
 
+class GenerationCache:
+    """Answers already generated in this run, one entry per item.
+
+    Seeds are fixed by the item, so asking the same weights the same question repeats the same answer, and most of a paired
+    pass used to go on regenerating the original model's answers. An entry is reused only when everything that determines
+    the answer matches: see `key`. It lives outside /work, so an editor cannot change the answers it is compared against, and
+    on disk, so a resumed run keeps it. The final evaluation never reads it.
+    """
+
+    def __init__(self, path: str | Path):
+        self.path = Path(path)
+        self.entries: dict[str, list[Generation]] = {}
+        if self.path.exists():
+            with open(self.path) as f:
+                for line in f:
+                    try:
+                        row = json.loads(line)
+                    except json.JSONDecodeError:  # the last line of a run that was killed mid-write
+                        continue
+                    self.entries[row["key"]] = [Generation(g["text"], g["finish"], g["ids"]) for g in row["samples"]]
+
+    @staticmethod
+    def key(weights: str, prompt: Prompt, n: int, sampling: dict, generator: str) -> str:
+        fields = {"weights": weights, "text": prompt.text, "seed": prompt.seed, "n": n, "sampling": sampling, "generator": generator}
+        return hashlib.sha256(json.dumps(fields, sort_keys=True).encode()).hexdigest()
+
+    def get(self, key: str) -> list[Generation] | None:
+        return self.entries.get(key)
+
+    def put(self, key: str, samples: list[Generation]) -> None:
+        self.entries[key] = samples
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.path, "a") as f:
+            f.write(json.dumps({"key": key, "samples": [{"text": g.text, "finish": g.finish_reason, "ids": g.token_ids}
+                                                        for g in samples]}) + "\n")
+
+
 def item_seed(item_id: str) -> int:
     """The sampling seed fixed by the item. Inferred: the prompts promise this, without giving the formula."""
     return int.from_bytes(hashlib.sha256(item_id.encode()).digest()[:4], "big")
@@ -64,7 +101,8 @@ class LMForward:
 
     def __init__(self, runner: LMRunner, *, practice: dict[str, dict], grader: Grader, limits: ForwardLimits,
                  sampling: dict, work: str | Path, base: Path, edited: Callable[[], Path],
-                 edit_digest: Callable[[], str | None], user_message: Callable[[dict], str]):
+                 edit_digest: Callable[[], str | None], user_message: Callable[[dict], str],
+                 cache: GenerationCache | None = None):
         self.runner = runner
         self.practice = practice
         self.grader = grader
@@ -75,6 +113,7 @@ class LMForward:
         self.edited = edited
         self.edit_digest = edit_digest
         self.user_message = user_message
+        self.cache = cache
         self._seen: set[str] = set()
 
     # Checking a request ----------------------------------------------------------------------------------------------
@@ -177,10 +216,33 @@ class LMForward:
             out.append(Prompt(item_id, self.runner.render(message), item_seed(item_id)))
         return out
 
+    def _fingerprint(self, model: str) -> str:
+        """What identifies these weights: the base model's files, or the hash of the current edit."""
+        if model == "edited" and self.edit_digest():
+            return f"edit:{self.edit_digest()}"
+        files = sorted(self.base.glob("*.safetensors")) if self.base.is_dir() else [self.base]
+        return "base:" + ",".join(f"{f.name}:{f.stat().st_size}:{f.stat().st_mtime_ns}" for f in files if f.exists())
+
+    def _generate_with_cache(self, model: str, prompts: list[Prompt], n: int, sampling: dict) -> tuple[list, int]:
+        """All answers, and how many items came from the cache. Weights are only built if something has to be generated."""
+        if self.cache is None:
+            return self.runner.generate(self._weights(model), prompts, n, sampling), 0
+        fingerprint = self._fingerprint(model)
+        generator = str(getattr(self.runner, "generator", ""))
+        keys = [GenerationCache.key(fingerprint, p, n, sampling, generator) for p in prompts]
+        found = [self.cache.get(k) for k in keys]
+        missing = [i for i, samples in enumerate(found) if samples is None]
+        if missing:
+            fresh = self.runner.generate(self._weights(model), [prompts[i] for i in missing], n, sampling)
+            for i, samples in zip(missing, fresh):
+                found[i] = samples
+                self.cache.put(keys[i], samples)
+        return found, len(prompts) - len(missing)
+
     def _run_model(self, model: str, prompts, items, request, name: str) -> tuple[dict, list[list[dict]], list]:
         sampling = {**self.sampling, "max_tokens": request.get("max_tokens", self.sampling.get("max_tokens"))}
         try:
-            outputs = self.runner.generate(self._weights(model), prompts, request.get("n", 1), sampling)
+            outputs, reused = self._generate_with_cache(model, prompts, request.get("n", 1), sampling)
         except Exception as e:  # noqa: BLE001 - any failure of the backend must not cost the editor a pass
             raise PassFailed(f"{type(e).__name__}: {e}") from e
         per_item: list[list[dict]] = []
@@ -197,7 +259,7 @@ class LMForward:
                 for r in rows:
                     f.write(json.dumps(r) + "\n")
         flat = [r for rows in per_item for r in rows]
-        return summarize(flat), per_item, outputs
+        return {**summarize(flat), "reused_items": reused}, per_item, outputs
 
     def _save_activations(self, model, prompts, outputs, acts, folder: Path) -> dict:
         folder.mkdir(parents=True, exist_ok=True)

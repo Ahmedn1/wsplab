@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from wsplab.eval import ChoiceGrader, ExactGrader, MathGrader, RegexGrader, extract, get_grader, is_correct, paired
-from wsplab.passes import ForwardLimits, LMForward, PassFailed, PassInvalid
+from wsplab.passes import ForwardLimits, GenerationCache, LMForward, PassFailed, PassInvalid
 from wsplab.runners.fake import FakeLM
 
 PRACTICE = {f"p{i}": {"id": f"p{i}", "source": "math", "problem": f"q{i}", "answer": "1"} for i in range(8)}
@@ -23,6 +23,114 @@ def tool(tmp_path, runner=None):
 
 def ask(t, k=1, **request):
     return t.run(json.dumps(request), k)
+
+
+class Counting(FakeLM):
+    """Remembers exactly which items reached the model, and with which weights."""
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.asked = []
+
+    def generate(self, weights, prompts, n, sampling):
+        self.asked.append((str(weights), [p.id for p in prompts], sampling["max_tokens"]))
+        return super().generate(weights, prompts, n, sampling)
+
+
+def cached_tool(tmp_path, runner, digest=None):
+    t = tool(tmp_path, runner)
+    t.cache = GenerationCache(tmp_path / "cache" / "generations.jsonl")
+    t.digest["value"] = digest
+    if not (tmp_path / "base.safetensors").exists():
+        (tmp_path / "base.safetensors").write_bytes(b"weights")
+    t.base = tmp_path / "base.safetensors"
+    return t
+
+
+def test_a_repeat_paired_pass_does_not_regenerate_the_original_model(tmp_path):
+    runner = Counting()
+    t = cached_tool(tmp_path, runner, "edit1")
+    first = ask(t, 1, type="generate", model="both", problems=["p0", "p1"], n=1)
+    assert first.summary["original"]["reused_items"] == 0 and len(runner.asked) == 2
+    t.digest["value"] = "edit2"
+    second = ask(t, 2, type="generate", model="both", problems=["p0", "p1"], n=1)
+    assert second.summary["original"]["reused_items"] == 2 and second.summary["edited"]["reused_items"] == 0
+    assert len(runner.asked) == 3 and "edited_model" in runner.asked[-1][0]
+    assert (tmp_path / "gen_2_original.jsonl").read_text() == (tmp_path / "gen_1_original.jsonl").read_text().replace("gen_1", "gen_2")
+
+
+def test_only_new_items_are_generated(tmp_path):
+    runner = Counting()
+    t = cached_tool(tmp_path, runner)
+    ask(t, 1, type="generate", model="original", problems=["p0", "p1"])
+    r = ask(t, 2, type="generate", model="original", problems=["p1", "p0", "p2"])
+    assert runner.asked[-1][1] == ["p2"] and r.summary["reused_items"] == 2
+    rows = [json.loads(x) for x in (tmp_path / "gen_2.jsonl").read_text().splitlines()]
+    assert [x["id"] for x in rows] == ["p1", "p0", "p2"]
+
+
+@pytest.mark.parametrize("change", [{"n": 2}, {"max_tokens": 32}])
+def test_a_different_request_is_not_served_from_the_cache(tmp_path, change):
+    runner = Counting()
+    t = cached_tool(tmp_path, runner)
+    ask(t, 1, type="generate", model="original", problems=["p0"])
+    r = ask(t, 2, type="generate", model="original", problems=["p0"], **change)
+    assert r.summary["reused_items"] == 0 and len(runner.asked) == 2
+
+
+def test_edited_answers_are_tied_to_the_exact_edit(tmp_path):
+    runner = Counting()
+    t = cached_tool(tmp_path, runner, "edit1")
+    ask(t, 1, type="generate", model="edited", problems=["p0"])
+    t.digest["value"] = "edit2"
+    assert ask(t, 2, type="generate", model="edited", problems=["p0"]).summary["reused_items"] == 0
+    t.digest["value"] = "edit1"
+    assert ask(t, 3, type="generate", model="edited", problems=["p0", "p1"]).summary["reused_items"] == 1
+
+
+def test_original_and_edited_never_share_answers(tmp_path):
+    runner = Counting()
+    t = cached_tool(tmp_path, runner, "edit1")
+    ask(t, 1, type="generate", model="original", problems=["p0"])
+    assert ask(t, 2, type="generate", model="edited", problems=["p0"]).summary["reused_items"] == 0
+
+
+def test_a_changed_base_model_invalidates_the_cache(tmp_path):
+    runner = Counting()
+    t = cached_tool(tmp_path, runner)
+    ask(t, 1, type="generate", model="original", problems=["p0"])
+    t._seen.clear()
+    t.base.write_bytes(b"other weights, not the same size")
+    assert ask(t, 2, type="generate", model="original", problems=["p0"]).summary["reused_items"] == 0
+
+
+def test_the_cache_survives_a_restart_and_a_torn_last_line(tmp_path):
+    t = cached_tool(tmp_path, Counting())
+    ask(t, 1, type="generate", model="original", problems=["p0"])
+    with open(tmp_path / "cache" / "generations.jsonl", "a") as f:
+        f.write('{"key": "half a li')
+    runner = Counting()
+    again = cached_tool(tmp_path, runner)
+    assert ask(again, 2, type="generate", model="original", problems=["p0"]).summary["reused_items"] == 1
+    assert runner.asked == []
+
+
+def test_a_failed_generation_is_not_cached(tmp_path):
+    runner = Counting()
+    t = cached_tool(tmp_path, runner)
+    runner.fail_with = RuntimeError("engine died")
+    with pytest.raises(PassFailed):
+        ask(t, 1, type="generate", model="original", problems=["p0"])
+    runner.fail_with = None
+    t._seen.clear()
+    assert ask(t, 2, type="generate", model="original", problems=["p0"]).summary["reused_items"] == 0
+
+
+def test_activations_still_work_on_reused_answers(tmp_path):
+    t = cached_tool(tmp_path, Counting())
+    ask(t, 1, type="generate", model="original", problems=["p0"])
+    r = ask(t, 2, type="generate", model="original", problems=["p0"], activations={"layers": [1]})
+    assert r.summary["reused_items"] == 1 and (tmp_path / "gen_2_acts" / "hidden_mean_answer.npy").exists()
 
 
 def test_generation_summary_has_the_logged_fields(tmp_path):

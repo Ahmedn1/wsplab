@@ -156,6 +156,50 @@ def test_language_model_options_need_an_eval(tmp_path):
         wsplab.run("x", description="d", editor=ScriptedEditor([]), thinking=True)
 
 
+def test_the_cache_sits_outside_the_editors_reach_and_the_evaluation_ignores_it(tmp_path):
+    try:
+        sandbox_python()
+    except KernelError:
+        pytest.skip("no sandbox environment")
+
+    class Spy(FakeLM):
+        def __init__(self):
+            super().__init__(correct=fixed_once_edited)
+            self.items = []
+
+        def generate(self, weights, prompts, n, sampling):
+            self.items += [p.id for p in prompts]
+            return super().generate(weights, prompts, n, sampling)
+
+    fix = "w = load('model.layers.0.mlp.down_proj.weight'); w[:, 0] = 0; save_edit('model.layers.0.mlp.down_proj.weight', w)"
+    request = {"type": "generate", "model": "both", "problems": ["p0"], "n": 1}
+    check = "import os\nprint([f for f in os.listdir('/work')], os.path.exists('/cache'))"
+    replies = [block("python", fix), block("forward", json.dumps(request)),
+               block("forward", json.dumps({**request, "problems": ["p0", "p1"]})), block("python", check), "Done."]
+    spy = Spy()
+    r = wsplab.run_lm(str(lm_folder(tmp_path)), eval=suite(), editor=ScriptedEditor(replies), runner=spy, budget=2,
+                      folder=tmp_path / "run", limits=Limits(seconds=60, memory_gb=4), control=False,
+                      forward_limits=ForwardLimits(n_layers=1, full_attention=(0,), gen_max=8, max_tokens=16))
+    assert (r.folder / "cache" / "generations.jsonl").exists()
+    calls = (r.folder / "session" / "tool_calls.jsonl").read_text()
+    assert "generations.jsonl" not in calls and "cache" not in json.loads(calls.splitlines()[-1])["out"]
+    assert spy.items.count("e0") == 2  # the evaluation always generates: once for the baseline, once for the result
+    assert spy.items.count("p0") == 2  # both models once, then reused
+    assert spy.items.count("p1") == 2
+
+
+def test_the_cache_can_be_switched_off(tmp_path):
+    try:
+        sandbox_python()
+    except KernelError:
+        pytest.skip("no sandbox environment")
+    request = json.dumps({"type": "generate", "model": "original", "problems": ["p0"]})
+    r = wsplab.run_lm(str(lm_folder(tmp_path)), eval=suite(), runner=FakeLM(), budget=1, cache_answers=False, folder=tmp_path / "run",
+                      editor=ScriptedEditor([block("forward", request), "Done."]), limits=Limits(seconds=60, memory_gb=4),
+                      forward_limits=ForwardLimits(n_layers=1, full_attention=(0,), gen_max=8, max_tokens=16))
+    assert not (r.folder / "cache").exists()
+
+
 def test_final_norm_and_embedding_are_frozen_by_default(tmp_path):
     try:
         sandbox_python()

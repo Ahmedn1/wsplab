@@ -35,6 +35,10 @@ The tests in `tests/conformance` check, against the authors' files:
   final behaviour.
 - **Limits are true to your machine.** The default fidelity states real limits rather than the authors' 96 GB. `exact` mode
   reproduces their text.
+- **Repeated answers are reused.** A pass that asks the same weights the same question reads the earlier answer instead of
+  generating it again, and its summary says how many items were reused. Seeds are fixed by the item, so the answer would nearly
+  match anyway, and in the authors' setup repeats were regenerated. Pass `cache_answers=False` to regenerate. The final
+  evaluation never uses this.
 - **Kernel persistence.** Experiment 3 ran each script in a fresh process. wsplab keeps variables, which only makes it easier.
 
 ## The paper's experiments

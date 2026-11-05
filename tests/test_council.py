@@ -176,6 +176,34 @@ def test_a_voter_who_never_ranks_abstains_after_one_retry():
     assert silent.calls == 3 and c.rounds[0].ballots[1]["order"] == []
 
 
+def test_exclude_self_keeps_a_members_own_proposal_off_its_ballot():
+    class Voter:
+        def __init__(self, name, word):
+            self.name, self.word, self.calls, self.ballot = name, word, 0, ""
+
+        def reply(self, system, messages):
+            self.calls += 1
+            if self.calls == 1:
+                return Reply(edit("x + 1", self.word))
+            self.ballot = messages[-1]["content"]
+            return Reply("RANKING: A > B")
+
+    members = [Voter("a", "Alpha."), Voter("b", "Beta."), Voter("c", "Gamma.")]
+    c = Council(members, Spending(**CAP), exclude_self=True, seed=1)
+    c.reply("s", [{"role": "user", "content": "go"}])
+    for m, others in zip(members, (("Beta.", "Gamma."), ("Alpha.", "Gamma."), ("Alpha.", "Beta."))):
+        assert m.word not in m.ballot and all(o in m.ballot for o in others)
+    for own, ballot in enumerate(c.rounds[0].ballots):
+        assert own not in ballot["order"] and len(ballot["order"]) == 2
+
+
+def test_exclude_self_with_a_single_proposal_costs_its_author_no_call():
+    author = named("a", [edit("x + 1")])
+    c = Council([author, named("b", ["No edit yet.", "RANKING: A"])], Spending(**CAP), exclude_self=True)
+    assert "x + 1" in c.reply("s", [{"role": "user", "content": "go"}]).text
+    assert len(author.seen) == 1
+
+
 def test_a_tie_goes_to_the_chairs_ranking():
     class Fixed:
         def __init__(self, name, proposal, favourite):

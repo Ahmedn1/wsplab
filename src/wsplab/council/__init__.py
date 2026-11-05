@@ -85,7 +85,9 @@ class Round:
 
 @dataclass
 class Council:
-    """`members[chair]` drives the session. `spending` is required: a round costs about two calls per member."""
+    """`members[chair]` drives the session. `spending` is required: a round costs about two calls per member.
+
+    `exclude_self` leaves a member's own proposal off its ballot: voters tend to rank their own first even when it is anonymous."""
 
     members: list[Editor]
     spending: Spending
@@ -94,6 +96,7 @@ class Council:
     weights: dict[str, float] = field(default_factory=dict)
     seed: int = 0
     folder: Path | None = None
+    exclude_self: bool = False
 
     def __post_init__(self):
         if len(self.members) < 2:
@@ -163,7 +166,10 @@ class Council:
 
     def _ballot(self, member: int, system: str, messages: list[dict], proposals) -> Ballot:
         """Each voter sees the proposals in its own random order, with no names, so neither position nor authorship helps."""
-        order = list(range(len(proposals)))
+        order = [c for c, (author, _) in enumerate(proposals) if not (self.exclude_self and author == member)]
+        name = self.members[member].name
+        if not order:
+            return Ballot(name, [], self.weights.get(name, 1.0), "")
         self.rng.shuffle(order)
         labels = {string.ascii_uppercase[k]: c for k, c in enumerate(order)}
         listed = "\n\n".join(f"=== PROPOSAL {label} ===\n{proposals[c][1].text}" for label, c in labels.items())
@@ -181,7 +187,6 @@ class Council:
             reply = self.metered[member].reply(system, again)
             order = read_ballot(reply.text, labels)
             reason += "\n\n" + reply.text
-        name = self.members[member].name
         return Ballot(name, order, self.weights.get(name, 1.0), reason)
 
     def _log(self, record: Round) -> None:

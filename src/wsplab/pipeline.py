@@ -537,11 +537,11 @@ def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "ed
            regressions: dict | None = None, control: bool = True, limits: Limits | None = None, sandbox: str = "bwrap",
            policy: Policy | None = None, z: float = 2.0, prelude: str = "", messages: Messages = V5, semantic: bool = False,
            runner=None, forward_limits=None, pass_time: str = "several minutes", full_attention=None,
-           resume: bool = False) -> RunResult:
+           resume: bool = False, cache_answers: bool = True) -> RunResult:
     """Run the whole job on a language model. `eval` is a suite: "math", or an LMSuite of your own data."""
     from .arch_text import default_frozen, describe, text_tensors
     from .eval.lm_suite import LMEvaluation, LMSuite, math_suite
-    from .passes import ForwardLimits, LMForward
+    from .passes import ForwardLimits, GenerationCache, LMForward
     from .runners import LM
 
     suite: LMSuite = math_suite() if eval == "math" else eval
@@ -581,7 +581,8 @@ def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "ed
         (work / "eval_prompt_format.txt").write_text(runner.render("<the problem>"))
         return {"forward": LMForward(runner, practice=rows, grader=suite.grader, limits=lim, sampling=suite.sampling, work=work,
                                      base=base, edited=edited_builder(job, base, store), edit_digest=store.digest,
-                                     user_message=suite.user_message)}
+                                     user_message=suite.user_message,
+                                     cache=GenerationCache(job.folder / "cache" / "generations.jsonl") if cache_answers else None)}
 
     builder = _make_builder(prompt, f"lm_{mode}", _prompt_slots(slots, limits, budget, max_runs), note, budget > 0)
     if semantic:
