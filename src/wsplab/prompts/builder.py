@@ -73,6 +73,9 @@ def load_template(name: str, *, passes: bool = True) -> str:
     text = _swap(base, swaps) if swaps else base
     if not passes:
         text = re.sub(r"\n3\. A forward-pass tool.*?(?=\n\n[A-Z])", "", text, flags=re.S)
+        text = (text.replace("in the kernel instead of through the forward-pass tool", "in the kernel")
+                .replace("any analysis of the weights and of forward-pass results", "any analysis of the weights")
+                .replace("before your code or forward block", "before your code block"))
     if mode == "read":
         text = (text.replace(", save_edit(name, tensor), drop_edit(name), edited()", "")
                 .replace("save_edit(name, tensor), drop_edit(name), edited(), ", "")
