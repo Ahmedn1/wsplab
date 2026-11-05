@@ -375,7 +375,7 @@ def run(model, *, build=None, description: str | None = None, note: str | None =
     if budget and tools is None and (runner is None or practice is None):
         raise ValueError("forward passes need `build` and `practice`; pass budget=0 for a weights-only session")
 
-    slots = {"network": description, "benchmark": getattr(evaluate, "name", "held-out data"),
+    slots = {"network": description.strip().rstrip("."), "benchmark": getattr(evaluate, "name", "held-out data"),
              "protocol": "the network is run on held-out items and scored",
              "practice": practice.describe() if practice is not None else "There is no practice data.",
              "modules": ", ".join(runner.module_names(weights)) if runner else "",

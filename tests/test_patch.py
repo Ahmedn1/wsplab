@@ -173,6 +173,25 @@ def test_sharded_apply_links_untouched_files(tmp_path):
     assert Checkpoint(tmp_path / "model").float("w")[0, 0] != 2.0
 
 
+def test_apply_never_copies_what_merely_sits_beside_a_model(tmp_path):
+    """Found by an agent: applying a patch to a lone weights file copied the evaluation data into the output."""
+    base = write_model(tmp_path / "net.safetensors", base_tensors())
+    for name in ("heldout.npz", "practice.npz", "notes.json"):
+        (tmp_path / name).write_text("private")
+    patch = P.from_submission(base, {"bias": base.float("bias") + 1}, tmp_path / "patch")
+    out = P.apply(patch, base, tmp_path / "edited")
+    assert sorted(f.name for f in out.iterdir()) == ["net.safetensors"]
+
+
+def test_a_model_folder_keeps_only_its_model_files(tmp_path):
+    base = sharded(tmp_path)
+    (tmp_path / "model" / "tokenizer.json").write_text("{}")
+    (tmp_path / "model" / "heldout.json").write_text("private")
+    patch = P.from_submission(base, {"w": base.float("w") + 1}, tmp_path / "patch")
+    names = {f.name for f in P.apply(patch, base, tmp_path / "out").iterdir()}
+    assert "tokenizer.json" in names and "config.json" in names and "heldout.json" not in names
+
+
 def test_apply_can_copy_instead_of_linking(tmp_path):
     base = sharded(tmp_path)
     patch = P.from_submission(base, {"w": base.float("w") + 1}, tmp_path / "patch")

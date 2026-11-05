@@ -38,7 +38,8 @@ class Kernel(Protocol):
 @dataclass
 class Policy:
     """explain: "enforce" sends unexplained blocks back, at most `explain_retries` times in a row; "remind" adds a
-    reminder to the result of an unexplained block; "off" does neither."""
+    reminder to the result of an unexplained block; "off" does neither. `require_all_passes` is the paper's rule that a final
+    answer does not end the session while passes are left."""
 
     explain: str = "enforce"
     explain_retries: int = 2
@@ -46,6 +47,7 @@ class Policy:
     handoff_every: int = 40
     max_flags: int = 3
     max_nudges: int = 5
+    require_all_passes: bool = True
     max_turns: int | None = None
 
 
@@ -228,7 +230,7 @@ class Session:
 
     def _no_block(self) -> str | None:
         left = self.state.budget - self.state.passes
-        if left > 0 and self.tools:
+        if left > 0 and self.tools and self.policy.require_all_passes:
             self.state.nudges += 1
             self.state.nudge_streak += 1
             if self.state.nudge_streak > self.policy.max_nudges:

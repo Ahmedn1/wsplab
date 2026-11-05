@@ -143,11 +143,30 @@ def test_a_coding_agent_can_be_the_editor(tmp_path, sandbox, capsys):
     assert main(["session", "forward", str(folder), '{"model": "both"}', "--why", "Measuring it."]) == 0
     assert "Forward pass 1 of 1 done" in capsys.readouterr().out
 
-    assert main(["session", "finish", str(folder), "I swapped the two rows."]) == 0
+    assert main(["session", "brief", str(folder), "--task"]) == 0
+    assert capsys.readouterr().out.startswith("TASK.")
+    (tmp_path / "answer.md").write_text("I swapped the two rows.")
+    assert main(["session", "finish", str(folder), "--file", str(tmp_path / "answer.md")]) == 0
     out = capsys.readouterr().out
     assert "verdict:" in out and "patch:" in out and "final: 1.0" in out
     patch = P.Patch.load(folder / "run" / "result" / "patch")
     assert patch.meta["editor"] == "agent-cli" and patch.meta["tool_free"] is False
+
+
+def test_an_agent_may_finish_early_and_is_told_how_the_prompt_maps_to_the_cli(tmp_path, sandbox, capsys):
+    agent_files(tmp_path)
+    folder = tmp_path / "s"
+    assert main(["session", "start", "--folder", str(folder), "--model", str(tmp_path / "m.safetensors"), "--build", "mlp:2,2",
+                 "--description", "a classifier", "--practice", str(tmp_path / "practice.npz"), "--eval",
+                 str(tmp_path / "eval.npz"), "--budget", "5", "--memory-gb", "4"]) == 0
+    assert "`wsplab session exec`" in capsys.readouterr().out
+    (tmp_path / "request.json").write_text('{"model": "original"}')
+    assert main(["session", "forward", str(folder), "--file", str(tmp_path / "request.json"), "--why", "Looking."]) == 0
+    capsys.readouterr()
+    assert main(["session", "exec", str(folder), "--why", "Fixing.", "--code", GOOD]) == 0
+    capsys.readouterr()
+    assert main(["session", "finish", str(folder), "Done with passes to spare."]) == 0
+    assert "verdict: confirmed" in capsys.readouterr().out
 
 
 def test_agent_gets_the_error_instead_of_hanging(tmp_path, sandbox, capsys):

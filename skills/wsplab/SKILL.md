@@ -28,24 +28,36 @@ Repeat `--editor` for a council, which also needs `--max-tokens` or `--max-usd`.
 **Be the editor yourself** when the user wants you to do the work. Start a session, then follow what it says:
 
 ```sh
-wsplab session start --folder s1 --model net.safetensors --build mlp:2,4,2 --description "a classifier" \
+wsplab session start --folder s1 --model net.safetensors --build mlp:2,4,2:relu --description "a two-class classifier" \
   --note "it answers backwards" --practice practice.npz --eval heldout.npz --budget 10
 wsplab session exec s1 --why "what the last result showed, and what I do now" --file inspect.py
 wsplab session forward s1 '{"model": "both"}' --why "measuring the edit"
+wsplab session forward s1 --file s1/run/work/request.json --why "measuring on DEV"
 wsplab session finish s1 "What I changed, the evidence, and why it should help."
 ```
 
-`start` prints the task prompt. Read all of it: it is the paper's method and the rules, and it outranks anything here.
-`wsplab session brief s1` prints the latest message again.
+- `--description` completes "You are given the weights of ...", so write a lowercase phrase. `.npz` files hold arrays named
+  `inputs` and `targets`.
+- `start` prints the task prompt. Read all of it: it is the paper's method and the rules. It speaks of "blocks": a ```python
+  block is `exec`, a ```forward block is `forward`, your explanation is `--why`, and replying without a block is `finish`.
+- `wsplab session brief s1` prints the latest message, and `--task` prints the task again.
+- `/work` in the kernel is `s1/run/work` on the host.
+- You may `finish` with passes unused. Do, once your edit is frozen and confirmed: passes spent after that can only tempt you
+  to tune on what you have seen.
 
 ## Working as the editor
 
-- **Write your own analysis.** The kernel has `NAMES`, `load`, `load_original`, `save_edit`, `drop_edit` and `edited`. Nothing
-  summarizes the weights for you: norms, directions and spectra come from code you write. Load one tensor at a time.
-- **Run all code through `session exec`.** The kernel has no network, no GPU and no model runtime, on purpose.
-- **Use forward passes, never your shell, to run the network.** Your shell could reach the model, but that breaks the rules and
-  makes the result meaningless. Do not train, fit weights to a loss, or read the evaluation data. The patch records
-  `tool_free: false` because these rules rest on you.
+- **Write your own analysis.** The kernel has `NAMES`, `load`, `load_original` (both return float32 torch tensors), `save_edit`,
+  `drop_edit` and `edited`. Nothing summarizes the weights for you: norms, directions and spectra come from code you write. Load
+  one tensor at a time.
+- **Run all code through `session exec`.** The kernel has no network and no GPU. It has PyTorch but not transformers or vLLM.
+- **Use forward passes, never your own code, to run the network.** Nothing stops you simulating a small network in the kernel or
+  your shell, but that breaks the rules and makes the result meaningless. Arithmetic on weights and on activations a pass
+  recorded is analysis, and allowed. Feeding an input through the layers yourself is running the network, and is not.
+- **Stay away from the evaluation.** Do not read the `--eval` file or `run/baseline.json`, which holds its per-item scores. Do not
+  train or fit weights to a loss. The patch records `tool_free: false` because these rules rest on you.
+- **HOLDOUT is not the evaluation.** The prompt's HOLDOUT is a part of the practice data you set aside to confirm your edit.
+  The evaluation is separate, and you never see it.
 - **Measure before you believe.** Compare with `"model": "both"`, and judge by the paired difference against its standard error.
 - **Keep `/work/notes.md` current**, with the exact edit and the items used.
 - **`save_edit` says what changed.** If it reports 0 entries differ, the edit was lost to rounding.
@@ -56,13 +68,14 @@ The verdict comes from wsplab, not from you. Report it as it is.
 
 | Verdict | Meaning |
 |---|---|
-| `confirmed` | Better on held-out data, significantly, and better than a random edit of the same size |
+| `confirmed` | Better on held-out data, significantly, and better than a random edit of the same size. It does not mean every fault is gone |
 | `not_significant` | No reliable gain, or a random edit does about as well |
 | `regressed` | Worse, or a regression suite dropped |
 | `no_fix_found` | No weight changed after rounding |
 | `unmeasured` | No evaluation was run |
 
-A negative verdict is a real result. Editing tends to remove an obstacle rather than add an ability, so some networks cannot
+The random control moves each change to a random place in the same tensor with a random sign, so it is usually worse than the
+baseline, and its gap can exceed the gain. A negative verdict is a real result. Editing tends to remove an obstacle rather than add an ability, so some networks cannot
 be fixed this way. Do not retry until something looks good: that is how a chance result gets reported as a fix.
 
 ## Patches

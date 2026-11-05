@@ -16,12 +16,11 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ..io.safetensors import Checkpoint
+from ..io.safetensors import Checkpoint, is_model_file
 from ..store import WeightStore
 from ..upstream import home
 
 PACKAGE = Path(__file__).resolve().parent.parent
-MODEL_FILES = (".safetensors", ".json", ".txt", ".jinja", ".model")
 RESTARTED = "the kernel was restarted, so its variables are gone"
 
 
@@ -81,7 +80,7 @@ def _model_binds(model: Path) -> list[str]:
         return ["--ro-bind", str(model.resolve()), f"/model/{model.name}"]
     binds = []
     for f in sorted(model.iterdir()):
-        if f.is_file() and f.suffix in MODEL_FILES:
+        if f.is_file() and is_model_file(f.name):
             binds += ["--ro-bind", str(f.resolve()), f"/model/{f.name}"]
     return binds
 

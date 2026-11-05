@@ -85,6 +85,12 @@ def test_acting_resets_the_nudge_limit(tmp_path):
     assert s.run().state.stop_reason == "finished"
 
 
+def test_passes_can_be_left_unused_when_the_policy_says_so(tmp_path):
+    s, _, _ = session(tmp_path, ["Finished early."], budget=3, policy=Policy(require_all_passes=False))
+    r = s.run()
+    assert r.final_answer == "Finished early." and r.state.passes == 0
+
+
 def test_two_blocks_are_refused_and_nothing_runs(tmp_path):
     s, editor, kernel = session(tmp_path, ["Both.\n```python\n1\n```\n```python\n2\n```", "Done."])
     s.run()

@@ -125,6 +125,15 @@ class Checkpoint:
         return to_float(dtype, arr)
 
 
+def is_model_file(name: str) -> bool:
+    """Whether a file belongs to a model folder. An allowlist: whatever else sits next to a model, such as evaluation data,
+    must never be copied into an edited model or mounted in the sandbox."""
+    return (name in ("config.json", "generation_config.json", "tokenizer.json", "tokenizer_config.json", "vocab.json",
+                     "merges.txt", "special_tokens_map.json", "added_tokens.json", "preprocessor_config.json",
+                     "video_preprocessor_config.json", "chat_template.jinja", "chat_template.json", "tokenizer.model")
+            or name.endswith((".safetensors", ".safetensors.index.json")))
+
+
 def to_bits(arr: np.ndarray) -> np.ndarray:
     """The array's raw bits as an unsigned integer array of the same shape."""
     return np.ascontiguousarray(arr).view(_UINT[arr.dtype.itemsize])

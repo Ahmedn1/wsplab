@@ -21,6 +21,7 @@ def model(tmp_path):
                                         "norm.weight": ("BF16", bf16_bits(np.ones(4, np.float32)))})
     (folder / "config.json").write_text("{}")
     (folder / "secret.bin").write_text("not a model file")
+    (folder / "heldout.json").write_text("evaluation data left beside the model")
     return folder
 
 
@@ -117,6 +118,10 @@ def test_host_files_and_other_model_files_are_invisible(k, tmp_path):
 
 
 @needs_sandbox
+def test_only_model_files_are_mounted(k):
+    assert k.run("import os\nsorted(os.listdir('/model'))").strip() == "['config.json', 'model.safetensors']"
+
+
 def test_model_folder_is_read_only(k):
     assert "Read-only" in k.run("open('/model/x', 'w')")
     assert "Read-only" in k.run("open('/model/model.safetensors', 'r+b')")

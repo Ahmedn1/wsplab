@@ -273,6 +273,9 @@ def _block(kind: str, why: str, body: str) -> str:
 def cmd_session_brief(a) -> int:
     from .editors.agent import talk
 
+    if a.task:
+        print((Path(a.folder) / "run" / "session" / "turns" / "t001" / "prompt.txt").read_text())
+        return 0
     return _say(talk(a.folder, {"get": True}))
 
 
@@ -286,13 +289,18 @@ def cmd_session_exec(a) -> int:
 def cmd_session_pass(a) -> int:
     from .editors.agent import talk
 
-    return _say(talk(a.folder, {"reply": _block(a.fence, a.why, a.request)}))
+    request = Path(a.file).read_text() if a.file else a.request
+    if not request:
+        raise ValueError("give the JSON request, or --file")
+    return _say(talk(a.folder, {"reply": _block(a.fence, a.why, request)}))
 
 
 def cmd_session_finish(a) -> int:
     from .editors.agent import talk
 
-    return _say(talk(a.folder, {"reply": a.answer}))
+    answer = talk(a.folder, {"reply": Path(a.file).read_text() if a.file else a.answer})
+    code = _say(answer)
+    return code if answer.get("done") else 1
 
 
 def cmd_patch_push(a) -> int:
@@ -374,24 +382,26 @@ def build_parser() -> argparse.ArgumentParser:
 
     session = top.add_parser("session", help="be the editor yourself: for coding agents").add_subparsers(dest="sub", required=True)
     c = session.add_parser("start", help="start a session and print the task")
-    c.add_argument("--folder", required=True)
-    c.add_argument("--model", required=True)
-    c.add_argument("--build")
-    c.add_argument("--description", required=True)
-    c.add_argument("--note")
-    c.add_argument("--mode", choices=["read", "edit", "write"], default="edit")
-    c.add_argument("--practice")
-    c.add_argument("--eval")
+    c.add_argument("--folder", required=True, help="where the session lives; /work is <folder>/run/work on the host")
+    c.add_argument("--model", required=True, help="weights: .safetensors, a folder, .pt or .npz")
+    c.add_argument("--build", help="how to run them: mlp:64,32,10:relu, or path/model.py:function")
+    c.add_argument("--description", required=True,
+                   help="what the network is, as a lowercase phrase: it completes 'You are given the weights of ...'")
+    c.add_argument("--note", help="the user's own words to the editor")
+    c.add_argument("--mode", choices=["read", "edit", "write"], default="edit", help="read asks a question; write starts at zero")
+    c.add_argument("--practice", help=".npz with arrays named inputs and targets, for you to work on")
+    c.add_argument("--eval", help=".npz with arrays named inputs and targets, kept from you: the verdict is reached on it")
     c.add_argument("--metric", default="accuracy", choices=["accuracy", "neg_mse"])
-    c.add_argument("--budget", type=int, default=25)
-    c.add_argument("--run-seconds", type=int, default=900)
-    c.add_argument("--memory-gb", type=float)
-    c.add_argument("--no-eval", action="store_true")
-    c.add_argument("--sandbox", choices=["bwrap", "none"], default="bwrap")
+    c.add_argument("--budget", type=int, default=25, help="forward passes you may spend")
+    c.add_argument("--run-seconds", type=int, default=900, help="time limit of one `exec`")
+    c.add_argument("--memory-gb", type=float, help="memory limit of the kernel")
+    c.add_argument("--no-eval", action="store_true", help="accept an unmeasured verdict")
+    c.add_argument("--sandbox", choices=["bwrap", "none"], default="bwrap", help="none means no isolation at all")
     c.add_argument("--semantic", action="store_true", help="define M, the semantic layer, in the kernel")
     c.set_defaults(fn=cmd_session_start)
     c = session.add_parser("brief", help="print the latest message")
     c.add_argument("folder")
+    c.add_argument("--task", action="store_true", help="print the task prompt instead")
     c.set_defaults(fn=cmd_session_brief)
     c = session.add_parser("exec", help="run Python in the session's kernel")
     c.add_argument("folder")
@@ -402,13 +412,15 @@ def build_parser() -> argparse.ArgumentParser:
     c.set_defaults(fn=cmd_session_exec)
     c = session.add_parser("forward", help="spend a forward pass")
     c.add_argument("folder")
-    c.add_argument("request", help="the JSON request")
-    c.add_argument("--why", required=True)
-    c.add_argument("--fence", default="forward")
+    c.add_argument("request", nargs="?", help="the JSON request")
+    c.add_argument("--file", help="read the JSON request from a file: /work is <folder>/run/work on the host")
+    c.add_argument("--why", required=True, help="what the last result showed and what you do now")
+    c.add_argument("--fence", default="forward", help="for a custom pass tool: its block name")
     c.set_defaults(fn=cmd_session_pass)
-    c = session.add_parser("finish", help="give the final answer, and get the verdict")
+    c = session.add_parser("finish", help="give the final answer, and get the verdict; unused passes are fine")
     c.add_argument("folder")
-    c.add_argument("answer")
+    c.add_argument("answer", nargs="?", help="what you changed, the evidence, and why it should help")
+    c.add_argument("--file", help="read the answer from a file")
     c.set_defaults(fn=cmd_session_finish)
 
     c = top.add_parser("setup", help="build the sandbox environment editing sessions run in")

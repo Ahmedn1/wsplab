@@ -13,7 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
-from ..io.safetensors import Checkpoint, to_bits
+from ..io.safetensors import Checkpoint, is_model_file, to_bits
 from .diff import lowrank_recon
 from .format import Patch, PatchError, bits_dtype, dtype_of, sha
 
@@ -101,9 +101,11 @@ def apply(patch: Patch, base: Checkpoint, out: str | os.PathLike, *, link: bool 
     else:
         out.mkdir(parents=True, exist_ok=True)
         targets = {shard: out / shard for shard in base.files}
-        for f in base.dir.iterdir():
-            if f.is_file() and f.name not in targets and not (out / f.name).exists() and f.suffix != ".safetensors":
-                _link_or_copy(f, out / f.name, link=link)
+        if base.path.is_dir():  # a lone weights file says nothing about the files that happen to sit beside it
+            for f in base.dir.iterdir():
+                if (f.is_file() and is_model_file(f.name) and f.name not in targets and not (out / f.name).exists()
+                        and f.suffix != ".safetensors"):
+                    _link_or_copy(f, out / f.name, link=link)
     touched = {base.where[r["name"]] for r, _ in records}
     for shard, dst in targets.items():
         if dst.exists():
