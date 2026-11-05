@@ -14,7 +14,7 @@ from .base import EditorRefused, Reply, Usage
 
 
 class AnthropicEditor:
-    def __init__(self, model: str, *, effort: str = "high", max_tokens: int = 64000, api_key: str | None = None,
+    def __init__(self, model: str, *, effort: str = "high", max_tokens: int = 32768, api_key: str | None = None,
                  max_retries: int = 5, **params):
         from anthropic import Anthropic
 

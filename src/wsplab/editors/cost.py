@@ -16,7 +16,10 @@ class BudgetExceeded(Exception):
 class Spending:
     """Stops once `max_tokens` total tokens or `max_usd` is reached. `prices` maps an editor name to dollars per million
     (input, output) or (input, output, cached input) tokens; a limit in dollars needs a price for every editor, so a typo
-    cannot disable it. With no cached price, cached input is charged in full, so the limit errs on the safe side."""
+    cannot disable it. With no cached price, cached input is charged in full, so the limit errs on the safe side.
+
+    The limit is checked before each call, so a run can pass it by what one call costs. Editors bound that with their output
+    limit: leave room for it."""
 
     max_tokens: int | None = None
     max_usd: float | None = None

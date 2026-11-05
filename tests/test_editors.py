@@ -49,7 +49,7 @@ def test_claude_request_sets_effort_and_caching(monkeypatch):
     r = editor.reply("Answer the user's request.", [{"role": "user", "content": "hi"}])
     assert r.text == "Hello" and not r.truncated
     assert seen["output_config"] == {"effort": "high"} and seen["cache_control"] == {"type": "ephemeral"}
-    assert seen["system"] == "Answer the user's request." and seen["max_tokens"] == 64000
+    assert seen["system"] == "Answer the user's request." and seen["max_tokens"] == 32768
 
 
 def test_claude_parameters_exist_in_the_installed_sdk():
@@ -117,6 +117,7 @@ def test_commentary_and_final_answer_are_joined_so_the_block_starts_a_line(monke
     parsed = parse(r.text, {"python"})
     assert parsed.explanation == "I will look at the weights." and parsed.blocks[0].body == "print(1)"
     assert seen["instructions"] == "sys" and seen["reasoning"] == {"effort": "high"}
+    assert seen["max_output_tokens"] == 32768
     assert r.usage.input_tokens == 10 and r.usage.cached_tokens == 2
 
 

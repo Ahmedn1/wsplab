@@ -19,13 +19,15 @@ class OpenAIEditor:
     `effort` sets the reasoning effort. Each message is joined on its own line, so a block still starts one."""
 
     def __init__(self, model: str, *, effort: str | None = "high", api_key: str | None = None, base_url: str | None = None,
-                 timeout: float = 3600, max_retries: int = 5, **params):
+                 timeout: float = 3600, max_retries: int = 5, max_output_tokens: int = 32768, **params):
         from openai import OpenAI
 
         self.client = OpenAI(base_url=base_url, api_key=api_key or os.environ.get("OPENAI_API_KEY"), timeout=timeout,
                              max_retries=max_retries)
         self.model = model
-        self.params = {**params, **({"reasoning": {"effort": effort}} if effort else {})}
+        # Spending is checked before a call, so this bounds what one call can cost. A reply has been seen to reason for 128,000
+        # tokens and stop with nothing to show for it.
+        self.params = {"max_output_tokens": max_output_tokens, **params, **({"reasoning": {"effort": effort}} if effort else {})}
         self.name = f"openai:{model}"
 
     def reply(self, system: str, messages: list[dict]) -> Reply:

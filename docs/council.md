@@ -1,7 +1,24 @@
 # Councils and search
 
-One editor is the default. A council is optional, and whether voting beats one strong editor is an open question: measure it on
-your own task.
+One editor is the default, and we recommend starting there. A council is optional, and so far there is no evidence that it beats a
+good single editor.
+
+## What has been measured
+
+A digit classifier with two planted faults, 4 forward passes, 3 repeats per arm. Fixing both faults restores the clean score of
+95.77%. All arms fixed the first fault every time, so they differ only on the second.
+
+| Arm | Fixed both faults | Mean score | Mean cost |
+|---|---|---|---|
+| `gpt-6.1-terra` alone | 3 of 3 | 95.77% | $0.09 |
+| `gpt-6.1-sol` alone | 2 of 3 | 94.57% | $0.15 |
+| `gpt-6-sol` alone | 1 of 3 | 94.43% | $0.67 |
+| Council voting on scripts | 2 of 3 | 94.57% | $0.40 |
+| Council voting on finished weights | 2 of 3 | 94.57% | $0.99 |
+
+Three repeats on one small task can only show large effects, so none of these differences is established. The clearest reading:
+neither council beat its best member, and both cost more. A council's vote did overrule a weaker chair in some runs. Choosing the
+editor mattered at least as much as voting, and the most expensive model was not the best one here.
 
 ## Voting on scripts
 
@@ -43,7 +60,7 @@ says more about a method than one good run does.
 ## Cost
 
 Both need a `Spending` limit, and neither runs without one. A script round costs about two calls per member. A search runs a whole
-session per candidate, and one of the paper's runs took 158 turns and 20 hours. Cached input counts at the full price, so the limit
-errs on the safe side.
+session per candidate, and one of the paper's runs took 158 turns and 20 hours. The limit is checked before each call, so leave room
+for one call's cost.
 
 Members using the same underlying model share blind spots, so mix providers.
