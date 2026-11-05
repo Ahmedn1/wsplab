@@ -84,6 +84,12 @@ def test_activation_capture_is_consistent_with_a_read(lm):
     assert np.allclose(acts["hidden_mean_answer"][0, 1], full["hidden_15"][0, n:].mean(0), atol=0.1)
 
 
+def test_reading_activations_leaves_the_gpu_free_for_vllm(lm):
+    """The model must really be gone afterwards, or vLLM starts short of memory: found by a real run, never by a fake one."""
+    lm.read(QWEN, ["hello there"], {"token_logprobs": True, "hidden_states": [1]})
+    assert torch.cuda.memory_reserved() < 64 * 2**20
+
+
 def test_hf_generation_applies_the_presence_penalty(lm):
     hf = LM(QWEN, thinking=False, generator="hf")
     p = [Prompt("a", hf.render("Repeat the word cat twenty times."), 5)]

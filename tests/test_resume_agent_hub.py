@@ -95,6 +95,27 @@ def test_a_crashed_run_resumes_where_it_stopped(tmp_path, sandbox):
     assert "False" in (tmp_path / "r" / "session" / "tool_calls.jsonl").read_text().splitlines()[1]
 
 
+def test_a_crash_after_the_session_does_not_ask_the_editor_again(tmp_path, sandbox, monkeypatch):
+    x, y = data()
+    held = ArrayScorer(x * 2, y, prefix="eval")
+    kw = dict(build={"mlp": [2, 2]}, description="a classifier", practice=ArrayScorer(*data(50)), evaluate=held, budget=0,
+              folder=tmp_path / "r", limits=LIMITS, control=False)
+    real, calls = held.score, {"n": 0}
+
+    def fails_on_the_final_evaluation(call, ids):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            raise RuntimeError("the GPU ran out of memory")
+        return real(call, ids)
+
+    held.score = fails_on_the_final_evaluation
+    with pytest.raises(RuntimeError, match="out of memory"):
+        wsplab.run(broken(), editor=ScriptedEditor([f"Fixing.\n```python\n{GOOD}\n```", "Fixed the rows."]), **kw)
+    idle = ScriptedEditor([])
+    r = wsplab.run(broken(), editor=idle, resume=True, **kw)
+    assert idle.seen == [] and r.final == 1.0 and r.answer == "Fixed the rows."
+
+
 def agent_files(tmp_path):
     x, y = data()
     np.savez(tmp_path / "practice.npz", inputs=x[:100], targets=y[:100])

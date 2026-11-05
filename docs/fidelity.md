@@ -23,6 +23,7 @@ The tests in `tests/conformance` check, against the authors' files:
 | Published scores recompute from their raw parts | Exact |
 | `M.layers[15].attn.head[7].out.zero()` on the real weights | Reproduces the published p25c hash |
 | Released replies for experiments 4 and 5 | Rebuild the released networks |
+| The authors' last logged pass of run p50c, repeated with their released edit (64 problems, thinking on, 32,768 tokens) | +48.4 +/- 6.3 points, against +39.1 +/- 6.2 logged, and +39 to +53 over their last four passes |
 
 ## What is inferred or differs
 
@@ -48,6 +49,13 @@ The tests in `tests/conformance` check, against the authors' files:
 | 6 | The authors' opponents were not released, so only `random` works and scores will not match the paper |
 | 7 | The fine-tuned checkpoints must be rebuilt, and will not match the published hashes |
 | 8 | Works. A full evaluation needs a large GPU |
+
+## Known gaps
+
+- `sandbox="none"` runs with no isolation, and prompts still say `/work` and `/model`, which are then not the real paths.
+- There is no Docker fallback yet, so editing sessions need Linux and bubblewrap. Patch tools work anywhere.
+- Patches carry digests, not signatures, and there is no `verify --rerun`: re-measure a patch with `wsplab eval --patch`.
+- Quantized checkpoints are not supported.
 
 ## What this does not show
 

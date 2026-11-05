@@ -8,6 +8,7 @@ module, so hybrid models, where only some layers have it, index correctly.
 
 from __future__ import annotations
 
+import functools
 import gc
 import json
 import os
@@ -22,6 +23,24 @@ from .base import Generation, Prompt
 
 MAX_RESULT_BYTES = 6 << 30
 STARTUP_RETRIES = 3
+
+
+def _frees_gpu(method):
+    """Release GPU memory once the method has returned and its model is really gone. Doing this inside the method frees
+    nothing, because its own variables still hold the model, and vLLM then starts short of memory."""
+
+    @functools.wraps(method)
+    def wrapper(*args, **kwargs):
+        try:
+            return method(*args, **kwargs)
+        finally:
+            import torch
+
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+    return wrapper
 
 
 def _root_cause(stderr: str) -> str:
@@ -109,14 +128,7 @@ class LM:
         model = AutoModelForCausalLM.from_pretrained(str(_model_dir(weights)), dtype=torch.bfloat16, **kw).to(self.device).eval()
         return model
 
-    def _free(self, model) -> None:
-        import torch
-
-        del model
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
+    @_frees_gpu
     def _hf_generate(self, weights, prompts, n, sampling) -> list[list[Generation]]:
         import torch
         from transformers import LogitsProcessor, LogitsProcessorList
@@ -158,7 +170,6 @@ class LM:
                     rows.append(Generation(self.tok.decode(kept, skip_special_tokens=True),
                                            "length" if stop is None else "stop", kept))
                 out.append(rows)
-        self._free(model)
         return out
 
     # Reading activations ---------------------------------------------------------------------------------------------
@@ -204,6 +215,7 @@ class LM:
                 h.remove()
         return out.logits, got
 
+    @_frees_gpu
     def read(self, weights, texts: list[str], request: dict) -> dict[str, np.ndarray]:
         import torch
 
@@ -217,7 +229,6 @@ class LM:
         width = model.config.get_text_config().hidden_size
         estimate = n * longest * 4 * (width * len(hidden) + 2 * topk + 1) + n * longest * longest * 4 * len(attn)
         if estimate > MAX_RESULT_BYTES:
-            self._free(model)
             raise ValueError(f"the result would take {estimate / 2**30:.1f} GB, more than the 6 GB limit of a pass")
         out: dict[str, np.ndarray] = {"lengths": lengths, "input_ids": np.zeros((n, longest), np.int64)}
         for i in range(0, n, self.batch_size):
@@ -247,9 +258,9 @@ class LM:
                 else:
                     target = out.setdefault(key, np.zeros((n, longest, array.shape[-1]), np.float32))
                     target[rows, :width_b] = array
-        self._free(model)
         return out
 
+    @_frees_gpu
     def activations(self, weights, prompts: list[Prompt], answers: list[Generation], layers: list[int], mlp: bool,
                     max_tokens: int) -> dict[str, np.ndarray]:
         """Works on the token ids the model generated, never on retokenized text, which can differ."""
@@ -282,5 +293,4 @@ class LM:
                 a, b = gather([f"mlp_act_{x}" for x in mlp_layers])
                 sums["mlp_last_prompt"].append(a)
                 sums["mlp_mean_answer"].append(b)
-        self._free(model)
         return {k: np.stack(v) for k, v in sums.items()}

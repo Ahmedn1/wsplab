@@ -1,7 +1,7 @@
 """The whole language model path with real components and no LLM spend: real Qwen3.5-0.8B, vLLM, the sandboxed kernel, a real
 forward pass, patch, evaluation and verdict. Only the editor is scripted: it applies the paper's published 25-pass edit.
 
-    python scripts/smoke_lm.py <run folder>
+    python scripts/smoke_lm.py <run folder> [--resume]
 """
 
 import json
@@ -23,7 +23,7 @@ QWEN = Path(os.environ["HF_HOME"]) / f"hub/models--Qwen--Qwen3.5-0.8B/snapshots/
 SAMPLING = {"temperature": 0.6, "top_p": 0.95, "top_k": 20, "presence_penalty": 1.5, "max_tokens": 1024}
 
 
-def main(folder: str) -> None:
+def main(folder: str, *flags: str) -> None:
     rows = read_jsonl(fetch("exp8_math/practice/gsm8k_train.jsonl"))
     suite = LMSuite(rows[:32], rows[32:96], MathGrader(), SAMPLING, benchmark="64 GSM8K problems",
                     user_message=lambda row: f"{row['problem']}\n{INSTRUCTION}")
@@ -37,7 +37,7 @@ def main(folder: str) -> None:
                f"Measuring it.\n```forward\n{request}\n```",
                f"Reading activations.\n```forward\n{read}\n```",
                "I switched off one attention head."]
-    result = wsplab.run(str(QWEN), eval=suite, editor=ScriptedEditor(replies), budget=2, folder=folder, name="Qwen3.5-0.8B",
+    result = wsplab.run(str(QWEN), eval=suite, editor=ScriptedEditor(replies), budget=2, folder=folder, name="Qwen3.5-0.8B", resume="--resume" in flags,
                         note="This model really sucks at math", limits=Limits(seconds=120, memory_gb=8), control=True,
                         forward_limits=ForwardLimits(n_layers=24, full_attention=(3, 7, 11, 15, 19, 23), gen_max=64, max_tokens=1024,
                                                      tf_max_tokens=1024))
@@ -47,4 +47,4 @@ def main(folder: str) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(*sys.argv[1:])

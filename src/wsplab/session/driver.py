@@ -108,7 +108,8 @@ class Session:
         self.state = State.load(self.folder / "state.json")
         self.history = saved["history"]
         self._resumed_message = saved["message"]
-        self.kernel_restarted()
+        if not self.state.done:
+            self.kernel_restarted()
 
     def _checkpoint(self, message: str) -> None:
         tmp = self.folder / "next.tmp"
@@ -118,6 +119,10 @@ class Session:
 
     # The loop --------------------------------------------------------------------------------------------------------
     def run(self) -> Result:
+        if self.state.done:
+            # A crash after the session ended: its result stands, and asking the editor again would only cost money.
+            answer = self.folder / "final_answer.md"
+            return Result(answer.read_text() if answer.exists() else None, self.state, self.usage)
         message = self._resumed_message or self.task
         final = None
         while True:
