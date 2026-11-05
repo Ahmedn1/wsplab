@@ -15,12 +15,12 @@ class BudgetExceeded(Exception):
 @dataclass
 class Spending:
     """Stops once `max_tokens` total tokens or `max_usd` is reached. `prices` maps an editor name to dollars per million
-    (input, output) tokens; a limit in dollars needs a price for every editor, so a typo cannot disable it. Cached input is
-    charged at the full input price, so the limit errs on the safe side."""
+    (input, output) or (input, output, cached input) tokens; a limit in dollars needs a price for every editor, so a typo
+    cannot disable it. With no cached price, cached input is charged in full, so the limit errs on the safe side."""
 
     max_tokens: int | None = None
     max_usd: float | None = None
-    prices: dict[str, tuple[float, float]] = field(default_factory=dict)
+    prices: dict[str, tuple] = field(default_factory=dict)
     tokens: int = 0
     usd: float = 0.0
 
@@ -35,8 +35,10 @@ class Spending:
             if self.max_usd is not None:
                 if editor not in self.prices:
                     raise ValueError(f"max_usd needs a price for {editor!r}: pass prices={{{editor!r}: (input, output)}}")
-                price_in, price_out = self.prices[editor]
-                self.usd += (usage.input_tokens * price_in + usage.output_tokens * price_out) / 1e6
+                price_in, price_out, *rest = self.prices[editor]
+                price_cached = rest[0] if rest else price_in
+                fresh = usage.input_tokens - usage.cached_tokens
+                self.usd += (fresh * price_in + usage.cached_tokens * price_cached + usage.output_tokens * price_out) / 1e6
 
     def check(self) -> None:
         if self.max_tokens is not None and self.tokens >= self.max_tokens:

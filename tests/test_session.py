@@ -72,6 +72,19 @@ def test_final_answer_with_passes_left_gets_a_nudge(tmp_path):
     assert "Forward passes left: 1" in editor.seen[1][-1]["content"]
 
 
+def test_an_editor_that_never_acts_cannot_spend_the_budget(tmp_path):
+    s, editor, _ = session(tmp_path, ["I will do it soon."] * 50, budget=3, policy=Policy(max_nudges=2))
+    r = s.run()
+    assert r.state.stop_reason == "no_block" and len(editor.seen) == 3
+
+
+def test_acting_resets_the_nudge_limit(tmp_path):
+    talk = "I will do it soon."
+    replies = [talk, talk, block("python", "1"), talk, talk, block("forward", "{}"), "Done."]
+    s, _, _ = session(tmp_path, replies, budget=1, policy=Policy(max_nudges=2))
+    assert s.run().state.stop_reason == "finished"
+
+
 def test_two_blocks_are_refused_and_nothing_runs(tmp_path):
     s, editor, kernel = session(tmp_path, ["Both.\n```python\n1\n```\n```python\n2\n```", "Done."])
     s.run()

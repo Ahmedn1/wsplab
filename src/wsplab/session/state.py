@@ -17,6 +17,7 @@ class State:
     requests: int = 0
     done: bool = False
     nudges: int = 0
+    nudge_streak: int = 0
     handoffs: int = 0
     since_handoff: int = 0
     flags: int = 0

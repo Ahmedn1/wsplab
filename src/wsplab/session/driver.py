@@ -45,6 +45,7 @@ class Policy:
     report_edits: bool = True
     handoff_every: int = 40
     max_flags: int = 3
+    max_nudges: int = 5
     max_turns: int | None = None
 
 
@@ -211,6 +212,7 @@ class Session:
         parsed = parse(reply, self._kinds)
         if not parsed.blocks:
             return self._no_block()
+        self.state.nudge_streak = 0
         if len(parsed.blocks) > 1:
             return self.messages.too_many_blocks.format(n=len(parsed.blocks))
         if self.policy.explain == "enforce" and not parsed.explanation:
@@ -228,6 +230,10 @@ class Session:
         left = self.state.budget - self.state.passes
         if left > 0 and self.tools:
             self.state.nudges += 1
+            self.state.nudge_streak += 1
+            if self.state.nudge_streak > self.policy.max_nudges:
+                self.state.stop_reason = "no_block"  # An editor that will not act must not spend the budget saying so.
+                return None
             return self.messages.nudge.format(left=left)
         return None
 

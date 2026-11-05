@@ -47,7 +47,8 @@ class Messages:
                     "YOUR NOTEBOOK (/work/notes.md, last {notes_chars:,} characters):\n```\n{notes}\n```\n"
                     "Continue from here.\n\nLast result:\n{last}")
     # New: these situations never occurred in the released logs.
-    nudge: str = "Forward passes left: {left}. The session continues until all of them are used: reply with a block."
+    nudge: str = ("Your reply had no block, so nothing was run. Forward passes left: {left}. The session continues until all "
+                  "of them are used: reply with your explanation and one block in the same message.")
     runs_exhausted: str = "No Python runs are left (limit {limit}), so this block was NOT run."
     too_many_blocks: str = "Your reply had {n} blocks, so none was run. Reply with exactly one block."
     passes_exhausted: str = "No forward passes are left, so this block was NOT run."

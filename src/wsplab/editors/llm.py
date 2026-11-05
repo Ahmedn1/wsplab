@@ -13,15 +13,60 @@ from .claude import AnthropicEditor
 
 
 class OpenAIEditor:
-    """Any OpenAI-compatible server: `base_url` covers OpenRouter, vLLM, Ollama and others."""
+    """OpenAI's own models, through the Responses API. Recent models answer in several messages: a commentary, then a final
+    answer holding the block. Chat Completions shows only part of that, so a reply can arrive with no block at all.
 
-    def __init__(self, model: str, base_url: str | None = None, api_key: str | None = None, **params):
+    `effort` sets the reasoning effort. Each message is joined on its own line, so a block still starts one."""
+
+    def __init__(self, model: str, *, effort: str | None = "high", api_key: str | None = None, base_url: str | None = None,
+                 timeout: float = 3600, max_retries: int = 5, **params):
         from openai import OpenAI
 
-        self.client = OpenAI(base_url=base_url, api_key=api_key or os.environ.get("OPENAI_API_KEY", "none"))
+        self.client = OpenAI(base_url=base_url, api_key=api_key or os.environ.get("OPENAI_API_KEY"), timeout=timeout,
+                             max_retries=max_retries)
+        self.model = model
+        self.params = {**params, **({"reasoning": {"effort": effort}} if effort else {})}
+        self.name = f"openai:{model}"
+
+    def reply(self, system: str, messages: list[dict]) -> Reply:
+        from openai import BadRequestError
+
+        try:
+            r = self.client.responses.create(model=self.model, instructions=system, input=messages, **self.params)
+        except BadRequestError as e:
+            if "policy" in str(e).lower() or "flagged" in str(e).lower():
+                raise EditorRefused(str(e)) from e
+            raise
+        parts: list[str] = []
+        for item in r.output:
+            if item.type != "message":
+                continue
+            for block in item.content:
+                if block.type == "refusal":
+                    raise EditorRefused(block.refusal)
+                if block.type == "output_text":
+                    parts.append(block.text)
+        reason = getattr(getattr(r, "incomplete_details", None), "reason", None)
+        if reason == "content_filter":
+            raise EditorRefused("content filter")
+        u = r.usage
+        details = getattr(u, "input_tokens_details", None)
+        usage = Usage(u.input_tokens, u.output_tokens, getattr(details, "cached_tokens", 0) or 0) if u else Usage()
+        return Reply("\n\n".join(p.strip("\n") for p in parts), usage, truncated=reason == "max_output_tokens")
+
+
+class ChatEditor:
+    """Any OpenAI-compatible Chat Completions server: `base_url` covers OpenRouter, vLLM, Ollama and others."""
+
+    def __init__(self, model: str, base_url: str | None = None, api_key: str | None = None, timeout: float = 3600,
+                 max_retries: int = 5, **params):
+        from openai import OpenAI
+
+        self.client = OpenAI(base_url=base_url, api_key=api_key or os.environ.get("OPENAI_API_KEY", "none"), timeout=timeout,
+                             max_retries=max_retries)
         self.model = model
         self.params = params
-        self.name = f"openai:{model}"
+        self.name = f"openai-chat:{model}"
 
     def reply(self, system: str, messages: list[dict]) -> Reply:
         from openai import BadRequestError
@@ -36,9 +81,10 @@ class OpenAIEditor:
         finish = r.choices[0].finish_reason
         if finish == "content_filter":
             raise EditorRefused("content filter")
-        usage = r.usage
-        return Reply(r.choices[0].message.content or "",
-                     Usage(usage.prompt_tokens, usage.completion_tokens) if usage else Usage(), truncated=finish == "length")
+        u = r.usage
+        details = getattr(u, "prompt_tokens_details", None)
+        usage = Usage(u.prompt_tokens, u.completion_tokens, getattr(details, "cached_tokens", 0) or 0) if u else Usage()
+        return Reply(r.choices[0].message.content or "", usage, truncated=finish == "length")
 
 
 class CodexEditor:
@@ -80,8 +126,8 @@ class CodexEditor:
 
 
 def get_editor(spec):
-    """An editor from a spec: an object with .reply, "openai:<model>", "anthropic:<model>", "codex:<model>", or
-    "script:<file.json>" with a list of replies."""
+    """An editor from a spec: an object with .reply, "openai:<model>", "openai-chat:<model>" for a compatible server (set
+    OPENAI_BASE_URL), "anthropic:<model>", "codex:<model>", or "script:<file.json>" with a list of replies."""
     if hasattr(spec, "reply"):
         return spec
     if not isinstance(spec, str) or ":" not in spec:
@@ -89,6 +135,8 @@ def get_editor(spec):
     provider, _, rest = spec.partition(":")
     if provider == "openai":
         return OpenAIEditor(rest)
+    if provider == "openai-chat":
+        return ChatEditor(rest)
     if provider == "anthropic":
         return AnthropicEditor(rest)
     if provider == "codex":
