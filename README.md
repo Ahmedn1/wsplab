@@ -87,6 +87,7 @@ Copy it into your agent's skills folder.
 - [Concepts](docs/concepts.md): kinds, modes, access and control levels.
 - [Patches](docs/patches.md): the format and how to share one.
 - [Councils and search](docs/council.md).
+- [Live results](docs/results.md): what has been measured so far, including what did not work.
 - [Fidelity to the paper](docs/fidelity.md): what is the authors' work, what is reconstructed, and what differs.
 - [`examples/paper`](examples/paper): the paper's eight experiments as configuration.
 
