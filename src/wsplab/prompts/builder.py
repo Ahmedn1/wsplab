@@ -99,6 +99,7 @@ class PromptBuilder:
     template: str | None = None
     sections: dict[str, str] = field(default_factory=dict)
     passes: bool = True
+    addendum: str | None = None
 
     def __post_init__(self):
         if (self.base is None) == (self.template is None):
@@ -107,7 +108,9 @@ class PromptBuilder:
     @property
     def fidelity(self) -> str:
         """paper: the base template; custom: the user changed its text. A note or slot values change neither."""
-        return "custom" if self.template is not None or self.sections else "paper"
+        if self.template is not None or self.sections:
+            return "custom"
+        return "paper+semantic" if self.addendum else "paper"
 
     def replace_section(self, heading: str, text: str) -> PromptBuilder:
         """Replace one section of the template, named by the heading it starts with, such as "METHOD."."""
@@ -133,6 +136,8 @@ class PromptBuilder:
             template = template.replace("{{out_of_scope}} (save_edit refuses them), ", "")
             slots.pop("out_of_scope", None)
         text = render(template, slots)
+        if self.addendum:
+            text = text.replace("\n2. ", f"{self.addendum}\n2. ", 1)
         if self.note:
             text = text.rstrip("\n") + f"\n\nNOTE FROM THE USER. {self.note.strip()}\n"
         return text

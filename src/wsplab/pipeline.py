@@ -21,6 +21,7 @@ from .passes import TorchForward
 from .passes.edits import apply_edits, last_block, render_weights
 from .prompts import PromptBuilder
 from .runners.torch import TorchRunner, state_to_checkpoint, zero_checkpoint
+from .semantic import SemanticMap, kernel_prelude, prompt_addendum
 from .session import V5, Messages, Policy, Session
 from .store import WeightStore
 from .upstream import home, sha256_file
@@ -285,12 +286,13 @@ def run(model, *, build=None, description: str, note: str | None = None, mode: s
         editor=None, budget: int = 25, max_runs: int = 300, access: str = "kernel", folder=None, frozen=(), prompt=None,
         task_sentence: str | None = None, regressions: dict | None = None, control: bool = True, limits: Limits | None = None,
         sandbox: str = "bwrap", policy: Policy | None = None, device: str = "cpu", z: float = 2.0, prelude: str = "",
-        messages: Messages = V5, no_eval: bool = False) -> RunResult:
+        messages: Messages = V5, no_eval: bool = False, semantic: bool = False) -> RunResult:
     """Run the whole job on any PyTorch network.
 
     `build` says how to run the weights: a function returning an nn.Module, "path/model.py:function", or
     {"mlp": [sizes], "activation": "tanh"}. `practice` and `evaluate` are Scorers: the editor sees the first and is judged
     on the second. If only `evaluate` is an ArrayScorer, it is split in two. `note` is your own words to the editor.
+    `semantic` gives the editor M, the semantic layer, in its kernel, and says so in the prompt.
     """
     if mode not in ("read", "edit", "write"):
         raise ValueError(f"unknown mode {mode!r}")
@@ -341,8 +343,12 @@ def run(model, *, build=None, description: str, note: str | None = None, mode: s
                                         edited=edited_builder(job, base, store), edit_digest=store.digest)}
 
     evaluation = TorchEvaluation(runner, evaluate, slots["benchmark"]) if evaluate is not None and not no_eval else None
-    job = Job(weights=weights, kind="generic", mode=mode, folder=folder, editor=get_editor(editor),
-              prompt=_make_builder(prompt, template, _prompt_slots(slots, limits, budget, max_runs), note, budget > 0),
+    builder = _make_builder(prompt, template, _prompt_slots(slots, limits, budget, max_runs), note, budget > 0)
+    if semantic:
+        builder.addendum = prompt_addendum(SemanticMap(Checkpoint(weights).names(), {}, load=None, save=None,
+                                                       shape=Checkpoint(weights).shape).family)
+        prelude = kernel_prelude() + prelude
+    job = Job(weights=weights, kind="generic", mode=mode, folder=folder, editor=get_editor(editor), prompt=builder,
               practice_dir=practice_dir, tools_factory=tools, evaluation=evaluation,
               regressions={k: TorchEvaluation(runner, v, k) for k, v in (regressions or {}).items()}, limits=limits,
               frozen=tuple(frozen), names=None, budget=budget, max_runs=max_runs, access=access, sandbox=sandbox,

@@ -51,3 +51,25 @@ def test_import_and_apply_p50c(qwen, tmp_path):
         assert P.format.sha(to_bits(out.raw(record["name"])[1])) == record["edited_sha256"]
     untouched = next(n for n in qwen.names() if n not in {t["name"] for t in patch.tensors})
     assert (out.raw(untouched)[1] == qwen.raw(untouched)[1]).all()
+
+
+@pytest.mark.network
+@pytest.mark.model
+def test_semantic_layer_reproduces_the_published_p25c_edit(qwen, tmp_path):
+    """The paper's 25-pass edit switches off attention head 7 of layer 15. Written with the semantic layer, on the real
+    weights, it must give the authors' published hash."""
+    from wsplab.semantic import SemanticMap
+    from wsplab.store import WeightStore
+
+    release_patch = P.Patch.load(release("p25c"))
+    assert len(release_patch.tensors) == 1
+    record = release_patch.tensors[0]
+
+    store = WeightStore(qwen, tmp_path / "edited")
+    M = SemanticMap.from_store(store)
+    assert M.family == "llama" and M.layers[0].attn is None and M.layers[15].attn is not None
+    M.layers[15].attn.head[7].out.zero()
+
+    ours = P.from_submission(qwen, P.read_submission(tmp_path / "edited"), tmp_path / "patch")
+    assert ours.tensors[0]["name"] == record["name"]
+    assert ours.tensors[0]["edited_sha256"] == record["edited_sha256"]
