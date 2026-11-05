@@ -30,8 +30,11 @@ class LMSuite:
     user_message: Callable[[dict], str] = field(default=lambda row: row["problem"])
     protocol: str | None = None
     practice_text: str | None = None
+    check_overlap: bool = True
 
     def __post_init__(self):
+        if not self.check_overlap:
+            return
         seen = {str(r["problem"]) for r in self.practice}
         overlap = [r["id"] for r in self.evaluation if str(r["problem"]) in seen]
         if overlap:

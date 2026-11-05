@@ -51,6 +51,7 @@ class Messages:
     runs_exhausted: str = "No Python runs are left (limit {limit}), so this block was NOT run."
     too_many_blocks: str = "Your reply had {n} blocks, so none was run. Reply with exactly one block."
     passes_exhausted: str = "No forward passes are left, so this block was NOT run."
+    truncated: str = "Your reply hit the output limit and was cut off, so nothing in it was run. Reply again, more briefly."
 
 
 V5 = Messages()

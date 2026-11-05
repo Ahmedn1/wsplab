@@ -137,6 +137,7 @@ class Job:
     meta: dict = field(default_factory=dict)
     binds: dict = field(default_factory=dict)
     force_tools: bool = False
+    resume: bool = False
 
 
 def build_edit(job: Job, base: Path, edited_dir: Path, out: Path, *, meta: dict | None = None) -> tuple[P.Patch, Path]:
@@ -178,7 +179,7 @@ def run_session(job: Job, base: Path) -> tuple[str | None, object, Path]:
     with SandboxKernel(config) as kernel:
         tools = job.tools_factory(job, base, kernel.store) if job.budget or job.force_tools else {}
         session = Session(job.prompt.build(), job.editor, kernel, tools, budget=job.budget, max_runs=job.max_runs,
-                          folder=job.folder / "session", messages=job.messages, policy=job.policy)
+                          folder=job.folder / "session", messages=job.messages, policy=job.policy, resume=job.resume)
         result = session.run()
     return result.final_answer, result.state, work / "edited"
 
@@ -220,15 +221,23 @@ def execute(job: Job, original: Path) -> RunResult:
     those zeros too, so the score says how far the written network got."""
     folder = job.folder
     measured = job.evaluation is not None
-    baseline = job.evaluation.evaluate(original) if measured else None
-    regress_base = {k: e.evaluate(original) for k, e in job.regressions.items()} if measured else {}
-    if baseline is not None:
-        (folder / "baseline.json").write_text(json.dumps(_scores_json(baseline)) + "\n")
+    saved = folder / "baseline.json"
+    if job.resume and measured and saved.exists():
+        data = json.loads(saved.read_text())
+        baseline = Scores(data["baseline"]["per_item"])
+        regress_base = {k: Scores(v["per_item"]) for k, v in data["regressions"].items()}
+    else:
+        baseline = job.evaluation.evaluate(original) if measured else None
+        regress_base = {k: e.evaluate(original) for k, e in job.regressions.items()} if measured else {}
+        if baseline is not None:
+            saved.write_text(json.dumps({"baseline": _scores_json(baseline),
+                                         "regressions": {k: _scores_json(v) for k, v in regress_base.items()}}) + "\n")
 
     start = run_inline if job.access == "inline" else run_session
     answer, state, edited_dir = start(job, original)
     meta = {**job.meta, "editor": job.editor.name, "prompt_fidelity": job.prompt.fidelity,
-            "prompt_sha256": job.prompt.sha256(), "harness": HARNESS, "tool_free": True, "mode": job.mode}
+            "prompt_sha256": job.prompt.sha256(), "harness": HARNESS, "mode": job.mode,
+            "tool_free": getattr(job.editor, "tool_free", True)}
     if hasattr(job.editor, "evidence"):
         meta["council"] = job.editor.evidence()
     calls = folder / "session" / "tool_calls.jsonl"
@@ -308,12 +317,13 @@ def _make_builder(prompt, base: str, slots: dict, note, passes: bool) -> PromptB
     return PromptBuilder(base, slots=slots, note=note, passes=passes)
 
 
-def run(model, *, build=None, description: str, note: str | None = None, mode: str = "edit", practice=None, evaluate=None,
+def run(model, *, build=None, description: str | None = None, note: str | None = None, mode: str = "edit", practice=None,
+        evaluate=None, eval=None,
         editor=None, budget: int = 25, max_runs: int = 300, access: str = "kernel", folder=None, frozen=(), prompt=None,
         task_sentence: str | None = None, regressions: dict | None = None, control: bool = True, limits: Limits | None = None,
         sandbox: str = "bwrap", policy: Policy | None = None, device: str = "cpu", z: float = 2.0, prelude: str = "",
         messages: Messages = V5, no_eval: bool = False, semantic: bool = False, tools=None, binds: dict | None = None,
-        weights_names: list | None = None) -> RunResult:
+        weights_names: list | None = None, resume: bool = False, **lm_options) -> RunResult:
     """Run the whole job on any PyTorch network.
 
     `build` says how to run the weights: a function returning an nn.Module, "path/model.py:function", or
@@ -321,9 +331,21 @@ def run(model, *, build=None, description: str, note: str | None = None, mode: s
     on the second. If only `evaluate` is an ArrayScorer, it is split in two. `note` is your own words to the editor.
     `semantic` gives the editor M, the semantic layer, in its kernel, and says so in the prompt.
 
+    For a language model, give `eval` instead: "math", or an LMSuite. Options such as `thinking`, `revision` or `generator`
+    then pass through to run_lm, and `description` is generated from the model's config.
+
     `tools` replaces the forward tool: a function (work folder, base weights, store, edited model builder) -> {fence: PassTool},
     for networks that need passes of their own, such as playing games. `binds` adds read-only {host path: path in the sandbox}.
     """
+    if eval is not None:
+        return run_lm(model, eval=eval, editor=editor, note=note, mode=mode, budget=budget, max_runs=max_runs,
+                      description=description, folder=folder, frozen=frozen or None, prompt=prompt, task_sentence=task_sentence,
+                      regressions=regressions, control=control, limits=limits, sandbox=sandbox, policy=policy, z=z, prelude=prelude,
+                      messages=messages, semantic=semantic, resume=resume, **lm_options)
+    if lm_options:
+        raise TypeError(f"unknown options for this network: {sorted(lm_options)}; language model options need `eval`")
+    if description is None:
+        raise ValueError("give `description`: what the network is, for the editor")
     if mode not in ("read", "edit", "write"):
         raise ValueError(f"unknown mode {mode!r}")
     if access not in ("kernel", "inline"):
@@ -335,7 +357,10 @@ def run(model, *, build=None, description: str, note: str | None = None, mode: s
     limits = limits or Limits()
     if limits.memory_gb is None:
         limits.memory_gb = available_memory_gb()
-    weights = prepare_weights(model, folder)
+    if resume and (folder / "base" / "model.safetensors").exists() and not isinstance(model, (str, os.PathLike)):
+        weights = folder / "base" / "model.safetensors"
+    else:
+        weights = prepare_weights(model, folder)
     if mode == "write":
         weights = zero_checkpoint(Checkpoint(weights), folder / "zero" / "model.safetensors")
     runner = TorchRunner(build, device) if build is not None else None
@@ -383,7 +408,8 @@ def run(model, *, build=None, description: str, note: str | None = None, mode: s
     job = Job(weights=weights, kind="generic", mode=mode, folder=folder, editor=get_editor(editor), prompt=builder,
               practice_dir=practice_dir, tools_factory=default_tools, evaluation=evaluation,
               regressions={k: TorchEvaluation(runner, v, k) for k, v in (regressions or {}).items()}, limits=limits,
-              frozen=tuple(frozen), names=weights_names, binds=binds or {}, force_tools=tools is not None, budget=budget, max_runs=max_runs, access=access, sandbox=sandbox,
+              frozen=tuple(frozen), names=weights_names, binds=binds or {}, force_tools=tools is not None, resume=resume,
+              budget=budget, max_runs=max_runs, access=access, sandbox=sandbox,
               policy=policy or Policy(), messages=messages, control=control and mode == "edit", z=z, runner=runner,
               prelude=prelude, meta={"kind": "generic"})
     return execute(job, weights)
@@ -510,7 +536,8 @@ def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "ed
            generator: str = "vllm", device: str = "cuda", folder=None, frozen=None, prompt=None, task_sentence: str | None = None,
            regressions: dict | None = None, control: bool = True, limits: Limits | None = None, sandbox: str = "bwrap",
            policy: Policy | None = None, z: float = 2.0, prelude: str = "", messages: Messages = V5, semantic: bool = False,
-           runner=None, forward_limits=None, pass_time: str = "several minutes", full_attention=None) -> RunResult:
+           runner=None, forward_limits=None, pass_time: str = "several minutes", full_attention=None,
+           resume: bool = False) -> RunResult:
     """Run the whole job on a language model. `eval` is a suite: "math", or an LMSuite of your own data."""
     from .arch_text import default_frozen, describe, text_tensors
     from .eval.lm_suite import LMEvaluation, LMSuite, math_suite
@@ -563,7 +590,7 @@ def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "ed
               practice_dir=practice_dir, tools_factory=tools, evaluation=LMEvaluation(runner, suite),
               regressions={k: LMEvaluation(runner, v) for k, v in (regressions or {}).items()}, limits=limits, frozen=frozen,
               names=names, budget=budget, max_runs=max_runs, access="kernel", sandbox=sandbox, policy=policy or Policy(),
-              messages=messages, control=control and mode == "edit", z=z, runner=runner, prelude=prelude,
+              messages=messages, control=control and mode == "edit", z=z, runner=runner, prelude=prelude, resume=resume,
               meta={"kind": "lm", "base": {"repo": str(model), "revision": revision}})
     return execute(job, weights)
 

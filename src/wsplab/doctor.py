@@ -89,4 +89,6 @@ def checks() -> list[Check]:
                   "fast language model generation"),
             Check("math-verify", _has("math_verify"), "installed" if _has("math_verify") else "pip install 'wsplab[eval]'",
                   "math grading"),
-            Check("GPU", gpu_ok, gpu_detail, "language models at useful speed")]
+            Check("GPU", gpu_ok, gpu_detail, "language models at useful speed"),
+            Check("huggingface-hub", _has("huggingface_hub"),
+                  "installed" if _has("huggingface_hub") else "pip install 'wsplab[hub]'", "sharing patches")]

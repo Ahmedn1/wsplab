@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 
 from .base import EditorRefused, Reply, ScriptedEditor, Usage
+from .claude import AnthropicEditor
 
 
 class OpenAIEditor:
@@ -32,32 +33,12 @@ class OpenAIEditor:
             if "content" in str(e).lower() and ("policy" in str(e).lower() or "filter" in str(e).lower()):
                 raise EditorRefused(str(e)) from e
             raise
-        if r.choices[0].finish_reason == "content_filter":
+        finish = r.choices[0].finish_reason
+        if finish == "content_filter":
             raise EditorRefused("content filter")
         usage = r.usage
         return Reply(r.choices[0].message.content or "",
-                     Usage(usage.prompt_tokens, usage.completion_tokens) if usage else Usage())
-
-
-class AnthropicEditor:
-    def __init__(self, model: str, max_tokens: int = 32000, api_key: str | None = None, **params):
-        from anthropic import Anthropic
-
-        self.client = Anthropic(api_key=api_key)
-        self.model = model
-        self.max_tokens = max_tokens
-        self.params = params
-        self.name = f"anthropic:{model}"
-
-    def reply(self, system: str, messages: list[dict]) -> Reply:
-        with self.client.messages.stream(model=self.model, max_tokens=self.max_tokens, system=system, messages=messages,
-                                         **self.params) as stream:
-            r = stream.get_final_message()
-        if r.stop_reason == "refusal":
-            raise EditorRefused("refused by the model")
-        text = "".join(b.text for b in r.content if b.type == "text")
-        return Reply(text, Usage(r.usage.input_tokens, r.usage.output_tokens,
-                                 getattr(r.usage, "cache_read_input_tokens", 0) or 0))
+                     Usage(usage.prompt_tokens, usage.completion_tokens) if usage else Usage(), truncated=finish == "length")
 
 
 class CodexEditor:

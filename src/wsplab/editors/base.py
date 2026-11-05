@@ -24,8 +24,11 @@ class Usage:
 
 @dataclass
 class Reply:
+    """`truncated` means the reply hit the output limit, so any block in it is incomplete and must not run."""
+
     text: str
     usage: Usage = field(default_factory=Usage)
+    truncated: bool = False
 
 
 @runtime_checkable

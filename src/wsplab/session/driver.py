@@ -63,7 +63,7 @@ class Session:
                  budget: int = 0, max_runs: int = 300, folder: str | Path, messages: Messages = V5,
                  policy: Policy | None = None, system: str = SYSTEM,
                  before_turn: Callable[[Session], None] | None = None,
-                 after_reply: Callable[[Session], None] | None = None):
+                 after_reply: Callable[[Session], None] | None = None, resume: bool = False):
         self.task = task
         self.editor = editor
         self.kernel = kernel
@@ -80,6 +80,10 @@ class Session:
         self.after_reply = after_reply
         self._prefix: list[str] = []
         self._kinds = {"python", *self.tools}
+        self._resumed_message: str | None = None
+        self._truncated = False
+        if resume and (self.folder / "state.json").exists() and (self.folder / "next.json").exists():
+            self._resume()
         if hasattr(editor, "attach"):
             editor.attach(self)
 
@@ -96,9 +100,24 @@ class Session:
     def new_rule(self, text: str) -> None:
         self._prefix.append(self.messages.new_rule.format(text=text) + "\n\n")
 
+    def _resume(self) -> None:
+        """Continue from the last completed turn. The conversation and /work survive a crash, the kernel's variables do
+        not, and the editor is told so, as it was in the paper's own restarts."""
+        saved = json.loads((self.folder / "next.json").read_text())
+        self.state = State.load(self.folder / "state.json")
+        self.history = saved["history"]
+        self._resumed_message = saved["message"]
+        self.kernel_restarted()
+
+    def _checkpoint(self, message: str) -> None:
+        tmp = self.folder / "next.tmp"
+        tmp.write_text(json.dumps({"message": message, "history": self.history}))
+        tmp.replace(self.folder / "next.json")
+        self.state.save(self.folder / "state.json")
+
     # The loop --------------------------------------------------------------------------------------------------------
     def run(self) -> Result:
-        message = self.task
+        message = self._resumed_message or self.task
         final = None
         while True:
             self.state.turn += 1
@@ -127,7 +146,8 @@ class Session:
             if self.after_reply:
                 self.after_reply(self)
             outcome = self._handle(reply)
-            self.state.save(self.folder / "state.json")
+            if outcome is not None:
+                self._checkpoint(outcome)
             if outcome is None:
                 final = reply
                 self.state.done = True
@@ -171,6 +191,7 @@ class Session:
             self.history.pop()
             raise
         self.usage.add(reply.usage)
+        self._truncated = reply.truncated
         self.history.append({"role": "assistant", "content": reply.text})
         (turn / "answer.md").write_text(reply.text)
         (turn / "run.json").write_text(json.dumps({"editor": self.editor.name, "seconds": round(time.time() - t0, 2),
@@ -179,6 +200,8 @@ class Session:
 
     def _handle(self, reply: str) -> str | None:
         """The next message, or None when the reply is the final answer."""
+        if self._truncated:
+            return self.messages.truncated
         parsed = parse(reply, self._kinds)
         if not parsed.blocks:
             return self._no_block()

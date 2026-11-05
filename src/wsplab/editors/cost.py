@@ -15,7 +15,8 @@ class BudgetExceeded(Exception):
 @dataclass
 class Spending:
     """Stops once `max_tokens` total tokens or `max_usd` is reached. `prices` maps an editor name to dollars per million
-    (input, output) tokens; a limit in dollars needs a price for every editor, so a typo cannot disable it."""
+    (input, output) tokens; a limit in dollars needs a price for every editor, so a typo cannot disable it. Cached input is
+    charged at the full input price, so the limit errs on the safe side."""
 
     max_tokens: int | None = None
     max_usd: float | None = None

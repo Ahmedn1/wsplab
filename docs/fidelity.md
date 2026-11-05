@@ -1,0 +1,56 @@
+# Fidelity to the paper
+
+wsplab is built from the authors' release, pinned at
+`RikiyaT/lm_understand-logs@4d09ba6d6a7e891dd8063974dfe81b3d78e3494f`, and new code. It contains no code from other
+weight-space programming frameworks. `provenance/PROVENANCE.md` lists what derives from what.
+
+## What was released, and what was not
+
+The authors released their logs, prompts, edit tools, evaluation code and networks. They did not release their agent driver,
+persistent kernel or forward-pass server, so wsplab's versions are **reconstructions** from the prompts and logs. Patches say so
+with `"harness": "reconstructed"`.
+
+## What has been checked
+
+The tests in `tests/conformance` check, against the authors' files:
+
+| Check | Result |
+|---|---|
+| The released p10c, p25c and p50c edits rebuild against the public weights | Every published hash matches |
+| The base template renders the authors' v5 prompt | Byte for byte |
+| Replaying runs p50c and g50b through the driver | All 275 prompts match byte for byte, and final counters match |
+| Logged forward requests | Same accept or reject, except the two that hit a bug the authors later fixed |
+| Published scores recompute from their raw parts | Exact |
+| `M.layers[15].attn.head[7].out.zero()` on the real weights | Reproduces the published p25c hash |
+| Released replies for experiments 4 and 5 | Rebuild the released networks |
+
+## What is inferred or differs
+
+- **Seeds.** The prompts say sampling seeds are fixed by the problem, without a formula, so wsplab uses its own.
+- **The rescale check.** The prompts say multiplying a whole tensor by a constant is refused, without saying how close counts.
+- **Handoff text and rules** come from logs, but rarely triggered paths did not appear there. The nudge, the block-count message
+  and the truncation message are new.
+- **The harness changed during the authors' runs.** The replay reproduces those changes with hooks, and wsplab's defaults use the
+  final behaviour.
+- **Limits are true to your machine.** The default fidelity states real limits rather than the authors' 96 GB. `exact` mode
+  reproduces their text.
+- **Kernel persistence.** Experiment 3 ran each script in a fresh process. wsplab keeps variables, which only makes it easier.
+
+## The paper's experiments
+
+`examples/paper` expresses all eight as configuration.
+
+| Experiment | Status |
+|---|---|
+| 1, 2, 3 | Everything needed is released |
+| 4 | Reply reading is checked. Scoring needs Kinetix and an evaluator of your own |
+| 5 | Reply reading is checked. Scoring needs MinAtar, which you install yourself because it is GPL-3.0 |
+| 6 | The authors' opponents were not released, so only `random` works and scores will not match the paper |
+| 7 | The fine-tuned checkpoints must be rebuilt, and will not match the published hashes |
+| 8 | Works. A full evaluation needs a large GPU |
+
+## What this does not show
+
+Matching the authors' harness does not mean you will get their results. Their headline used `gpt-6-astra` at maximum effort, and
+one independent rerun with the same editor scored far lower. The gain was loop repair on a model that looped on 93% of answers,
+and a model that did not loop barely moved.

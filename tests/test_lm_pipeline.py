@@ -119,6 +119,21 @@ def test_full_language_model_lifecycle_with_a_fake_runner(tmp_path):
     assert json.loads(summary["result"])["paired"]["accuracy_difference"] == 1.0
 
 
+def test_one_run_function_covers_language_models(tmp_path):
+    try:
+        sandbox_python()
+    except KernelError:
+        pytest.skip("no sandbox environment")
+    r = wsplab.run(str(lm_folder(tmp_path)), eval=suite(), editor=ScriptedEditor(["Nothing to do."]), runner=FakeLM(), budget=0,
+                   folder=tmp_path / "run", limits=Limits(seconds=60, memory_gb=4))
+    assert r.verdict == "no_fix_found"
+
+
+def test_language_model_options_need_an_eval(tmp_path):
+    with pytest.raises(TypeError, match="language model options"):
+        wsplab.run("x", description="d", editor=ScriptedEditor([]), thinking=True)
+
+
 def test_final_norm_and_embedding_are_frozen_by_default(tmp_path):
     try:
         sandbox_python()
