@@ -1,0 +1,23 @@
+{
+ "network": "Gemma 3 270M IT (18 layers of width 640; every layer has attention with 4 query heads and 1 key/value head of size 256 and q/k norms: layers 5, 11 and 17 attend to the whole context, the other 15 to a sliding window of 512 tokens; GeGLU MLPs of width 2,048 (mlp.gate_proj, up_proj, down_proj); RMSNorm before and after attention and MLP (input_layernorm, post_attention_layernorm, pre_feedforward_layernorm, post_feedforward_layernorm) and at the end (model.norm); a tied 262,144-token embedding, scaled by sqrt(640) at the input)",
+ "task_sentence": "Make it better at mathematics by editing its weights directly: find out what goes wrong inside the network when it fails at math problems and repair that with targeted changes.",
+ "protocol": "the model's chat template; the user message is the problem, a newline and \"Please reason step by step, and put your final answer within \\boxed{}.\"; sampling with temperature 1.0, top_k 64, top_p 0.95 and at most 8,192 new tokens; the final answer is graded against the reference answer: the last \\boxed{} answer if there is one, otherwise the answer stated after 'Final Answer' or 'the answer is', otherwise the last number in the response",
+ "practice": "Practice problems (none is in the evaluation), one JSON object per line with id, problem, answer and a reference solution: /practice/gsm8k_train.jsonl (7,469) and /practice/math_train.jsonl (7,275, with subject and level 1-5).",
+ "benchmark": "MATH-500",
+ "out_of_scope": "the final norm and the embedding / output matrix",
+ "libraries": "numpy, scipy, scikit-learn, PyTorch, pandas, safetensors, tokenizers",
+ "run_seconds": "900",
+ "run_memory": "96 GB",
+ "output_cut": "10,000",
+ "max_runs": "300",
+ "passes": "50",
+ "max_tokens": "8,192",
+ "n_layers": "18",
+ "gen_max": "2,048",
+ "both_max": "1,024",
+ "act_tokens": "8,192",
+ "tf_texts": "1,024",
+ "tf_tokens": "8,192",
+ "tf_total": "524,288",
+ "pass_time": "several minutes"
+}

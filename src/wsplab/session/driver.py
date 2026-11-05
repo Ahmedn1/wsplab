@@ -1,0 +1,247 @@
+"""The session loop: send a message, read one block, run it, report back, until the budget is spent.
+
+Reconstructed from the published prompts and logs (exp8_math/runs/p50c, exp8_math/gemma_followup/runs/g50b): the
+authors did not release their driver. It writes the same layout as their logs: turns/tNNN/{prompt.txt,answer.md},
+tool_calls.jsonl, state.json.
+"""
+
+from __future__ import annotations
+
+import json
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Callable, Protocol
+
+from ..editors.base import Editor, EditorRefused, Usage
+from ..passes.base import PassFailed, PassInvalid, PassTool
+from ..prompts import SYSTEM
+from .messages import V5, Messages
+from .protocol import Block, parse
+from .state import State
+
+NOTES_CHARS = 8000
+
+
+class Kernel(Protocol):
+    def run(self, code: str) -> str: ...
+    def edited(self) -> list[str]: ...
+    def files(self) -> list[str]: ...
+    def notes(self) -> str: ...
+    def edits_used(self) -> tuple[list[str], str | None]:
+        """The tensors currently edited, and a short hash of their values."""
+        ...
+
+
+@dataclass
+class Policy:
+    """explain: "enforce" sends unexplained blocks back, at most `explain_retries` times in a row; "remind" adds a
+    reminder to the result of an unexplained block; "off" does neither."""
+
+    explain: str = "enforce"
+    explain_retries: int = 2
+    report_edits: bool = True
+    handoff_every: int = 40
+    max_flags: int = 3
+    max_turns: int | None = None
+
+
+@dataclass
+class Result:
+    final_answer: str | None
+    state: State
+    usage: Usage = field(default_factory=Usage)
+
+
+class Stop(Exception):
+    """Ends a session early, with a reason."""
+
+
+class Session:
+    def __init__(self, task: str, editor: Editor, kernel: Kernel, tools: dict[str, PassTool] | None = None, *,
+                 budget: int = 0, max_runs: int = 300, folder: str | Path, messages: Messages = V5,
+                 policy: Policy | None = None, system: str = SYSTEM,
+                 before_turn: Callable[[Session], None] | None = None,
+                 after_reply: Callable[[Session], None] | None = None):
+        self.task = task
+        self.editor = editor
+        self.kernel = kernel
+        self.tools = tools or {}
+        self.messages = messages
+        self.policy = policy or Policy()
+        self.system = system
+        self.folder = Path(folder)
+        self.folder.mkdir(parents=True, exist_ok=True)
+        self.state = State(budget=budget, max_runs=max_runs)
+        self.history: list[dict] = []
+        self.usage = Usage()
+        self.before_turn = before_turn
+        self.after_reply = after_reply
+        self._prefix: list[str] = []
+        self._kinds = {"python", *self.tools}
+
+    # Things that can happen to a running session -------------------------------------------------------------------
+    def notice(self, text: str, name: str | None = None) -> None:
+        """Deliver a note to the editor with the next message."""
+        self._prefix.append(self.messages.note.format(text=text) + "\n\n")
+        if name:
+            self.state.notices.append(name)
+
+    def kernel_restarted(self) -> None:
+        self._prefix.append(self.messages.kernel_restarted + "\n")
+
+    def new_rule(self, text: str) -> None:
+        self._prefix.append(self.messages.new_rule.format(text=text) + "\n\n")
+
+    # The loop --------------------------------------------------------------------------------------------------------
+    def run(self) -> Result:
+        message = self.task
+        final = None
+        while True:
+            self.state.turn += 1
+            if self.before_turn:
+                self.before_turn(self)
+            if self.policy.max_turns is not None and self.state.turn > self.policy.max_turns:
+                self.state.stop_reason = "max_turns"
+                break
+            message = self._dress(message)
+            try:
+                reply = self._ask(message)
+            except EditorRefused:
+                self.state.flags += 1
+                self.state.flag_streak += 1
+                if self.state.flag_streak > self.policy.max_flags:
+                    self.state.stop_reason = "refused"
+                    break
+                self.state.turn -= 1
+                message = self.messages.refused
+                continue
+            except Stop as e:
+                self.state.stop_reason = str(e)
+                break
+            self.state.flag_streak = 0
+            self.state.since_handoff += 1
+            if self.after_reply:
+                self.after_reply(self)
+            outcome = self._handle(reply)
+            self.state.save(self.folder / "state.json")
+            if outcome is None:
+                final = reply
+                self.state.done = True
+                self.state.stop_reason = self.state.stop_reason or "finished"
+                break
+            message = outcome
+        self.state.save(self.folder / "state.json")
+        if final is not None:
+            (self.folder / "final_answer.md").write_text(final)
+        return Result(final, self.state, self.usage)
+
+    def _dress(self, message: str) -> str:
+        """Add what belongs around this turn's message: a handoff, then pending notes."""
+        prefix = "".join(self._prefix)
+        self._prefix.clear()
+        message = prefix + message
+        if self.state.since_handoff >= self.policy.handoff_every:
+            message = self._handoff(message)
+        return message
+
+    def _handoff(self, last: str) -> str:
+        s = self.state
+        s.handoffs += 1
+        s.since_handoff = 0
+        self.history.clear()
+        body = self.messages.handoff.format(
+            replies=s.turn - 1, passes=s.passes, budget=s.budget, runs=s.runs, limit=s.max_runs,
+            edited=self.kernel.edited(), files=self.kernel.files(), notes=self.kernel.notes()[-NOTES_CHARS:],
+            notes_chars=NOTES_CHARS, last=last)
+        return f"{self.task}\n\n{body}"
+
+    def _ask(self, message: str) -> str:
+        turn = self.folder / "turns" / f"t{self.state.turn:03d}"
+        turn.mkdir(parents=True, exist_ok=True)
+        (turn / "prompt.txt").write_text(message)
+        self.history.append({"role": "user", "content": message})
+        t0 = time.time()
+        try:
+            reply = self.editor.reply(self.system, list(self.history))
+        except EditorRefused:
+            self.history.pop()
+            raise
+        self.usage.add(reply.usage)
+        self.history.append({"role": "assistant", "content": reply.text})
+        (turn / "answer.md").write_text(reply.text)
+        (turn / "run.json").write_text(json.dumps({"editor": self.editor.name, "seconds": round(time.time() - t0, 2),
+                                                   "usage": reply.usage.__dict__}, indent=1) + "\n")
+        return reply.text
+
+    def _handle(self, reply: str) -> str | None:
+        """The next message, or None when the reply is the final answer."""
+        parsed = parse(reply, self._kinds)
+        if not parsed.blocks:
+            return self._no_block()
+        if len(parsed.blocks) > 1:
+            return self.messages.too_many_blocks.format(n=len(parsed.blocks))
+        if self.policy.explain == "enforce" and not parsed.explanation:
+            self.state.unexplained += 1
+            if self.state.unexplained_streak < self.policy.explain_retries:
+                self.state.unexplained_streak += 1
+                return self.messages.no_explanation.format(explain=self.messages.explain)
+        self.state.unexplained_streak = 0
+        out = self._run_block(parsed.blocks[0])
+        if self.policy.explain == "remind" and not parsed.explanation:
+            out += "\n" + self.messages.reminder
+        return out
+
+    def _no_block(self) -> str | None:
+        left = self.state.budget - self.state.passes
+        if left > 0 and self.tools:
+            self.state.nudges += 1
+            return self.messages.nudge.format(left=left)
+        return None
+
+    def _run_block(self, block: Block) -> str:
+        if block.kind == "python":
+            return self._run_python(block.body)
+        return self._run_pass(block)
+
+    def _log(self, **entry) -> None:
+        with open(self.folder / "tool_calls.jsonl", "a") as f:
+            f.write(json.dumps({"t": time.time(), **entry}) + "\n")
+
+    def _run_python(self, code: str) -> str:
+        s = self.state
+        if s.runs >= s.max_runs:
+            return self.messages.runs_exhausted.format(limit=s.max_runs)
+        s.runs += 1
+        t0 = time.time()
+        out = self.kernel.run(code)
+        self._log(kind="python", s=round(time.time() - t0, 2), code=code, out=out)
+        return self.messages.python_output.format(k=s.runs, limit=s.max_runs, out=out)
+
+    def _run_pass(self, block: Block) -> str:
+        s = self.state
+        if s.passes >= s.budget:
+            return self.messages.passes_exhausted
+        s.requests += 1
+        tool = self.tools[block.kind]
+        try:
+            result = tool.run(block.body, s.requests)
+        except PassInvalid as e:
+            s.requests -= 1
+            self._log(kind=block.kind, request=block.body, error=str(e))
+            return self.messages.pass_invalid.format(error=e)
+        except PassFailed as e:
+            self._log(kind=block.kind, request=block.body, error=str(e))
+            return self.messages.pass_failed.format(error=e)
+        s.passes += 1
+        summary = result.summary if isinstance(result.summary, str) else json.dumps(result.summary, indent=1)
+        out = self.messages.pass_done.format(k=s.passes, budget=s.budget, kind=result.kind, where=result.where,
+                                             summary=summary, left=s.budget - s.passes)
+        digest = None
+        if self.policy.report_edits:
+            names, digest = self.kernel.edits_used()
+            out += "\n" + self.messages.pass_edits.format(names=", ".join(names) or "none", digest=digest or "none")
+            if s.passes == s.budget:
+                out += "\n" + self.messages.all_passes_used
+        self._log(kind=block.kind, request=block.body, result=summary, edit_hash=digest)
+        return out
