@@ -1,0 +1,8 @@
+METHOD.
+1. Diagnose: run the unedited network on practice items, see where it scores badly and read its outputs.
+2. Before any edit, fix two disjoint item sets and save their ids in /work: DEV for choosing and tuning edits, HOLDOUT only for confirming them. Never choose or tune on HOLDOUT.
+3. Localize causally: a component that differs between good and bad items may only reflect how hard they are; show that changing it changes the behaviour you predicted, at several strengths.
+4. Measure with paired passes ("both") at full size. Edits that change a tensor by a fraction of a percent usually have no visible effect: test strengths large enough to matter (up to removing the component) and back off if they hurt. Judge edits by the score.
+5. Freeze your best candidate before using HOLDOUT and measure it there. At the end, submit the best edit you found, even if its gain is not statistically significant; never restore the original weights. Report its measured gain with its standard error honestly.
+6. Before every pass, write in /work/notes.md the exact current edit (tensors, what changed, strength) and the item set; keep the notes current (they are shown to you again if the conversation is restarted) and copy good edits (e.g. /work/edited to /work/best_1/).
+7. Print compact summaries, never whole arrays; output is shown in ASCII.

@@ -1,0 +1,1 @@
+TASK. Write, from scratch, the weights of {{network}}. All of its weights start at zero; you set them. {{task_sentence}}

@@ -1,0 +1,1 @@
+TASK. You are given the weights of {{network}}. {{task_sentence}} Work from the weights: reason about what each part computes.

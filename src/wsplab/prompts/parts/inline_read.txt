@@ -1,0 +1,4 @@
+TASK. Below are all the weights of {{network}}. {{task_sentence}} Work from the weights. You have no tools: no code execution, no calculator, nothing to run. Do not do any forward-pass calculation: do not run the network on any input (in your head or on paper). Read what the weights themselves show. This is a single response.
+
+THE WEIGHTS.
+{{weights}}

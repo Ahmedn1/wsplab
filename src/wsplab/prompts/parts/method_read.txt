@@ -1,0 +1,4 @@
+METHOD.
+1. Work out what each part of the network computes from the weights: which layers, units or directions matter, and how they fit together.
+2. Do not settle for trivial statistics: norms, ranks and spectra show where things differ, not what they do. Base your answer on what the network computes, and do not stop at the first plausible signal.
+3. Print compact summaries, never whole arrays; output is shown in ASCII.

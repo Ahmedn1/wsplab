@@ -1,0 +1,17 @@
+TASK. Below are all the weights of {{network}}. {{task_sentence}} You have no tools: no code execution, no calculator, nothing to run. This is a single response and you will get no feedback.
+
+EVALUATION. After you finish, your edited network and the unedited network are evaluated on {{benchmark}}, which you never see, with this fixed protocol: {{protocol}}. Only weight values can change.
+
+HOW TO WRITE THE WEIGHTS (numbers only; nothing is run). First explain what the network does and what you change. Then write a code block whose opening line is three backticks followed by the word edits, one statement per line ('#' starts a comment; a long list may continue over the next lines). Tensors: {{tensor_names}}.
+
+```edits
+W1[12, 0] = 2.5                     # one entry: row 12, column 0
+W1[0:6, 3] = [1, 0, -1, 0, 2, 0]    # explicit values along a range (as many values as entries)
+b1[0:4] = -1                        # fill a range (a:b is half-open; ':' alone = the whole axis)
+W2[0:2, 0:3] = [[1, -1, 0.5], [0, 2, 0]]   # a 2-D list for a 2-D block (here 2 x 3)
+W3[:, 2] *= 2                       # scale (also += and -=)
+```
+Ranges: a:b is half-open, a:b:s takes every s-th index. Statements apply in order; a later statement overwrites an earlier one. Only the LAST edits block of your reply is read; a statement that cannot be read is skipped (the others still apply). Values: plain decimal numbers (|v| <= 1e6).
+
+THE WEIGHTS. {{start_note}}
+{{weights}}

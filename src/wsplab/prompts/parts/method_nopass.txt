@@ -1,0 +1,4 @@
+METHOD.
+1. Work out from the weights what goes wrong and which components are responsible.
+2. Keep /work/notes.md current (it is shown to you again if the conversation is restarted) and copy good edits (e.g. /work/edited to /work/best_1/).
+3. Print compact summaries, never whole arrays; output is shown in ASCII.

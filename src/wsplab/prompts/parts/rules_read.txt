@@ -1,0 +1,1 @@
+RULES. Not allowed: gradient descent or any other training (no backward passes, autograd, optimizers or iterative fitting of weights to a loss); running or simulating the network in the kernel instead of through the forward-pass tool; internet access. Allowed: any analysis of the weights and of forward-pass results.

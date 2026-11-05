@@ -138,10 +138,31 @@ def from_checkpoints(base: Checkpoint, edited: Checkpoint, out: str | os.PathLik
     return write_patch(out, tensors, arrays, meta=meta)
 
 
+def with_tied(base: Checkpoint, submission: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    """A model with tied word embeddings may also store lm_head.weight: keep the two the same. Models that are not tied
+    keep them separate, whatever the file holds."""
+    config = base.config.get("text_config", base.config)
+    if not config.get("tie_word_embeddings", base.config.get("tie_word_embeddings")):
+        return submission
+    pairs = [(n, n.rsplit("lm_head.weight", 1)[0]) for n in base.names() if n.endswith("lm_head.weight")]
+    out = dict(submission)
+    for head, _ in pairs:
+        embed = next((n for n in base.names() if n.endswith("embed_tokens.weight")), None)
+        if embed is None:
+            continue
+        if embed in out and head in out and not np.array_equal(out[embed], out[head]):
+            raise PatchError(f"{embed} and {head} are tied, so they cannot be edited differently")
+        if embed in out or head in out:
+            value = out.get(embed, out.get(head))
+            out[embed] = out[head] = value
+    return out
+
+
 def from_submission(base: Checkpoint, submission: dict[str, np.ndarray], out: str | os.PathLike, *,
                     meta: dict | None = None) -> Patch:
     """The patch for edited float tensors, rounded to each tensor's dtype in the base model, as the evaluation does."""
     tensors, arrays, no_effect = [], {}, []
+    submission = with_tied(base, submission)
     for name in sorted(submission):
         if name not in base:
             raise PatchError(f"{name}: not a tensor of the base model")
@@ -161,7 +182,10 @@ def from_submission(base: Checkpoint, submission: dict[str, np.ndarray], out: st
 
 def read_submission(folder: str | os.PathLike) -> dict[str, np.ndarray]:
     """A folder of <tensor name>.npy files, such as the /work/edited folder of a session."""
-    return {f.name[:-4]: np.load(f, allow_pickle=False) for f in sorted(Path(folder).glob("*.npy"))}
+    from urllib.parse import unquote
+
+    return {unquote(f.name[:-4]): np.load(f, allow_pickle=False) for f in sorted(Path(folder).glob("*.npy"))
+            if not f.name.startswith(".")}
 
 
 def import_release(source: str | os.PathLike, out: str | os.PathLike, *, name=None, base_repo=None, base_revision=None,

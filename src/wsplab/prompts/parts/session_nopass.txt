@@ -1,0 +1,1 @@
+HOW THE SESSION RUNS. There are no forward passes: you cannot run the network. When you are done, reply without a code block, saying what you changed, the evidence for it and why you expect it to help (the tensors in /work/edited when you finish are submitted).

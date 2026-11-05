@@ -1,0 +1,1 @@
+HOW THE SESSION RUNS. It continues until all {{passes}} forward passes are used (replying without a code block does not end it earlier); after that, reply without a code block, describing your design and why you expect it to work. The tensors you saved with save_edit are your network; tensors never saved stay zero.
