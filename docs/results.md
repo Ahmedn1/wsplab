@@ -27,4 +27,5 @@ Separately, the authors' released 50-pass edit, rerun on their logged final pass
 
 ## The council
 
-See [Councils and search](council.md). No council has beaten its best member so far, including one across three providers.
+See [Councils and search](council.md). On simple tasks no council beat its best member. On a hard task one cross-provider council run
+reached 85.7% where every single-model run stayed near 49%, but it did not repeat reliably.

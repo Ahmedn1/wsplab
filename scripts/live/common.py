@@ -1,44 +1,61 @@
-"""Live-test helpers: one ledger across every run. Needs OPENAI_API_KEY and LIVE_DIR, the folder for the ledger.
-
-TOTAL stops new calls; one call can still pass it by what it costs."""
+"""Live-test helpers: a ledger per provider, written after every call, with a working limit below each real budget."""
 import fcntl, json, os, threading
 from pathlib import Path
-from wsplab.editors import Metered, Spending, Usage
-from wsplab.editors.llm import OpenAIEditor
+from wsplab.editors import Spending
+from wsplab.editors.claude import AnthropicEditor
+from wsplab.editors.llm import ChatEditor, OpenAIEditor
 
-TOTAL = 24.0     # stop a dollar short of the user's $25, to absorb the one call that can overshoot
-LEDGER = Path(os.environ["LIVE_DIR"]) / "ledger.json"
-PRICES = {"gpt-6-astra": (10, 50, 1), "gpt-6-sol": (2, 10, .2), "gpt-6-luna": (.1, .5, .01), "gpt-6.1-sol": (2, 10, .1),
-          "gpt-6.1-terra": (1, 5, .05)}
+LIVE = Path(os.environ["LIVE_DIR"])
+LIMITS = {"openai": 17.0, "anthropic": 8.0, "gemini": 9.0}   # budgets: $19, $25, $25
+PRICES = {"openai:gpt-6-astra": (10, 50, 1), "openai:gpt-6-sol": (2, 10, .2), "openai:gpt-6-luna": (.1, .5, .01),
+          "openai:gpt-6.1-sol": (2, 10, .1), "openai:gpt-6.1-terra": (1, 5, .05), "anthropic:claude-opus-5-5": (4, 20, .4),
+          "gemini:gemini-4-argon": (2, 10, .1)}
 _lock = threading.Lock()
 
 
-def spent() -> float:
-    return json.loads(LEDGER.read_text())["usd"] if LEDGER.exists() else 0.0
+def _key(provider: str) -> str:
+    return os.environ[f"{provider.upper()}_API_KEY"]
+
+
+def ledger_path(provider: str) -> Path:
+    return LIVE / f"ledger2_{provider}.json"
+
+
+def spent(provider: str) -> float:
+    p = ledger_path(provider)
+    return json.loads(p.read_text())["usd"] if p.exists() else 0.0
 
 
 class Ledgered(Spending):
-    """A run's cap, also bounded by what is left of the whole budget, written to disk after every call."""
     def add(self, editor, usage):
         before = self.usd
         super().add(editor, usage)
-        with _lock, open(str(LEDGER) + ".lock", "w") as lock:
+        provider = editor.split(":")[0].split("#")[0].replace("openai-chat", "gemini")
+        p = ledger_path(provider)
+        with _lock, open(str(p) + ".lock", "w") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)
-            data = json.loads(LEDGER.read_text()) if LEDGER.exists() else {"usd": 0.0, "calls": 0, "by_editor": {}}
+            data = json.loads(p.read_text()) if p.exists() else {"usd": 0.0, "calls": 0, "by_editor": {}}
             data["usd"] += self.usd - before
             data["calls"] += 1
             data["by_editor"][editor] = data["by_editor"].get(editor, 0.0) + self.usd - before
-            LEDGER.write_text(json.dumps(data, indent=1))
-        if spent() >= TOTAL:
-            self.max_usd = 0.0   # the whole budget is gone: every run stops at its next call
+            p.write_text(json.dumps(data, indent=1))
+        if data["usd"] >= LIMITS[provider]:
+            self.max_usd = 0.0
 
 
 def spending(cap: float) -> Ledgered:
-    left = TOTAL - spent()
-    if left <= 0.2:
-        raise SystemExit(f"budget exhausted: ${spent():.2f} spent")
-    return Ledgered(max_usd=min(cap, left), prices={f"openai:{k}": v for k, v in PRICES.items()})
+    return Ledgered(max_usd=cap, prices=PRICES)
 
 
-def editor(model: str, effort: str | None = "high"):
-    return OpenAIEditor(model, api_key=os.environ["OPENAI_API_KEY"], effort=effort)
+def editor(spec: str, effort: str = "high"):
+    provider, _, model = spec.partition(":")
+    if provider == "openai":
+        return OpenAIEditor(model, api_key=_key("openai"), effort=effort)
+    if provider == "anthropic":
+        return AnthropicEditor(model, api_key=_key("anthropic"), effort=effort)
+    if provider == "gemini":
+        e = ChatEditor(model, base_url="https://generativelanguage.googleapis.com/v1beta/openai/", api_key=_key("gemini"),
+                       reasoning_effort=effort, max_tokens=32768)
+        e.name = f"gemini:{model}"
+        return e
+    raise ValueError(spec)

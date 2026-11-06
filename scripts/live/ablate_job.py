@@ -11,8 +11,8 @@ from wsplab.kernel import Limits
 from wsplab.runners.torch import mlp
 import common
 
-MODELS = ("gpt-6-sol", "gpt-6.1-sol", "gpt-6.1-terra")
-CAPS = {"council": 1.2, "weights": 1.6}
+MODELS = tuple(sys.argv[4].split(",")) if len(sys.argv) > 4 else ()
+CAPS = {"council": 2.0, "weights": 2.5}
 arm, rep, folder = sys.argv[1], int(sys.argv[2]), sys.argv[3]
 
 x, y = load_digits(return_X_y=True)
@@ -42,20 +42,20 @@ extra = {}
 if arm == "council":
     council = Council([common.editor(m) for m in MODELS], s, method="borda", seed=rep)
     r = wsplab.run(net, editor=council, **common_args)
-    chair_won = [q.proposals[q.winner]["member"] == "openai:gpt-6-sol" for q in council.rounds]
+    chair_won = [q.proposals[q.winner]["member"] == MODELS[0] for q in council.rounds]
     bias_proposed = [any("b[1]" in p["text"] or "[1]" in p["text"] and "bias" in p["text"] for p in q.proposals) for q in council.rounds]
-    extra = {"rounds": len(council.rounds), "chair_won": chair_won, "ties": sum(q.tie for q in council.rounds), "bias_mentioned_in_proposal": bias_proposed}
+    extra = {"rounds": len(council.rounds), "chair_won": chair_won, "winners": [q.proposals[q.winner]["member"] for q in council.rounds], "ties": sum(q.tie for q in council.rounds), "bias_mentioned_in_proposal": bias_proposed}
 elif arm == "weights":
     out = wsplab.search(net, editors=[Metered(common.editor(m), s) for m in MODELS], selection="vote", spending=s, seed=rep, **common_args)
     r = out.result
     extra = {"success_rate": out.success_rate, "winner_run": out.selection.get("run"), "tie": out.selection.get("tie"),
              "candidates": [{"editor": c["editor"], "score": c["score"], "gain": c["gain"]} for c in out.candidates]}
 else:
-    r = wsplab.run(net, editor=Metered(common.editor(arm), s), **common_args)
+    r = wsplab.run(net, editor=Metered(common.editor(arm), s), resume=True, **common_args)
 e = Checkpoint(r.weights)
 bias1, rows = float(e.float("layers.2.bias")[1]), e.float("layers.2.weight")
 row_error = float(np.abs(rows[[4, 7, 9]] - clean["layers.2.weight"][[4, 7, 9]]).max())
-row = {"arm": arm, "rep": rep, "clean": clean_acc, "baseline": r.baseline, "final": r.final, "verdict": r.verdict, "usd": round(s.usd, 4),
+row = {"arm": arm, "rep": rep, "clean": clean_acc, "baseline": r.baseline, "final": r.final, "verdict": r.verdict, "usd": round(s.usd, 4), "stop": getattr(r.state, "stop_reason", None),
        "tokens": s.tokens, "turns": getattr(r.state, "turn", None), "bias1": bias1, "bias_fixed": abs(bias1 - float(clean["layers.2.bias"][1])) < 1.0,
        "rotation_fixed": row_error < 0.05, "seconds": round(time.time() - t0), **extra}
 print(json.dumps(row))

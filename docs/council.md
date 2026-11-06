@@ -33,6 +33,29 @@ The council reached the clean score with every chair, but so did each of its mem
 anything. Mixing providers did make members disagree more often. Voters also ranked their own proposal first in 8 of 11 cases
 despite anonymous ballots, more than chance would give, so anonymity may not fully hide authorship. Both are small samples.
 
+### A harder task
+
+A trained 64-48-48-10 digit classifier with 62 planted faults in its hidden layers, 3 forward passes and 15 Python runs. The damaged
+network scores 35.2%, and the clean one 94.6%.
+
+| Arm | Scores | Mean | Mean cost |
+|---|---|---|---|
+| `gpt-6.1-terra` alone | 47.9, 47.9, 47.9 | 47.9% | $0.09 |
+| `claude-opus-5-5` alone | 49.5, 51.1, 46.1 | 48.9% | $0.60 |
+| `gemini-4-argon` alone | 49.5, 49.5, 47.7 | 48.9% | $0.69 |
+| Cross-provider council | 49.7, **85.7**, 47.9 | 61.1% | $0.96 |
+| The same, with self-votes excluded | 47.9, 48.9, 47.9 | 48.2% | $0.64 |
+
+Fourteen of the fifteen runs got no further than the 12 shifted biases, which stand out when the weights are read. One council run,
+chaired by Gemini, also repaired all 14 sign flips and 15 of the 16 rewired connections. Gemini's analysis found the flips and Claude's
+winning proposal found the wiring. No run repaired the 20 mirrored units. An audit of that run's code found no network simulation and no
+fitting by gradient descent: it worked from the activations a forward pass had recorded.
+
+That is the first case of a council doing what no member did alone, but it is one run in six. The same chair with self-votes excluded
+did not repeat it, and the mean is carried by that single run. Treat it as a reason to test further, not as a measured advantage.
+Excluding self-votes showed no benefit. When self-votes were allowed, every member with a proposal ranked its own first on this task,
+so Borda decided on second-place votes.
+
 ## Voting on scripts
 
 ```python
