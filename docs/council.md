@@ -63,6 +63,15 @@ councils beat a single editor.
 Excluding self-votes showed no benefit. When self-votes were allowed, every member with a proposal ranked its own first on this task,
 so Borda decided on second-place votes.
 
+### Sharing findings at every step
+
+`Team` is a cooperative council: after each result, teammates share short notes and one lead writes the next step. With Claude leading,
+a 40-run Python limit and the same 70% bar, it failed too: no run of five passed 50%. Every run fixed the biases, and most stopped there.
+In a first version teammates simply echoed one another, so they are now asked for what is new or contested.
+
+`search(..., shared=True)` runs peers instead, with no lead: each model works on its own copy and decides for itself, and all of them
+see each other's work after every step. It is built and tested with scripted editors, but has not yet been measured on this task.
+
 ## Voting on scripts
 
 ```python

@@ -182,6 +182,13 @@ def test_a_truncated_reply_never_runs_its_half_written_block(tmp_path):
     assert "cut off" in editor.seen[1][-1]["content"]
 
 
+def test_thinking_left_out_of_completion_tokens_is_still_counted(monkeypatch):
+    reply = openai_reply()
+    reply.usage.total_tokens = 100  # 7 input, 3 reported output, and 90 of thinking the report left out
+    editor, _ = stubbed_openai(reply, monkeypatch)
+    assert editor.reply("s", []).usage.output_tokens == 93
+
+
 def test_cached_input_at_its_own_price():
     class Paid:
         name = "paid"

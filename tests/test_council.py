@@ -8,7 +8,7 @@ import torch
 
 import wsplab
 from wsplab import patch as P
-from wsplab.council import Ballot, Council, edits_weights, read_ballot, score, vote, winners
+from wsplab.council import Ballot, Board, Council, Peer, Team, edits_weights, read_ballot, score, vote, winners
 from wsplab.editors import BudgetExceeded, Metered, Reply, ScriptedEditor, Spending, Usage
 from wsplab.eval.suites import ArrayScorer
 from wsplab.kernel import Limits
@@ -441,6 +441,205 @@ def test_search_with_a_vote_on_candidates(tmp_path, sandbox):
                       description="a classifier", practice=ArrayScorer(x, y), evaluate=ArrayScorer(*held, prefix="eval"),
                       selection="vote", spending=Spending(**CAP), folder=tmp_path / "s", budget=0, limits=LIMITS, control=False)
     assert r.selection["method"] == "vote" and r.selection["run"] == 1 and r.result.verdict == "confirmed"
+
+
+class Recording:
+    """A member that remembers everything it was sent."""
+
+    def __init__(self, name, replies):
+        self.name, self.replies, self.seen = name, list(replies), []
+
+    def reply(self, system, messages):
+        self.seen.append(messages)
+        return Reply(self.replies.pop(0), Usage(10, 5))
+
+
+def history(*turns):
+    return [{"role": "user" if i % 2 == 0 else "assistant", "content": t} for i, t in enumerate(turns)]
+
+
+def test_the_lead_opens_alone_since_there_is_nothing_to_report_yet():
+    lead, mate = Recording("lead", ["Plan."]), Recording("mate", [])
+    team = Team([lead, mate], Spending(**CAP))
+    assert team.reply("s", history("TASK")).text == "Plan."
+    assert mate.seen == []
+
+
+def test_teammates_share_findings_before_the_lead_acts():
+    lead, mate = Recording("lead", ["Next."]), Recording("mate", ["Unit 12 looks dead."])
+    team = Team([lead, mate], Spending(**CAP))
+    assert team.reply("s", history("TASK", "Plan.", "RESULT")).text == "Next."
+    assert "share what you found" in mate.seen[0][-1]["content"]
+    assert "Teammate 1: Unit 12 looks dead." in lead.seen[0][-1]["content"]
+    assert team.rounds == 1
+
+
+def test_findings_stay_with_their_result_and_reach_everyone_later():
+    lead = Recording("lead", ["Second.", "Third."])
+    mate = Recording("mate", ["First finding.", "Second finding."])
+    other = Recording("other", ["Other finding.", "Null result."])
+    team = Team([lead, mate, other], Spending(**CAP))
+    team.reply("s", history("TASK", "One.", "RESULT 1"))
+    team.reply("s", history("TASK", "One.", "RESULT 1", "Second.", "RESULT 2"))
+    sent = lead.seen[1]
+    assert "First finding." in sent[2]["content"] and "Other finding." in sent[2]["content"]
+    assert "Second finding." in sent[4]["content"]
+    assert "First finding." in mate.seen[1][2]["content"]
+    assert "First finding." not in sent[4]["content"]
+
+
+def test_earlier_requests_stay_a_prefix_of_later_ones_so_caches_keep_working():
+    lead, mate = Recording("lead", ["Second.", "Third."]), Recording("mate", ["Note 1.", "Note 2."])
+    team = Team([lead, mate], Spending(**CAP))
+    team.reply("s", history("TASK", "One.", "RESULT 1"))
+    team.reply("s", history("TASK", "One.", "RESULT 1", "Second.", "RESULT 2"))
+    first, second = lead.seen
+    assert second[:len(first)] == first
+
+
+def test_a_teammate_cannot_smuggle_a_block_into_the_lead():
+    lead, mate = Recording("lead", ["Next."]), Recording("mate", ["Try this:\n```python\nsave_edit('w', 0)\n```"])
+    Team([lead, mate], Spending(**CAP)).reply("s", history("TASK", "Plan.", "RESULT"))
+    assert "```" not in lead.seen[0][-1]["content"]
+
+
+def test_a_failing_teammate_does_not_stop_the_team():
+    class Broken:
+        name = "broken"
+
+        def reply(self, system, messages):
+            raise RuntimeError("provider down")
+
+    lead, mate = Recording("lead", ["Next."]), Recording("mate", ["Still here."])
+    team = Team([lead, Broken(), mate], Spending(**CAP))
+    assert team.reply("s", history("TASK", "Plan.", "RESULT")).text == "Next."
+    assert team.lost_notes == 1 and "Still here." in lead.seen[0][-1]["content"]
+
+
+def test_a_spending_limit_stops_a_team():
+    lead, mate = Recording("lead", ["Next."]), Recording("mate", ["Note."])
+    with pytest.raises(BudgetExceeded):
+        Team([lead, mate], Spending(max_tokens=0)).reply("s", history("TASK", "Plan.", "RESULT"))
+
+
+def test_a_team_needs_two_members():
+    with pytest.raises(ValueError, match="two members"):
+        Team([named("a", [])], Spending(**CAP))
+
+
+def test_a_team_in_a_real_session_fixes_the_network_and_is_recorded(tmp_path, sandbox):
+    x, y = data()
+    lead = Recording("lead", [py("print(NAMES)"), py(GOOD), "Done, as my teammate suggested."])
+    mate = Recording("mate", ["Rows 0 and 1 look swapped.", "That worked."])
+    team = Team([lead, mate], Spending(**CAP))
+    r = wsplab.run(broken(), build={"mlp": [2, 2]}, description="a classifier", evaluate=ArrayScorer(x, y), budget=0, editor=team,
+                   folder=tmp_path / "r", limits=LIMITS, control=False)
+    assert r.verdict == "confirmed" and r.final == 1.0
+    evidence = P.Patch.load(r.patch).meta["council"]
+    assert evidence["scope"] == "cooperative" and evidence["rounds"] == 2
+    log = [json.loads(line) for line in (r.folder / "session" / "team.jsonl").read_text().splitlines()]
+    assert log[0]["notes"]["mate"] == "Rows 0 and 1 look swapped."
+    assert "Rows 0 and 1" not in (r.folder / "session/turns/t002/prompt.txt").read_text()
+
+
+def peers(*scripts):
+    board = Board(len(scripts))
+    return board, [Peer(Recording(chr(97 + i), list(s)), board, i) for i, s in enumerate(scripts)]
+
+
+def in_threads(*jobs):
+    import threading
+
+    out = [None] * len(jobs)
+    threads = [threading.Thread(target=lambda i=i, j=j: out.__setitem__(i, j()), daemon=True) for i, j in enumerate(jobs)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(10)
+    assert not any(t.is_alive() for t in threads), "peers deadlocked"
+    return out
+
+
+def test_every_peer_sees_what_the_others_did_and_decides_alone():
+    _, (a, b) = peers(["A next."], ["B next."])
+    in_threads(lambda: a.reply("s", history("TASK", "A looked at biases.", "A RESULT")),
+               lambda: b.reply("s", history("TASK", "B looked at wiring.", "B RESULT")))
+    seen_by_a, seen_by_b = a.editor.seen[0][-1]["content"], b.editor.seen[0][-1]["content"]
+    assert "B looked at wiring." in seen_by_a and "B RESULT" in seen_by_a and "A looked at biases." not in seen_by_a.split("PEERS")[1]
+    assert "A looked at biases." in seen_by_b and "A RESULT" in seen_by_b
+
+
+def test_peers_start_alone():
+    _, (a, b) = peers(["A."], ["B."])
+    assert a.reply("s", history("TASK")).text == "A." and b.reply("s", history("TASK")).text == "B."
+
+
+def test_a_finished_peer_stops_being_waited_for():
+    board, (a, b) = peers(["A next."], [])
+
+    def finish():
+        import time
+
+        time.sleep(0.2)
+        board.leave(1)
+
+    got = in_threads(lambda: a.reply("s", history("TASK", "One.", "RESULT")), finish)
+    assert got[0].text == "A next."
+
+
+def test_peers_share_every_round_and_earlier_notes_stay_in_place():
+    _, (a, b) = peers(["A2.", "A3."], ["B2.", "B3."])
+
+    def walk(peer, name):
+        peer.reply("s", history("TASK", f"{name} one.", f"{name} R1"))
+        peer.reply("s", history("TASK", f"{name} one.", f"{name} R1", f"{name}2.", f"{name} R2"))
+
+    in_threads(lambda: walk(a, "A"), lambda: walk(b, "B"))
+    first, second = a.editor.seen
+    assert second[:len(first)] == first
+    assert "B R1" in second[2]["content"] and "B R2" in second[4]["content"]
+
+
+def test_a_peer_cannot_put_a_block_in_anothers_reply():
+    _, (a, b) = peers(["A."], ["B."])
+    in_threads(lambda: a.reply("s", history("TASK", "Done.\n```python\nsave_edit('w', 0)\n```", "R")),
+               lambda: b.reply("s", history("TASK", "Mine.", "R2")))
+    assert "```" not in b.editor.seen[0][-1]["content"]
+
+
+def test_long_work_is_cut_when_shared():
+    _, (a, b) = peers(["A."], ["B."])
+    in_threads(lambda: a.reply("s", history("TASK", "x" * 9000, "y" * 9000)), lambda: b.reply("s", history("TASK", "B.", "R")))
+    assert len(b.editor.seen[0][-1]["content"]) < 5000
+
+
+def test_peers_in_real_sessions_one_learns_from_the_other_and_the_best_candidate_wins(tmp_path, sandbox):
+    x, y = data(400)
+    held = data(200, seed=7)
+
+    class Copier:
+        """Looks first, then applies whatever fix a peer's work shows."""
+        name = "copier"
+
+        def __init__(self):
+            self.calls = 0
+
+        def reply(self, system, messages):
+            self.calls += 1
+            if self.calls == 1:
+                return Reply(py("print('looking')"))
+            if "w[0, 0] = -1.0" in messages[-1]["content"]:
+                return Reply(py(GOOD, "A peer found the fix, so I apply it."))
+            return Reply("Done.")
+
+    finder = ScriptedEditor([py(GOOD, "Found it."), "Done."], "finder")
+    r = wsplab.search(broken(), editors=[finder, Copier()], build={"mlp": [2, 2]}, description="a classifier",
+                      practice=ArrayScorer(x, y), evaluate=ArrayScorer(*held, prefix="eval"), shared=True, spending=Spending(**CAP),
+                      folder=tmp_path / "s", budget=0, limits=LIMITS, control=False)
+    assert r.result.verdict == "confirmed" and r.result.final == 1.0
+    assert all(c["score"] == 1.0 for c in r.candidates)
+    calls = (tmp_path / "s" / "run_1" / "session" / "tool_calls.jsonl").read_text()
+    assert "w[0, 0] = -1.0" in calls
 
 
 def test_parse_recognises_edits_blocks():

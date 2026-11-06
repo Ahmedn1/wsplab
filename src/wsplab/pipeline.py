@@ -429,14 +429,19 @@ class SearchResult:
 
 def search(model, *, editors: list, runs: int | None = None, build, description: str, practice=None, evaluate,
            selection: str = "metric", spending=None, method: str = "borda", folder=None, z: float = 2.0, seed: int = 0,
-           **options) -> SearchResult:
+           shared: bool = False, **options) -> SearchResult:
     """Several independent sessions, then one winner. The practice data is split: editors work on one part and candidates
     are compared on the other, so only the winner ever meets the evaluation.
 
     `selection` is "metric" (the best score on the selection set) or "vote" (the editors vote on the finished candidates,
     the `weights` scope of a council). `spending` is required: this runs a whole session per candidate.
+
+    With `shared`, the sessions run together as peers: after each step every editor sees what the others did and what came back,
+    then decides its own next step. They may finish early, and each still ends with a candidate of its own.
     """
-    from .council import vote
+    from concurrent.futures import ThreadPoolExecutor
+
+    from .council import Board, Peer, vote
     from .editors.cost import Metered
     from .session.state import State
 
@@ -456,14 +461,23 @@ def search(model, *, editors: list, runs: int | None = None, build, description:
     selector = TorchEvaluation(runner, select_set)
     baseline = selector.evaluate(base)
     count = runs or len(editors)
-    candidates = []
-    for k in range(count):
+    board = Board(count) if shared else None
+
+    def session(k: int) -> dict:
         editor = get_editor(editors[k % len(editors)])
         metered = Metered(editor, spending)
-        one = run(base, build=build, description=description, practice=work_set, evaluate=None, no_eval=True,
-                  editor=metered, folder=folder / f"run_{k}", **options)
+        settings = dict(options)
+        if shared:
+            metered = Peer(metered, board, k)
+            settings.setdefault("policy", Policy(handoff_every=10**9, require_all_passes=False))
+        try:
+            one = run(base, build=build, description=description, practice=work_set, evaluate=None, no_eval=True,
+                      editor=metered, folder=folder / f"run_{k}", **settings)
+        finally:
+            if board is not None:
+                board.leave(k)
         row = {"run": k, "editor": editor.name, "folder": str(one.folder), "patch": str(one.patch), "answer": one.answer,
-               "stop_reason": getattr(one.state, "stop_reason", None)}
+               "stop_reason": getattr(one.state, "stop_reason", None), "turns": getattr(one.state, "turn", None)}
         changed = P.Patch.load(one.patch).manifest["changed_entries_total"]
         row["changed_entries"] = changed
         if changed:
@@ -473,9 +487,17 @@ def search(model, *, editors: list, runs: int | None = None, build, description:
                        z=comparison.z())
         else:
             row.update(score=baseline.mean, gain=0.0, standard_error=0.0, z=0.0)
-        candidates.append(row)
-        if spending_exhausted(spending):
-            break
+        return row
+
+    candidates = []
+    if shared:
+        with ThreadPoolExecutor(count) as pool:
+            candidates = list(pool.map(session, range(count)))
+    else:
+        for k in range(count):
+            candidates.append(session(k))
+            if spending_exhausted(spending):
+                break
     success = sum(c["z"] >= z for c in candidates) / len(candidates)
     usable = [c for c in candidates if c["changed_entries"]]
     decision: dict = {"method": selection}

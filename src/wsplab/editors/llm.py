@@ -85,7 +85,9 @@ class ChatEditor:
             raise EditorRefused("content filter")
         u = r.usage
         details = getattr(u, "prompt_tokens_details", None)
-        usage = Usage(u.prompt_tokens, u.completion_tokens, getattr(details, "cached_tokens", 0) or 0) if u else Usage()
+        # Some servers leave thinking out of completion_tokens but bill it as output, and count it in total_tokens.
+        output = max(u.completion_tokens, (getattr(u, "total_tokens", 0) or 0) - u.prompt_tokens) if u else 0
+        usage = Usage(u.prompt_tokens, output, getattr(details, "cached_tokens", 0) or 0) if u else Usage()
         return Reply(r.choices[0].message.content or "", usage, truncated=finish == "length")
 
 

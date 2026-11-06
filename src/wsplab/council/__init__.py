@@ -17,11 +17,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..editors.base import Editor, Reply, Usage
-from ..editors.cost import Metered, Spending
+from ..editors.cost import BudgetExceeded, Metered, Spending
 from ..session.protocol import parse
+from .peers import Board, Peer
 from .tally import METHODS, Ballot, read_ballot, score, winners
 
-__all__ = ["BALLOT", "Ballot", "Council", "METHODS", "edits_weights", "read_ballot", "score", "vote", "winners"]
+__all__ = ["BALLOT", "Ballot", "Board", "Council", "METHODS", "Peer", "Team", "edits_weights", "read_ballot", "score", "vote", "winners"]
 
 EDIT_CALLS = {"save_edit", "drop_edit"}
 EDIT_VERBS = {"write", "scale", "zero", "add", "project_out"}
@@ -194,6 +195,88 @@ class Council:
             return
         with open(Path(self.folder) / "council.jsonl", "a") as f:
             f.write(json.dumps(record.__dict__) + "\n")
+
+
+TEAM_ASK = """You are working on this together with teammates, and one of you, the lead, writes the next step. Before they do, share what you found. In at most {words} words: what the latest result shows that the team has not already established, what it leaves unexplained, and the one thing most worth trying or checking next. Do not repeat what the team already agrees on: add something new, or argue for a competing explanation. A null result is worth sharing. Say so if you think an edit is ready to save. Plain text only: no code blocks."""
+TEAM_NOTES = """
+
+FINDINGS FROM YOUR TEAMMATES, who read the same result:
+{notes}
+Use what helps. You decide the next step."""
+
+
+@dataclass
+class Team:
+    """A cooperative council. After every result each teammate shares a short note of findings, and the lead writes the next step
+    with those notes in view. Notes stay attached to the result they answer, so everyone sees the whole discussion from then on.
+
+    There is no vote: insights meet at every step instead of only at an edit. Teammates are asked for what is new or contested, since
+    on a live run they simply echoed one another. A Team is an Editor, so the session, kernel and patch
+    code do not change, and the transcript holds the lead's replies alone. `spending` is required: a turn costs a call per member.
+    """
+
+    members: list[Editor]
+    spending: Spending
+    lead: int = 0
+    words: int = 150
+    folder: Path | None = None
+
+    def __post_init__(self):
+        if len(self.members) < 2:
+            raise ValueError("a team needs at least two members")
+        names = [m.name for m in self.members]
+        if len(set(names)) != len(names):
+            self.members = [_Renamed(m, f"{m.name}#{i}") for i, m in enumerate(self.members)]
+        self.metered = [Metered(m, self.spending) for m in self.members]
+        self.name = "team:" + "+".join(m.name for m in self.members)
+        self.notes: dict[str, str] = {}
+        self.rounds = 0
+        self.lost_notes = 0
+
+    def attach(self, session) -> None:
+        self.folder = session.folder
+
+    def evidence(self) -> dict:
+        return {"members": [m.name for m in self.members], "lead": self.members[self.lead].name, "scope": "cooperative",
+                "rounds": self.rounds, "lost_notes": self.lost_notes, "tokens": self.spending.tokens}
+
+    def _with_notes(self, messages: list[dict]) -> list[dict]:
+        """The conversation with each result followed by the team's notes on it. Only ever appends to what was sent before, so
+        prompt caches keep working."""
+        out = []
+        for m in messages:
+            note = self.notes.get(m["content"]) if m["role"] == "user" else None
+            out.append({**m, "content": m["content"] + TEAM_NOTES.format(notes=note)} if note else m)
+        return out
+
+    def _note(self, member: int, system: str, conversation: list[dict]) -> str | None:
+        ask = {"role": "user", "content": TEAM_ASK.format(words=self.words)}
+        try:
+            return self.metered[member].reply(system, [*conversation, ask]).text.replace("```", "'''").strip()
+        except BudgetExceeded:
+            raise
+        except Exception:  # noqa: BLE001 - one teammate failing must not stop the others
+            self.lost_notes += 1
+            return None
+
+    def reply(self, system: str, messages: list[dict]) -> Reply:
+        if len(messages) > 1 and messages[-1]["content"] not in self.notes:  # the first message is the task: nothing to report yet
+            conversation = self._with_notes(messages)
+            others = [i for i in range(len(self.metered)) if i != self.lead]
+            with ThreadPoolExecutor(len(others)) as pool:
+                found = list(pool.map(lambda i: (i, self._note(i, system, conversation)), others))
+            lines = [f"Teammate {n}: {text}" for n, (_, text) in enumerate(found, 1) if text]
+            if lines:
+                self.notes[messages[-1]["content"]] = "\n".join(lines) + "\n"
+                self.rounds += 1
+                self._log(found)
+        return self.metered[self.lead].reply(system, self._with_notes(messages))
+
+    def _log(self, found: list) -> None:
+        if self.folder is None:
+            return
+        with open(Path(self.folder) / "team.jsonl", "a") as f:
+            f.write(json.dumps({"round": self.rounds, "notes": {self.members[i].name: text for i, text in found}}) + "\n")
 
 
 class _Renamed:

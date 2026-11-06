@@ -1,8 +1,8 @@
 """One run on the hard task: python hard_job.py <arm> <rep> <folder> [members] [--exclude-self]"""
-import json, re, sys, time
+import json, os, re, sys, time
 from pathlib import Path
 import wsplab
-from wsplab.council import Council
+from wsplab.council import Council, Team
 from wsplab.editors import Metered
 from wsplab.eval.suites import ArrayScorer
 from wsplab.kernel import Limits
@@ -16,10 +16,14 @@ args = dict(build={"mlp": hard_net.SIZES, "activation": "relu"},
             description="an MLP classifying 8x8 grayscale digit images (64 inputs in [0, 1], row-major; two hidden layers of 48 ReLU units; 10 logits, one per digit 0-9)",
             note="This network used to be accurate, but it has been damaged in several places.",
             practice=ArrayScorer(x[pr], y[pr], name="digit images"), evaluate=ArrayScorer(x[ev], y[ev], name="held-out digit images", prefix="eval"),
-            budget=3, max_runs=15, folder=folder, limits=Limits(seconds=120, memory_gb=4))
-s = common.spending(2.5 if arm.startswith("council") else 1.2)
+            budget=3, max_runs=int(os.environ.get("HARD_RUNS", 15)), folder=folder, limits=Limits(seconds=120, memory_gb=4))
+s = common.spending(float(os.environ.get("HARD_CAP", 2.5 if arm.startswith("council") else 1.2)))
 t0 = time.time(); extra = {}
-if arm.startswith("council"):
+if arm == "team":
+    t = Team([common.editor(m) for m in members], s)
+    r = wsplab.run(net, editor=t, resume=True, **args)
+    extra = {"lead": members[0], "rounds": t.rounds, "lost_notes": t.lost_notes}
+elif arm.startswith("council"):
     c = Council([common.editor(m) for m in members], s, method="borda", seed=rep, exclude_self="--exclude-self" in sys.argv)
     r = wsplab.run(net, editor=c, resume=True, **args)
     extra = {"chair": members[0], "rounds": len(c.rounds), "winners": [q.proposals[q.winner]["member"] for q in c.rounds],
