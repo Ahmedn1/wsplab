@@ -5,6 +5,10 @@ good single editor.
 
 ## What has been measured
 
+Gemini costs below are too low, and so are the totals that include it: its OpenAI-compatible endpoint leaves thinking out of
+`completion_tokens`, and thinking is billed as output. A test call reported 6 output tokens with 1,036 more in `total_tokens`. wsplab now
+counts them, but the figures here were measured before that fix.
+
 A digit classifier with two planted faults, 4 forward passes, 3 repeats per arm. Fixing both faults restores the clean score of
 95.77%. All arms fixed the first fault every time, so they differ only on the second.
 
