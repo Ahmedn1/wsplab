@@ -52,7 +52,14 @@ winning proposal found the wiring. No run repaired the 20 mirrored units. An aud
 fitting by gradient descent: it worked from the activations a forward pass had recorded.
 
 That is the first case of a council doing what no member did alone, but it is one run in six. The same chair with self-votes excluded
-did not repeat it, and the mean is carried by that single run. Treat it as a reason to test further, not as a measured advantage.
+did not repeat it, and the mean is carried by that single run.
+
+We then repeated the 85.7% setup five times with new seeds, with the test fixed in advance: 70% counts as a breakthrough, and the claim
+needs 2 of 5. **It failed: 0 of 5.** Four runs made no edit, and one reached 47.1%. In all four, the Gemini chair spent all 15 Python runs on
+analysis, in at least one case reaching a promising permutation, then had no run left to save anything. The original
+85.7% happened to save on its last run. So the 15-run limit, added to control cost, shaped this result, and the test says little about
+what a council can do without it. wsplab now warns an editor before its last runs if nothing is saved. There is still no proof that
+councils beat a single editor.
 Excluding self-votes showed no benefit. When self-votes were allowed, every member with a proposal ranked its own first on this task,
 so Borda decided on second-place votes.
 

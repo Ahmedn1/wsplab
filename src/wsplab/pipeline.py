@@ -176,6 +176,8 @@ def run_session(job: Job, base: Path) -> tuple[str | None, object, Path]:
     config = KernelConfig(model=base, work=work, practice=job.practice_dir, mode=job.mode, frozen=job.frozen,
                           refuse_rescale=job.mode == "edit", names=job.names, prelude=job.prelude, limits=job.limits,
                           sandbox=job.sandbox, binds=job.binds)
+    if job.mode != "read" and not job.policy.warn_unsaved:
+        job.policy.warn_unsaved = 3
     with SandboxKernel(config) as kernel:
         tools = job.tools_factory(job, base, kernel.store) if job.budget or job.force_tools else {}
         session = Session(job.prompt.build(), job.editor, kernel, tools, budget=job.budget, max_runs=job.max_runs,

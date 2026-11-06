@@ -39,7 +39,8 @@ class Kernel(Protocol):
 class Policy:
     """explain: "enforce" sends unexplained blocks back, at most `explain_retries` times in a row; "remind" adds a
     reminder to the result of an unexplained block; "off" does neither. `require_all_passes` is the paper's rule that a final
-    answer does not end the session while passes are left."""
+    answer does not end the session while passes are left. `warn_unsaved` warns the editor this many Python runs before the
+    limit if it has saved no edit: live editors have spent every run on analysis and been left unable to apply what they found."""
 
     explain: str = "enforce"
     explain_retries: int = 2
@@ -48,6 +49,7 @@ class Policy:
     max_flags: int = 3
     max_nudges: int = 5
     require_all_passes: bool = True
+    warn_unsaved: int = 0
     max_turns: int | None = None
 
 
@@ -257,7 +259,11 @@ class Session:
         approves = getattr(self.editor, "approves", None)
         out = self.kernel.run(code) if approves is None else self.kernel.run(code, allow_edits=approves(code))
         self._log(kind="python", s=round(time.time() - t0, 2), code=code, out=out)
-        return self.messages.python_output.format(k=s.runs, limit=s.max_runs, out=out)
+        message = self.messages.python_output.format(k=s.runs, limit=s.max_runs, out=out)
+        left = s.max_runs - s.runs
+        if 0 < left <= self.policy.warn_unsaved and not self.kernel.edited():
+            message += "\n" + self.messages.no_edit_yet.format(left=left)
+        return message
 
     def _run_pass(self, block: Block) -> str:
         s = self.state

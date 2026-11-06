@@ -91,6 +91,24 @@ def test_passes_can_be_left_unused_when_the_policy_says_so(tmp_path):
     assert r.final_answer == "Finished early." and r.state.passes == 0
 
 
+def test_an_editor_is_warned_before_it_spends_its_last_runs_on_analysis(tmp_path):
+    """Found on live runs: an editor found the fix, used its last run without saving, and could not apply it."""
+    s, editor, _ = session(tmp_path, [block(), block(), block(), "Done."], max_runs=3, policy=Policy(warn_unsaved=2))
+    s.run()
+    messages = [m[-1]["content"] for m in editor.seen]
+    assert "no edit is saved" not in messages[0]
+    assert "Python runs left: 2, and no edit is saved" in messages[1]
+    assert "Python runs left: 1, and no edit is saved" in messages[2]
+    assert "no edit is saved" not in messages[3]
+
+
+def test_no_warning_once_an_edit_is_saved(tmp_path):
+    s, editor, kernel = session(tmp_path, [block(), block(), "Done."], max_runs=3, policy=Policy(warn_unsaved=2))
+    kernel.edited = lambda: ["w"]
+    s.run()
+    assert not any("no edit is saved" in m[-1]["content"] for m in editor.seen)
+
+
 def test_two_blocks_are_refused_and_nothing_runs(tmp_path):
     s, editor, kernel = session(tmp_path, ["Both.\n```python\n1\n```\n```python\n2\n```", "Done."])
     s.run()
