@@ -2,7 +2,8 @@
 
 In the paper's follow-up, Astra raised Gemma's MATH-500 score only from 6.8% to 7.0-7.7% across 5-50 passes. Here
 OpenAI, Claude and Gemini edit it as peers (sharing every step) and, separately, alone. The sessions use the paper's
-prompt (the v5 template the Gemma runs used), sampling and lenient grading, with 10 passes each.
+prompt (the v5 template the Gemma runs used), sampling and lenient grading, with 8 passes each (the GPU, not the
+budget, is the limit: each pass of ~1,000 answers takes several minutes on this machine).
 
 Each session's own end-of-run score is on a SELECTION set held out from the practice problems, which picks each arm's
 candidate. MATH-500 and the guard checks are run only after the protocol audit (gemma_report.py)."""
@@ -26,7 +27,7 @@ else:
 MODEL, REVISION, NAME = "google/gemma-3-270m-it", "ac82b4e820549b854eebf28ce6dedaf9fdfa17b3", "Gemma 3 270M IT"
 SAMPLING = {"temperature": 1.0, "top_k": 64, "top_p": 0.95, "max_tokens": 8192}   # the model card's, as in the paper
 SEED = 20261108
-PASSES, MAX_RUNS, MAX_TURNS = 10, 40, 60
+PASSES, MAX_RUNS, MAX_TURNS = 8, 40, 60
 MAX_CHANGED = 500_000       # about 0.5% of the editable (non-embedding) weights
 SELECTION = {"math": 400, "gsm8k": 200}
 SCRATCH = Path("/tmp/wsplab-gemma-trial")
@@ -62,7 +63,7 @@ def suites():
     selection = [{"id": r["id"], "problem": r["problem"], "answer": r["answer"], "source": r["source"]}
                  for r in rows if r["id"] in held]
     suite = LMSuite(practice, selection, get_grader("math-lenient"), SAMPLING, benchmark="held-out practice problems",
-                    samples=4, user_message=lambda row: f"{row['problem']}\n{INSTRUCTION}")
+                    samples=2, user_message=lambda row: f"{row['problem']}\n{INSTRUCTION}")
     return suite
 
 
@@ -170,6 +171,7 @@ def run(out, caps, scripted=None, budget=PASSES):
     for arm in ("peers", "independent"):
         (out / arm).mkdir()
         ledger = Ledger(out / arm / "ledger.json", caps)
+        ledger.save()
         board = Board(len(MODELS)) if arm == "peers" else None
         for index, provider in enumerate(MODELS):
             ed = scripted(arm, index) if scripted else Guarded(editor(provider), provider, ledger, max_output=16384)
