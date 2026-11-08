@@ -138,6 +138,7 @@ class Job:
     binds: dict = field(default_factory=dict)
     force_tools: bool = False
     resume: bool = False
+    max_changed: int | None = None
 
 
 def build_edit(job: Job, base: Path, edited_dir: Path, out: Path, *, meta: dict | None = None) -> tuple[P.Patch, Path]:
@@ -186,7 +187,7 @@ def run_session(job: Job, base: Path) -> tuple[str | None, object, Path]:
     work.mkdir(parents=True, exist_ok=True)
     config = KernelConfig(model=base, work=work, practice=job.practice_dir, mode=job.mode, frozen=job.frozen,
                           refuse_rescale=job.mode == "edit", names=job.names, prelude=job.prelude, limits=job.limits,
-                          sandbox=job.sandbox, binds=job.binds)
+                          sandbox=job.sandbox, binds=job.binds, max_changed=job.max_changed)
     if job.mode != "read" and not job.policy.warn_unsaved:
         job.policy.warn_unsaved = 3
     with SandboxKernel(config) as kernel:
@@ -320,6 +321,15 @@ def _prompt_slots(job_slots: dict, limits: Limits, budget: int, max_runs: int) -
             "output_cut": f"{limits.output_chars:,}", "max_runs": max_runs, "passes": budget, **job_slots}
 
 
+def _budget_note(note, max_changed):
+    """The user's note, plus one sentence about the edit budget when there is one."""
+    if max_changed is None:
+        return note
+    line = (f"Edit budget: all your edits together may change at most {max_changed:,} weight entries (counted after "
+            f"rounding to the model's dtype); save_edit refuses an edit that would go over it.")
+    return f"{note}\n{line}" if note else line
+
+
 def _make_builder(prompt, base: str, slots: dict, note, passes: bool) -> PromptBuilder:
     if isinstance(prompt, PromptBuilder):
         prompt.slots = {**slots, **prompt.slots}
@@ -336,7 +346,7 @@ def run(model, *, build=None, description: str | None = None, note: str | None =
         task_sentence: str | None = None, regressions: dict | None = None, control: bool = True, limits: Limits | None = None,
         sandbox: str = "bwrap", policy: Policy | None = None, device: str = "cpu", z: float = 2.0, prelude: str = "",
         messages: Messages = V5, no_eval: bool = False, semantic: bool = False, tools=None, binds: dict | None = None,
-        weights_names: list | None = None, resume: bool = False, **lm_options) -> RunResult:
+        weights_names: list | None = None, resume: bool = False, max_changed: int | None = None, **lm_options) -> RunResult:
     """Run the whole job on any PyTorch network.
 
     `build` says how to run the weights: a function returning an nn.Module, "path/model.py:function", or
@@ -413,7 +423,8 @@ def run(model, *, build=None, description: str | None = None, note: str | None =
                                         edited=edited_builder(job, base, store), edit_digest=store.digest)}
 
     evaluation = TorchEvaluation(runner, evaluate, slots["benchmark"]) if evaluate is not None and not no_eval else None
-    builder = _make_builder(prompt, template, _prompt_slots(slots, limits, budget, max_runs), note, budget > 0)
+    builder = _make_builder(prompt, template, _prompt_slots(slots, limits, budget, max_runs), _budget_note(note, max_changed),
+                            budget > 0)
     if semantic:
         builder.addendum = prompt_addendum(SemanticMap(Checkpoint(weights).names(), {}, load=None, save=None,
                                                        shape=Checkpoint(weights).shape).family)
@@ -424,7 +435,7 @@ def run(model, *, build=None, description: str | None = None, note: str | None =
               frozen=tuple(frozen), names=weights_names, binds=binds or {}, force_tools=tools is not None, resume=resume,
               budget=budget, max_runs=max_runs, access=access, sandbox=sandbox,
               policy=policy or Policy(), messages=messages, control=control and mode == "edit", z=z, runner=runner,
-              prelude=prelude, meta={"kind": "generic"})
+              prelude=prelude, meta={"kind": "generic"}, max_changed=max_changed)
     return execute(job, weights)
 
 
@@ -572,7 +583,7 @@ def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "ed
            regressions: dict | None = None, control: bool = True, limits: Limits | None = None, sandbox: str = "bwrap",
            policy: Policy | None = None, z: float = 2.0, prelude: str = "", messages: Messages = V5, semantic: bool = False,
            runner=None, forward_limits=None, pass_time: str = "several minutes", full_attention=None,
-           resume: bool = False, cache_answers: bool = True) -> RunResult:
+           resume: bool = False, cache_answers: bool = True, max_changed: int | None = None) -> RunResult:
     """Run the whole job on a language model. `eval` is a suite: "math", or an LMSuite of your own data."""
     from .arch_text import default_frozen, describe, text_tensors
     from .eval.lm_suite import LMEvaluation, LMSuite, math_suite
@@ -619,7 +630,8 @@ def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "ed
                                      user_message=suite.user_message,
                                      cache=GenerationCache(job.folder / "cache" / "generations.jsonl") if cache_answers else None)}
 
-    builder = _make_builder(prompt, f"lm_{mode}", _prompt_slots(slots, limits, budget, max_runs), note, budget > 0)
+    builder = _make_builder(prompt, f"lm_{mode}", _prompt_slots(slots, limits, budget, max_runs),
+                            _budget_note(note, max_changed), budget > 0)
     if semantic:
         builder.addendum = prompt_addendum("llama")
         prelude = kernel_prelude() + prelude
@@ -628,7 +640,7 @@ def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "ed
               regressions={k: LMEvaluation(runner, v) for k, v in (regressions or {}).items()}, limits=limits, frozen=frozen,
               names=names, budget=budget, max_runs=max_runs, access="kernel", sandbox=sandbox, policy=policy or Policy(),
               messages=messages, control=control and mode == "edit", z=z, runner=runner, prelude=prelude, resume=resume,
-              meta={"kind": "lm", "base": {"repo": str(model), "revision": revision}})
+              meta={"kind": "lm", "base": {"repo": str(model), "revision": revision}}, max_changed=max_changed)
     return execute(job, weights)
 
 

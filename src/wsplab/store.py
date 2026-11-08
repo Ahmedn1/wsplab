@@ -43,10 +43,11 @@ def tensor_name_of(file_name: str) -> str:
 
 class WeightStore:
     """mode: "read" refuses every edit; "edit" and "write" allow them. `names` limits what is visible, for example to the
-    text part of a multimodal model."""
+    text part of a multimodal model. `max_changed` caps how many entries all edits together may change (after rounding
+    to the model's dtype); an edit that would go over it is refused."""
 
     def __init__(self, checkpoint: Checkpoint, edited_dir: str | os.PathLike, *, mode: str = "edit", frozen=(),
-                 refuse_rescale: bool = True, names: list[str] | None = None):
+                 refuse_rescale: bool = True, names: list[str] | None = None, max_changed: int | None = None):
         if mode not in ("read", "edit", "write"):
             raise ValueError(f"unknown mode {mode!r}")
         self.checkpoint = checkpoint
@@ -56,6 +57,8 @@ class WeightStore:
         self.refuse_rescale = refuse_rescale
         self.names = list(names) if names is not None else checkpoint.names()
         self.locked = False
+        self.max_changed = max_changed
+        self._counts: dict[str, tuple[int, int]] = {}
         unknown = set(self.names) - set(checkpoint.names())
         if unknown:
             raise ValueError(f"unknown tensors: {sorted(unknown)[:5]}")
@@ -94,11 +97,16 @@ class WeightStore:
         original = to_float(dtype, base).astype(np.float64)
         if self.refuse_rescale and self._is_rescale(original, array.astype(np.float64)):
             raise EditRefused(f"{name}: an edit that only multiplies a whole tensor by a constant is refused")
+        changed = int((bits != to_bits(base)).sum())
+        if self.max_changed is not None:
+            total = changed + sum(self.changed_entries(n) for n in self.edited() if n != name)
+            if total > self.max_changed:
+                raise EditRefused(f"{name}: the edits would change {total:,} entries in total; the limit is "
+                                  f"{self.max_changed:,} (nothing was saved)")
         self.dir.mkdir(parents=True, exist_ok=True)
         tmp = self.dir / f".{os.getpid()}.tmp.npy"
         np.save(tmp, array.astype(np.float64 if dtype == "F64" else np.float32))
         tmp.replace(self._path(name))
-        changed = int((bits != to_bits(base)).sum())
         return f"saved {name}: {changed:,} of {array.size:,} entries differ from the original in {LONG_NAMES[dtype]}"
 
     @staticmethod
@@ -110,6 +118,18 @@ class WeightStore:
         if abs(c - 1) <= RESCALE_TOLERANCE or c == 0:
             return False
         return float(np.linalg.norm(new - c * original)) <= RESCALE_TOLERANCE * float(np.linalg.norm(new))
+
+    def changed_entries(self, name: str) -> int:
+        """Entries of one saved edit that differ from the original after rounding to the model's dtype."""
+        p = self._path(name)
+        if not p.exists():
+            return 0
+        stamp = p.stat().st_mtime_ns
+        if self._counts.get(name, (None,))[0] != stamp:
+            dtype, base = self.checkpoint.raw(name)
+            bits = cast_to(np.load(p, allow_pickle=False), dtype, name)
+            self._counts[name] = (stamp, int((bits != to_bits(base)).sum()))
+        return self._counts[name][1]
 
     def drop_edit(self, name: str) -> None:
         self._check_name(name)

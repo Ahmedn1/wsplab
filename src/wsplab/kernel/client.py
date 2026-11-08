@@ -41,6 +41,7 @@ class KernelConfig:
     frozen: tuple = ()
     refuse_rescale: bool = True
     names: list[str] | None = None
+    max_changed: int | None = None
     prelude: str = ""
     limits: Limits = field(default_factory=Limits)
     sandbox: str = "bwrap"
@@ -93,7 +94,8 @@ class SandboxKernel:
         self.config.work = Path(config.work)
         self.config.work.mkdir(parents=True, exist_ok=True)
         self.store = WeightStore(Checkpoint(config.model), self.config.work / "edited", mode=config.mode,
-                                 frozen=config.frozen, refuse_rescale=config.refuse_rescale, names=config.names)
+                                 frozen=config.frozen, refuse_rescale=config.refuse_rescale, names=config.names,
+                                 max_changed=config.max_changed)
         self.process: subprocess.Popen | None = None
         self.restarts = 0
         self._cgroup = None
@@ -104,7 +106,7 @@ class SandboxKernel:
         isolated = c.sandbox == "bwrap"
         return {"model": "/model" if isolated else str(c.model), "work": "/work" if isolated else str(c.work),
                 "scratch": "/tmp", "mode": c.mode, "frozen": list(c.frozen), "refuse_rescale": c.refuse_rescale,
-                "names": c.names, "prelude": c.prelude}
+                "names": c.names, "max_changed": c.max_changed, "prelude": c.prelude}
 
     def _command(self) -> list[str]:
         c = self.config

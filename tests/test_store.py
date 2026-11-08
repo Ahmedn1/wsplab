@@ -107,3 +107,22 @@ def test_names_limit_what_is_visible(ckpt, tmp_path):
     s = store(ckpt, tmp_path, names=["w"])
     with pytest.raises(KeyError):
         s.load("frozen.weight")
+
+
+def test_edit_budget_counts_all_edits_and_refuses_going_over(ckpt, tmp_path):
+    s = store(ckpt, tmp_path, max_changed=5)
+    w = s.load("w")
+    w[0, :3] += 1                                   # 3 entries
+    s.save_edit("w", w)
+    a = s.load("a/b")
+    a[:2] += 1                                      # 2 more: total 5, allowed
+    s.save_edit("a/b", a)
+    a[2] += 1                                       # a 6th entry: refused, nothing saved
+    with pytest.raises(EditRefused, match="limit is 5"):
+        s.save_edit("a/b", a)
+    assert s.changed_entries("a/b") == 2
+    w2 = s.load("w")
+    w2[0, :3] = s.load_original("w")[0, :3]          # replacing an edit counts the new version, not both
+    w2[1, :3] += 1
+    s.save_edit("w", w2)
+    assert s.changed_entries("w") == 3

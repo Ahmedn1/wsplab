@@ -48,7 +48,8 @@ def build_namespace(config: dict) -> dict:
     from wsplab.store import WeightStore
 
     store = WeightStore(Checkpoint(config["model"]), os.path.join(config["work"], "edited"), mode=config["mode"],
-                        frozen=config["frozen"], refuse_rescale=config["refuse_rescale"], names=config.get("names"))
+                        frozen=config["frozen"], refuse_rescale=config["refuse_rescale"], names=config.get("names"),
+                        max_changed=config.get("max_changed"))
     ns: dict = {"__name__": "__main__", "NAMES": list(store.names)}
     try:
         import torch
