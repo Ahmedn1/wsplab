@@ -20,6 +20,21 @@ else:
     import minatar_seaquest as task
     from peer_trial import MODELS, PRICES, Guarded, Ledger, editor
 
+# The cheaper model of each provider. Prices are conservative: Haiku at its long-prompt rate (and fresh input at the
+# cache-write rate, as the ledger does for Anthropic); Luna and Gemini 3.8 Flash from published trackers.
+CHEAP = {"openai": "gpt-6-luna", "anthropic": "claude-haiku-5-5", "gemini": "gemini-3.8-flash"}
+CHEAP_PRICES = {"openai:gpt-6-luna": (.10, .50, .01), "anthropic:claude-haiku-5-5": (.625, 2.50, .05),
+                "gemini:gemini-3.8-flash": (.75, 3.75, .075)}
+
+
+def use_tier(tier):
+    """Point the shared editor factory and spending guard at the chosen tier (they read these tables at call time)."""
+    if tier == "cheap":
+        MODELS.clear()
+        MODELS.update(CHEAP)
+        PRICES.update(CHEAP_PRICES)
+
+
 SEED = 20261108
 PASSES, MAX_RUNS, MAX_TURNS = 8, 40, 60
 MAX_CHANGED = 1024   # 5% of the 20,486 parameters
@@ -40,7 +55,8 @@ NOTE = (
 )
 
 
-def run(arm, fixture, out, caps):
+def run(arm, fixture, out, caps, tier="strong"):
+    use_tier(tier)
     fixture, out = Path(fixture).resolve(), Path(out).resolve()
     if set(caps) != set(MODELS):
         raise ValueError("supply caps for all three providers")
@@ -51,7 +67,7 @@ def run(arm, fixture, out, caps):
     runner = TorchRunner(task.build, "cpu")
     description = task.description()
     out.mkdir(parents=True, exist_ok=False)
-    plan = {"arm": arm, "fixture": str(fixture), "manifest": json.loads((fixture / "manifest.json").read_text()),
+    plan = {"arm": arm, "tier": tier, "fixture": str(fixture), "manifest": json.loads((fixture / "manifest.json").read_text()),
             "task_sha256": task.digest(Path(task.__file__)), "trial_sha256": task.digest(Path(__file__)),
             "models": MODELS, "caps": caps, "prices": PRICES, "effort": "high", "max_output_tokens": 16384,
             "passes": PASSES, "require_all_passes": True, "max_runs": MAX_RUNS, "max_turns": MAX_TURNS,
@@ -87,7 +103,8 @@ if __name__ == "__main__":
     parser.add_argument("--arm", choices=["peers", "independent"], required=True)
     parser.add_argument("--fixture", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--tier", choices=["strong", "cheap"], default="strong")
     for provider in MODELS:
         parser.add_argument(f"--{provider}-cap", type=float, required=True)
     args = parser.parse_args()
-    run(args.arm, args.fixture, args.out, {p: getattr(args, f"{p}_cap") for p in MODELS})
+    run(args.arm, args.fixture, args.out, {p: getattr(args, f"{p}_cap") for p in MODELS}, args.tier)
