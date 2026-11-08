@@ -69,9 +69,15 @@ class TorchForward:
             if names:
                 if not hasattr(self.scorer, "inputs"):
                     raise ValueError("this scorer has no fixed inputs to capture activations on")
-                batch = self.scorer.inputs[self.scorer._index(ids)]
-                for name, array in self.runner.capture(weights, batch, names).items():
-                    np.save(folder / f"act_{name}.npy", array)
+                index = self.scorer._index(ids)
+                step = getattr(self.scorer, "batch", None) or len(index)
+                parts: dict[str, list[np.ndarray]] = {}
+                for start in range(0, len(index), step):  # in batches: a large network on many items won't fit at once
+                    got = self.runner.capture(weights, self.scorer.inputs[index[start:start + step]], names)
+                    for name, array in got.items():
+                        parts.setdefault(name, []).append(array)
+                for name, arrays in parts.items():
+                    np.save(folder / f"act_{name}.npy", np.concatenate(arrays))
         except Exception as e:  # noqa: BLE001 - a failed run must not cost the editor a pass
             raise PassFailed(f"{type(e).__name__}: {e}") from e
         (folder / "scores.json").write_text(json.dumps(scores.per_item))

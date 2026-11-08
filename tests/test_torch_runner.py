@@ -35,3 +35,27 @@ def test_activation_snapshot_precedes_inplace_residual_addition(tmp_path):
     captured = TorchRunner(Residual).capture(weights, inputs, ["before", "after"])
     np.testing.assert_array_equal(captured["before"], inputs)
     np.testing.assert_array_equal(captured["after"], inputs * 2)
+
+
+def test_forward_tool_captures_activations_in_scorer_batches(tmp_path):
+    import json
+
+    from wsplab.eval.suites import ArrayScorer
+    from wsplab.passes.torch_forward import TorchForward
+
+    def build():
+        return nn.Sequential(nn.Linear(3, 4), nn.ReLU())
+
+    weights = state_to_checkpoint(build().state_dict(), tmp_path / "model.safetensors")
+    runner = TorchRunner(build)
+    calls = []
+    capture = runner.capture
+    runner.capture = lambda w, x, names: calls.append(len(x)) or capture(w, x, names)
+    inputs = np.random.default_rng(0).normal(size=(10, 3)).astype(np.float32)
+    scorer = ArrayScorer(inputs, np.zeros(10, dtype=np.int64), batch=4)
+    tool = TorchForward(runner, scorer, work=tmp_path / "work", base=weights, edited=lambda: weights,
+                        edit_digest=lambda: None)
+    tool.run(json.dumps({"model": "original", "activations": ["1"]}), 1)
+    assert calls == [4, 4, 2]
+    saved = np.load(tmp_path / "work/fwd_1/act_1.npy")
+    np.testing.assert_allclose(saved, capture(weights, inputs, ["1"])["1"], rtol=1e-6)
