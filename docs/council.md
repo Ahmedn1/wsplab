@@ -1,7 +1,8 @@
 # Councils and search
 
-One editor is the default, and we recommend starting there. A council is optional, and so far there is no evidence that it beats a
-good single editor.
+One editor is the default, and we recommend starting there. A council is optional.
+A two-peer search now has one positive comparison against both members working alone
+on modular digit repair, but a repeatable or cost-efficient advantage is not established.
 
 ## What has been measured
 
@@ -75,7 +76,49 @@ account stopped responding partway, so the last three runs lost almost all of on
 members scored best. In a first version teammates simply echoed one another, so they are now asked for what is new or contested.
 
 `search(..., shared=True)` runs peers instead, with no lead: each model works on its own copy and decides for itself, and all of them
-see each other's work after every step. It is built and tested with scripted editors, but has not yet been measured on this task.
+see each other's work after every step. The first live peer pilot selected a candidate scoring 47.9% (against the damaged
+35.2% baseline); its individual candidates scored 48.9%, 39.6% and 47.9% on evaluation in a subsequent diagnostic audit.
+The winner was selected on a separate selection set, so it need not have the highest evaluation score.
+The pilot showed sharing but did not reach the 70% breakthrough threshold. It cost about $6.11 according to the corrected
+local accounting and was cut short by its spending limit; it is not a completed fair comparison with solo baselines.
+
+That pilot's peer messages were truncated to 2,500 reply characters and 1,500 result characters. New runs preserve the full
+reply and returned result text, with code fences escaped as quotations. This can increase token usage; existing spending
+limits still apply. The pilot therefore does not measure the revised full-sharing implementation.
+
+### A positive peer comparison on modular repair
+
+The [routed digit repair task](experiments/routed-digits.md) makes independent partial repairs measurable.
+On a fresh model-test seed, terra and Claude peers selected a candidate scoring **88.82%**, versus
+**83.53%** for Claude alone and **78.82%** for terra alone, on the same 340 external held-out queries.
+Both arms selected candidates using separate selection data. All four sessions finished normally
+with six forward passes each and identical per-editor limits and provider spending ceilings.
+
+The peer gain over the selected independent candidate was 5.29 percentage points. Peers cost an
+estimated $2.20, versus $1.73 for both independent attempts and $1.50 for Claude alone. This is one
+seed on a deliberately modular task, not a demonstrated general or efficiency advantage. An earlier
+pilot was disqualified after a contributing peer simulated modified-network predictions in Python.
+The new run's audit found no such replay or external evaluation access; a peer's internal practice
+holdout bookkeeping issue is disclosed in the [full results](experiments/peer-confirmation-results.md).
+
+### Testing a naturally imperfect model
+
+The genuine-task experiment uses the unmodified public CIFAR-100 ResNet-20 checkpoint.
+Its ordinary full-test accuracy reproduces the author's 68.83% exactly; no faults
+are planted. OpenAI, Claude and Gemini are included in both peer and independent
+arms, with 8,000 images reserved for external evaluation. The first attempt was
+stopped after finding that the generic activation recorder returned numpy views
+that later in-place operations overwrote. The recorder now snapshots outputs;
+regression tests and an independent reference verify the fix. That attempt has
+no valid performance result. The [corrected plan](experiments/natural-cifar100-restart-plan.md)
+and [baseline verification](experiments/natural-cifar100-baseline.json) are retained;
+the user approved revised provider limits for the corrected paid comparison.
+That comparison is now complete: the selected peer candidate scored 68.525%
+against the selected independent candidate's 68.800% and the original's 68.875%.
+Gemini was included in both arms. Its peer simulated modified-network tails
+outside the forward tool, invalidating the peer arm as a clean comparison;
+both Gemini sessions also reached their budget guards with passes unused.
+There is no council win. See the [full results and audit](experiments/natural-cifar100-results.md).
 
 ## Voting on scripts
 

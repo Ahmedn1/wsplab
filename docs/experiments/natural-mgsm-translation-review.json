@@ -1,0 +1,108 @@
+{
+  "reviewer": "assistant manual comparison against published English pilot counterparts",
+  "scope": "English output usability for the mathematical task; not a native-speaker audit or proof of absent latent comprehension",
+  "rubric_file": "translation-review-criteria.json",
+  "reviewed_at": 1793977249.1808696,
+  "items": [
+    {
+      "id": "mgsm-rev2-76-bn",
+      "language": "bn",
+      "usable_english_math_rendering": false,
+      "note": "Changes four levels to two, area to height, and average to one-level area."
+    },
+    {
+      "id": "mgsm-rev2-76-sw",
+      "language": "sw",
+      "usable_english_math_rendering": false,
+      "note": "Invents an illness scenario and loses the level/area relationships."
+    },
+    {
+      "id": "mgsm-rev2-85-bn",
+      "language": "bn",
+      "usable_english_math_rendering": false,
+      "note": "Changes games to players and win/loss totals to goals; loses the original sum constraint."
+    },
+    {
+      "id": "mgsm-rev2-85-sw",
+      "language": "sw",
+      "usable_english_math_rendering": false,
+      "note": "Mostly copies the Swahili source rather than producing an English translation."
+    },
+    {
+      "id": "mgsm-rev2-118-bn",
+      "language": "bn",
+      "usable_english_math_rendering": true,
+      "note": "Preserves 3 children, 2 pairs each, 60 per pair and a total-money question; buying/payment becomes selling/earnings, so mathematically usable but not semantically faithful."
+    },
+    {
+      "id": "mgsm-rev2-118-sw",
+      "language": "sw",
+      "usable_english_math_rendering": false,
+      "note": "Copies the Swahili source rather than translating."
+    },
+    {
+      "id": "mgsm-rev2-144-bn",
+      "language": "bn",
+      "usable_english_math_rendering": false,
+      "note": "Repeats the translation instruction rather than translating the question."
+    },
+    {
+      "id": "mgsm-rev2-144-sw",
+      "language": "sw",
+      "usable_english_math_rendering": false,
+      "note": "Changes a tax restricted to nonfood items into savings on the total amount."
+    },
+    {
+      "id": "mgsm-rev2-223-bn",
+      "language": "bn",
+      "usable_english_math_rendering": false,
+      "note": "Changes flower categories into repeated rows of beans and loses a clear comparison and total-count question."
+    },
+    {
+      "id": "mgsm-rev2-223-sw",
+      "language": "sw",
+      "usable_english_math_rendering": false,
+      "note": "Drops the fewer-than relation and asks only for geraniums rather than total flowers."
+    },
+    {
+      "id": "mgsm-rev2-211-bn",
+      "language": "bn",
+      "usable_english_math_rendering": false,
+      "note": "Replaces work and savings relationships with store visits; loses the four babysitting sessions and original savings constraint."
+    },
+    {
+      "id": "mgsm-rev2-211-sw",
+      "language": "sw",
+      "usable_english_math_rendering": false,
+      "note": "Copies the Swahili source rather than translating."
+    },
+    {
+      "id": "mgsm-rev2-249-bn",
+      "language": "bn",
+      "usable_english_math_rendering": false,
+      "note": "Loses 50 pounds per bag and treats four bags as four pounds."
+    },
+    {
+      "id": "mgsm-rev2-249-sw",
+      "language": "sw",
+      "usable_english_math_rendering": false,
+      "note": "Copies the Swahili source rather than translating."
+    },
+    {
+      "id": "mgsm-rev2-208-bn",
+      "language": "bn",
+      "usable_english_math_rendering": true,
+      "note": "Names and candy categories change, but both counts, the two-to-one weight relation, 40 grams and total weight are preserved."
+    },
+    {
+      "id": "mgsm-rev2-208-sw",
+      "language": "sw",
+      "usable_english_math_rendering": false,
+      "note": "Copies the Swahili source rather than translating."
+    }
+  ],
+  "usable_counts": {
+    "bn": 2,
+    "sw": 0
+  }
+}

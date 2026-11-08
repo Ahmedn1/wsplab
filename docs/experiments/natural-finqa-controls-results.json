@@ -1,0 +1,146 @@
+{
+  "status": "completed",
+  "at": 1793997101.2540612,
+  "paid_api_calls": 0,
+  "external_evaluation_used": false,
+  "metric": "custom direct numeric answer accuracy; not official FinQA program execution",
+  "conditions": {
+    "original_nonthinking": {
+      "all_32": {
+        "n": 32,
+        "correct": 4,
+        "accuracy": 0.125,
+        "unparseable": 3,
+        "truncated": 0
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "correct": 4,
+        "accuracy": 0.16666666666666666,
+        "unparseable": 3,
+        "truncated": 0
+      }
+    },
+    "original_thinking": {
+      "all_32": {
+        "n": 32,
+        "correct": 17,
+        "accuracy": 0.53125,
+        "unparseable": 1,
+        "truncated": 0
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "correct": 17,
+        "accuracy": 0.7083333333333334,
+        "unparseable": 1,
+        "truncated": 0
+      }
+    },
+    "clean_nonthinking": {
+      "all_32": {
+        "n": 32,
+        "correct": 7,
+        "accuracy": 0.21875,
+        "unparseable": 2,
+        "truncated": 0
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "correct": 6,
+        "accuracy": 0.25,
+        "unparseable": 2,
+        "truncated": 0
+      }
+    },
+    "clean_thinking": {
+      "all_32": {
+        "n": 32,
+        "correct": 8,
+        "accuracy": 0.25,
+        "unparseable": 0,
+        "truncated": 0
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "correct": 8,
+        "accuracy": 0.3333333333333333,
+        "unparseable": 0,
+        "truncated": 0
+      }
+    },
+    "evidence_thinking": {
+      "all_32": {
+        "n": 32,
+        "correct": 10,
+        "accuracy": 0.3125,
+        "unparseable": 0,
+        "truncated": 0
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "correct": 9,
+        "accuracy": 0.375,
+        "unparseable": 0,
+        "truncated": 0
+      }
+    }
+  },
+  "paired": {
+    "clean_nonthinking-minus-original_nonthinking": {
+      "all_32": {
+        "n": 32,
+        "difference": 0.09375,
+        "standard_error": 0.09374999999999999,
+        "wrong_to_right": 6,
+        "right_to_wrong": 3,
+        "exploratory_not_multiplicity_adjusted": true
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "difference": 0.08333333333333333,
+        "standard_error": 0.1191252334983594,
+        "wrong_to_right": 5,
+        "right_to_wrong": 3,
+        "exploratory_not_multiplicity_adjusted": true
+      }
+    },
+    "clean_thinking-minus-original_thinking": {
+      "all_32": {
+        "n": 32,
+        "difference": -0.28125,
+        "standard_error": 0.08075219711382271,
+        "wrong_to_right": 0,
+        "right_to_wrong": 9,
+        "exploratory_not_multiplicity_adjusted": true
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "difference": -0.375,
+        "standard_error": 0.10094660663590604,
+        "wrong_to_right": 0,
+        "right_to_wrong": 9,
+        "exploratory_not_multiplicity_adjusted": true
+      }
+    },
+    "evidence_thinking-minus-clean_thinking": {
+      "all_32": {
+        "n": 32,
+        "difference": 0.0625,
+        "standard_error": 0.09977292767466629,
+        "wrong_to_right": 6,
+        "right_to_wrong": 4,
+        "exploratory_not_multiplicity_adjusted": true
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "difference": 0.041666666666666664,
+        "standard_error": 0.12739256153441425,
+        "wrong_to_right": 5,
+        "right_to_wrong": 4,
+        "exploratory_not_multiplicity_adjusted": true
+      }
+    }
+  },
+  "fixture_hashes_verified_after_inference": true
+}

@@ -1,0 +1,186 @@
+{
+  "seed": 22,
+  "evaluation_items": 340,
+  "rows": [
+    {
+      "arm": "peers",
+      "editor": "openai:gpt-6.1-terra",
+      "run": 0,
+      "selected": true,
+      "selection_score": 0.9142857142857143,
+      "diagnostic_evaluation_score": 0.888235294117647,
+      "per_branch": [
+        0.9705882352941176,
+        0.9117647058823529,
+        1.0,
+        0.9117647058823529,
+        0.7647058823529411,
+        1.0,
+        0.5,
+        0.9411764705882353,
+        0.8823529411764706,
+        1.0
+      ],
+      "turns": 21,
+      "python_runs": 12,
+      "passes": 6,
+      "stop": "finished",
+      "changed_entries": 1172,
+      "potential_fit_flags_require_review": [],
+      "kernel_matrix_operations_require_review": [],
+      "replies_mentioning_peers": 7,
+      "folder": "./.wsplab/experiments/peer-confirmation-seed22/peers/run/run_0"
+    },
+    {
+      "arm": "peers",
+      "editor": "anthropic:claude-opus-5-5",
+      "run": 1,
+      "selected": false,
+      "selection_score": 0.9142857142857143,
+      "diagnostic_evaluation_score": 0.8794117647058823,
+      "per_branch": [
+        0.9705882352941176,
+        0.9117647058823529,
+        1.0,
+        0.9117647058823529,
+        0.7941176470588235,
+        1.0,
+        0.5,
+        0.8235294117647058,
+        0.8823529411764706,
+        1.0
+      ],
+      "turns": 30,
+      "python_runs": 22,
+      "passes": 6,
+      "stop": "finished",
+      "changed_entries": 1172,
+      "potential_fit_flags_require_review": [],
+      "kernel_matrix_operations_require_review": [
+        "eff1=(v*on2)@W2*on1; tmpl=eff1@W1",
+        "tmpl=((v*on2)@W2*on1)@W1"
+      ],
+      "replies_mentioning_peers": 20,
+      "folder": "./.wsplab/experiments/peer-confirmation-seed22/peers/run/run_1"
+    },
+    {
+      "arm": "independent",
+      "editor": "openai:gpt-6.1-terra",
+      "run": 0,
+      "selected": false,
+      "selection_score": 0.8571428571428571,
+      "diagnostic_evaluation_score": 0.788235294117647,
+      "per_branch": [
+        0.9705882352941176,
+        0.9117647058823529,
+        1.0,
+        0.7647058823529411,
+        0.5,
+        0.5,
+        0.5,
+        0.8529411764705882,
+        0.8823529411764706,
+        1.0
+      ],
+      "turns": 27,
+      "python_runs": 13,
+      "passes": 6,
+      "stop": "finished",
+      "changed_entries": 63,
+      "potential_fit_flags_require_review": [],
+      "kernel_matrix_operations_require_review": [
+        "norms=np.linalg.norm(w,axis=1); cos=w@w.T/(norms[:,None]*norms[None,:]+1e-9)",
+        "corr=centered.T@centered/(norms[:,None]*norms[None,:]+1e-8)"
+      ],
+      "replies_mentioning_peers": 0,
+      "folder": "./.wsplab/experiments/peer-confirmation-seed22/independent/run/run_0"
+    },
+    {
+      "arm": "independent",
+      "editor": "anthropic:claude-opus-5-5",
+      "run": 1,
+      "selected": true,
+      "selection_score": 0.9,
+      "diagnostic_evaluation_score": 0.8352941176470589,
+      "per_branch": [
+        0.9705882352941176,
+        0.9117647058823529,
+        1.0,
+        0.7647058823529411,
+        0.5,
+        1.0,
+        0.47058823529411764,
+        0.8529411764705882,
+        0.8823529411764706,
+        1.0
+      ],
+      "turns": 35,
+      "python_runs": 27,
+      "passes": 6,
+      "stop": "finished",
+      "changed_entries": 2239,
+      "potential_fit_flags_require_review": [],
+      "kernel_matrix_operations_require_review": [
+        "C=(Wc@Mc.T)/(np.linalg.norm(Wc,axis=1)[:,None]*np.linalg.norm(Mc,axis=1)[None]+1e-9)",
+        "c=(Wt@disc)/(np.linalg.norm(Wt,axis=1)*np.linalg.norm(disc)+1e-9); out[k]=round(float(np.abs(c).mean()),3)",
+        "W2=load(f'branches.{b}.l2.weight').numpy(); pred=W2@d1",
+        "W3=load(f'branches.{b}.l3.weight').numpy(); v=(W3[1]-W3[0])@W2.numpy()   # readout-projected column weight"
+      ],
+      "replies_mentioning_peers": 4,
+      "folder": "./.wsplab/experiments/peer-confirmation-seed22/independent/run/run_1"
+    }
+  ],
+  "selected_peer_minus_independent": 0.052941176470588235,
+  "paired_standard_error": 0.01641235584741998,
+  "cost_estimate": {
+    "peers": {
+      "openai": 0.20246490000000006,
+      "anthropic": 1.9933803999999993
+    },
+    "independent": {
+      "openai": 0.23302449999999994,
+      "anthropic": 1.4962378
+    }
+  },
+  "note": "Individual candidate evaluation is exploratory; candidates were selected using selection data only.",
+  "peer_vs_each_solo": {
+    "openai:gpt-6.1-terra": {
+      "difference": 0.1,
+      "paired_standard_error": 0.01967107624593175,
+      "wrong_to_right": 41,
+      "right_to_wrong": 7
+    },
+    "anthropic:claude-opus-5-5": {
+      "difference": 0.052941176470588235,
+      "paired_standard_error": 0.01641235584741998,
+      "wrong_to_right": 25,
+      "right_to_wrong": 7
+    }
+  },
+  "complete_solo_baselines": [
+    "openai:gpt-6.1-terra",
+    "anthropic:claude-opus-5-5"
+  ],
+  "audit": {
+    "result": "No prohibited counterfactual simulation, training, or external evaluation access found in manual review.",
+    "reviewed": "All four sessions, including matrix operations and later saved edits.",
+    "practice_split_caveat": "The Claude peer mixed its internal practice HOLDOUT into one development request. Its internal confirmation is not independent. The framework selection and external evaluation data were outside all editor kernels and remained separate.",
+    "method_note": "Weight-to-template correlations and one-shot permutation matching used practice labels and recorded activations. They did not evaluate modified network predictions inside the kernel.",
+    "matching_base_sha256": "af7ea4bfa3db107c8ee63de63c3f3f110a206e0dfff6d381757f889f18525092",
+    "matching_plan_fields": true
+  },
+  "accounting": {
+    "peers": {
+      "estimated_usd": 2.1958452999999993,
+      "calls": 51,
+      "api_errors": 0,
+      "estimated_usage_calls": 0
+    },
+    "independent": {
+      "estimated_usd": 1.7292623,
+      "calls": 62,
+      "api_errors": 0,
+      "estimated_usage_calls": 0
+    }
+  }
+}

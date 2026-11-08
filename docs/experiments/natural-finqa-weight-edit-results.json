@@ -1,0 +1,262 @@
+{
+  "candidate_1": {
+    "original_correct": 7,
+    "edited_correct": 6,
+    "n": 16,
+    "difference": -0.0625,
+    "standard_error": 0.11063265039459795,
+    "wrong_to_right": 1,
+    "right_to_wrong": 2,
+    "changed_answers": [
+      {
+        "id": "VTR/2007/page_47.pdf-4",
+        "original_prediction": "643876",
+        "edited_prediction": "643667",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "AWK/2013/page_132.pdf-2",
+        "original_prediction": "10.2",
+        "edited_prediction": "10.1\\%",
+        "original_correct": true,
+        "edited_correct": false
+      },
+      {
+        "id": "DRE/2013/page_39.pdf-2",
+        "original_prediction": "71.7\\%",
+        "edited_prediction": "72.17",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "DRE/2009/page_72.pdf-2",
+        "original_prediction": "-38.78",
+        "edited_prediction": "38.77",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "JPM/2014/page_65.pdf-1",
+        "original_prediction": "67.48",
+        "edited_prediction": "715.56",
+        "original_correct": true,
+        "edited_correct": false
+      },
+      {
+        "id": "MAS/2018/page_35.pdf-3",
+        "original_prediction": "1.46%",
+        "edited_prediction": "1.43",
+        "original_correct": false,
+        "edited_correct": true
+      },
+      {
+        "id": "PNC/2009/page_46.pdf-2",
+        "original_prediction": "33.33",
+        "edited_prediction": "1.00",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "RSG/2016/page_144.pdf-1",
+        "original_prediction": "4.0",
+        "edited_prediction": "4",
+        "original_correct": true,
+        "edited_correct": true
+      },
+      {
+        "id": "JPM/2009/page_133.pdf-2",
+        "original_prediction": "118",
+        "edited_prediction": "218",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "UPS/2006/page_32.pdf-4",
+        "original_prediction": "13.03",
+        "edited_prediction": "-151.06",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "LKQ/2018/page_83.pdf-1",
+        "original_prediction": "111,000",
+        "edited_prediction": "111000",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "MRO/2014/page_58.pdf-1",
+        "original_prediction": "97.1",
+        "edited_prediction": "97.14",
+        "original_correct": true,
+        "edited_correct": true
+      }
+    ],
+    "exact_two_sided_p": 1.0
+  },
+  "candidate_2": {
+    "original_correct": 7,
+    "edited_correct": 7,
+    "n": 16,
+    "difference": 0.0,
+    "standard_error": 0.12909944487358055,
+    "wrong_to_right": 2,
+    "right_to_wrong": 2,
+    "changed_answers": [
+      {
+        "id": "VTR/2007/page_47.pdf-4",
+        "original_prediction": "643876",
+        "edited_prediction": "643722.41",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "AWK/2013/page_132.pdf-2",
+        "original_prediction": "10.2",
+        "edited_prediction": "10.1\\%",
+        "original_correct": true,
+        "edited_correct": false
+      },
+      {
+        "id": "ETFC/2007/page_126.pdf-3",
+        "original_prediction": "86.85",
+        "edited_prediction": "87.14",
+        "original_correct": true,
+        "edited_correct": true
+      },
+      {
+        "id": "DRE/2013/page_39.pdf-2",
+        "original_prediction": "71.7\\%",
+        "edited_prediction": "72.17\\%",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "DRE/2009/page_72.pdf-2",
+        "original_prediction": "-38.78",
+        "edited_prediction": "38.77",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "JPM/2014/page_65.pdf-1",
+        "original_prediction": "67.48",
+        "edited_prediction": "167.48",
+        "original_correct": true,
+        "edited_correct": false
+      },
+      {
+        "id": "MAS/2018/page_35.pdf-3",
+        "original_prediction": "1.46%",
+        "edited_prediction": "1.45",
+        "original_correct": false,
+        "edited_correct": true
+      },
+      {
+        "id": "PNC/2009/page_46.pdf-2",
+        "original_prediction": "33.33",
+        "edited_prediction": "-1",
+        "original_correct": false,
+        "edited_correct": true
+      },
+      {
+        "id": "RSG/2016/page_144.pdf-1",
+        "original_prediction": "4.0",
+        "edited_prediction": "4",
+        "original_correct": true,
+        "edited_correct": true
+      },
+      {
+        "id": "JPM/2009/page_133.pdf-2",
+        "original_prediction": "118",
+        "edited_prediction": "1258",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "CAG/2008/page_75.pdf-1",
+        "original_prediction": "61.6",
+        "edited_prediction": "61.7\\%",
+        "original_correct": true,
+        "edited_correct": true
+      },
+      {
+        "id": "ABMD/2007/page_52.pdf-2",
+        "original_prediction": "8381",
+        "edited_prediction": "11822",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "UPS/2006/page_32.pdf-4",
+        "original_prediction": "13.03",
+        "edited_prediction": "14.03",
+        "original_correct": false,
+        "edited_correct": false
+      },
+      {
+        "id": "LKQ/2018/page_83.pdf-1",
+        "original_prediction": "111,000",
+        "edited_prediction": "$3,517",
+        "original_correct": false,
+        "edited_correct": false
+      }
+    ],
+    "exact_two_sided_p": 1.0
+  },
+  "frozen": {
+    "decision": "restore_original",
+    "reason": "Neither precommitted strength meets the DEV retention rule",
+    "frozen": true,
+    "holdout_used": false
+  },
+  "holdout_used": false,
+  "framework": {
+    "verdict": "no_fix_found",
+    "reasons": [
+      "no weight differs from the base model after rounding"
+    ],
+    "baseline": 0.5,
+    "final": null,
+    "patch": "./.wsplab/fq-edit1/run/result/patch",
+    "report": "./.wsplab/fq-edit1/run/report.md",
+    "status": "completed",
+    "paid_api_calls": 0,
+    "external_evaluation_used": false,
+    "fixture_hashes_verified": true
+  },
+  "state": {
+    "budget": 6,
+    "max_runs": 20,
+    "turn": 11,
+    "runs": 7,
+    "passes": 3,
+    "requests": 3,
+    "done": true,
+    "nudges": 0,
+    "nudge_streak": 0,
+    "handoffs": 0,
+    "since_handoff": 11,
+    "flags": 0,
+    "flag_streak": 0,
+    "unexplained": 0,
+    "unexplained_streak": 0,
+    "notices": [],
+    "stop_reason": "finished"
+  },
+  "model": "Qwen3-0.6B",
+  "prompt_changes": 0,
+  "paid_api_calls": 0,
+  "training_steps": 0,
+  "new_generations": 80,
+  "new_generation_breakdown": {
+    "private_original_baseline": 32,
+    "dev_original": 16,
+    "dev_full_ablation": 16,
+    "dev_half_attenuation": 16
+  },
+  "heldout_candidate_evaluation_performed": false,
+  "external_evaluation_used": false,
+  "completion_sources_verified": true
+}

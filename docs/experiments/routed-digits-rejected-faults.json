@@ -1,0 +1,257 @@
+{
+  "results": [
+    {
+      "seed": 21,
+      "split": "calibration",
+      "queries": 480,
+      "clean_sha256": "6824797583214a511ccec9acbf78a47c91e0a6f72f2e8e64ebb9a8c8c599eae3",
+      "clean": 0.9625,
+      "baseline": 0.5854166666666667,
+      "clean_per_branch": [
+        1.0,
+        0.8958333333333334,
+        1.0,
+        0.9166666666666666,
+        0.9791666666666666,
+        1.0,
+        1.0,
+        0.9583333333333334,
+        0.9583333333333334,
+        0.9166666666666666
+      ],
+      "broken_per_branch": [
+        0.0,
+        0.5208333333333334,
+        1.0,
+        0.5,
+        0.5,
+        0.4583333333333333,
+        0.5,
+        0.5,
+        0.9583333333333334,
+        0.9166666666666666
+      ],
+      "repairs": [
+        {
+          "digit": 0,
+          "fault": "output sign",
+          "gain": 0.09999999999999998,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 1,
+          "fault": "hidden bias shift",
+          "gain": 0.03749999999999998,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 2,
+          "fault": "output attenuation",
+          "gain": 0.0,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 3,
+          "fault": "hidden sign flips",
+          "gain": 0.04166666666666663,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 4,
+          "fault": "rewiring",
+          "gain": 0.04791666666666661,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 5,
+          "fault": "input mirror",
+          "gain": 0.054166666666666585,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 6,
+          "fault": "input shift",
+          "gain": 0.04999999999999993,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 7,
+          "fault": "rewiring + hidden sign flips",
+          "gain": 0.04583333333333328,
+          "other_routes_unchanged": true
+        }
+      ],
+      "max_subset_additivity_error": 3.3306690738754696e-16,
+      "accepted": false
+    },
+    {
+      "seed": 22,
+      "split": "calibration",
+      "queries": 480,
+      "clean_sha256": "f81e52fe6b91b04571f172dfa25a3a9bce2488a54445ba0fe1915460594ee5cc",
+      "clean": 0.9770833333333333,
+      "baseline": 0.6291666666666667,
+      "clean_per_branch": [
+        1.0,
+        0.9375,
+        1.0,
+        0.9375,
+        1.0,
+        0.9791666666666666,
+        1.0,
+        0.9791666666666666,
+        0.9791666666666666,
+        0.9583333333333334
+      ],
+      "broken_per_branch": [
+        0.0,
+        0.9791666666666666,
+        1.0,
+        0.7291666666666666,
+        0.5,
+        0.4791666666666667,
+        0.5208333333333334,
+        0.14583333333333334,
+        0.9791666666666666,
+        0.9583333333333334
+      ],
+      "repairs": [
+        {
+          "digit": 0,
+          "fault": "output sign",
+          "gain": 0.09999999999999998,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 1,
+          "fault": "hidden bias shift",
+          "gain": -0.004166666666666652,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 2,
+          "fault": "output attenuation",
+          "gain": 0.0,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 3,
+          "fault": "hidden sign flips",
+          "gain": 0.02083333333333337,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 4,
+          "fault": "rewiring",
+          "gain": 0.050000000000000044,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 5,
+          "fault": "input mirror",
+          "gain": 0.050000000000000044,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 6,
+          "fault": "input shift",
+          "gain": 0.04791666666666672,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 7,
+          "fault": "rewiring + hidden sign flips",
+          "gain": 0.08333333333333337,
+          "other_routes_unchanged": true
+        }
+      ],
+      "max_subset_additivity_error": 2.220446049250313e-16,
+      "accepted": false
+    },
+    {
+      "seed": 23,
+      "split": "calibration",
+      "queries": 480,
+      "clean_sha256": "1dadce5e72f7f48d531ab1f2e66de8a8c0cc943308614007c2ea8b6ddb26d4d7",
+      "clean": 0.9708333333333333,
+      "baseline": 0.6604166666666667,
+      "clean_per_branch": [
+        0.9791666666666666,
+        0.875,
+        1.0,
+        0.9791666666666666,
+        1.0,
+        0.9791666666666666,
+        1.0,
+        0.9791666666666666,
+        0.9166666666666666,
+        1.0
+      ],
+      "broken_per_branch": [
+        0.020833333333333332,
+        0.8333333333333334,
+        1.0,
+        0.8958333333333334,
+        0.5,
+        0.4375,
+        0.5,
+        0.5,
+        0.9166666666666666,
+        1.0
+      ],
+      "repairs": [
+        {
+          "digit": 0,
+          "fault": "output sign",
+          "gain": 0.09583333333333333,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 1,
+          "fault": "hidden bias shift",
+          "gain": 0.004166666666666652,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 2,
+          "fault": "output attenuation",
+          "gain": 0.0,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 3,
+          "fault": "hidden sign flips",
+          "gain": 0.008333333333333304,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 4,
+          "fault": "rewiring",
+          "gain": 0.050000000000000044,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 5,
+          "fault": "input mirror",
+          "gain": 0.054166666666666696,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 6,
+          "fault": "input shift",
+          "gain": 0.050000000000000044,
+          "other_routes_unchanged": true
+        },
+        {
+          "digit": 7,
+          "fault": "rewiring + hidden sign flips",
+          "gain": 0.04791666666666672,
+          "other_routes_unchanged": true
+        }
+      ],
+      "max_subset_additivity_error": 1.1102230246251565e-16,
+      "accepted": false
+    }
+  ],
+  "accepted": false
+}

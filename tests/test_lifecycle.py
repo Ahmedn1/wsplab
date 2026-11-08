@@ -16,6 +16,7 @@ from wsplab.io import Checkpoint
 from wsplab.kernel import Limits
 from wsplab.kernel.client import KernelError, sandbox_python
 from wsplab.runners.torch import TorchRunner, mlp
+from wsplab.session.driver import Policy
 
 LIMITS = Limits(seconds=60, memory_gb=4)
 
@@ -85,6 +86,22 @@ def test_full_lifecycle_fixes_a_sabotaged_mlp(tmp_path):
     assert (r.folder / "report.md").read_text().startswith("# wsplab run: confirmed")
     x, y = data(seed=9)
     assert (r.infer(x).argmax(1) == y).all()
+
+
+def test_optional_pass_policy_is_explained_in_the_actual_session_prompt(tmp_path):
+    result = run_mlp(tmp_path, ["Keep the original weights."], policy=Policy(require_all_passes=False))
+    prompt = (result.folder / "session/turns/t001/prompt.txt").read_text()
+    assert "2 forward passes are a maximum, not a requirement" in prompt
+    assert "ends the session immediately" in prompt
+    assert "It continues until all 2 forward passes are used" not in prompt
+    assert result.state.stop_reason == "finished" and result.state.passes == 0
+
+
+def test_required_pass_policy_keeps_the_original_prompt(tmp_path):
+    result = run_mlp(tmp_path, list(SCRIPT))
+    prompt = (result.folder / "session/turns/t001/prompt.txt").read_text()
+    assert "It continues until all 2 forward passes are used" in prompt
+    assert "forward passes are a maximum, not a requirement" not in prompt
 
 
 def test_patch_rebuilds_the_evaluated_model_and_carries_its_evidence(tmp_path):

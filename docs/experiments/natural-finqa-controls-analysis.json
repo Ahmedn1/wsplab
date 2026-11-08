@@ -1,0 +1,1448 @@
+{
+  "status": "completed",
+  "paid_api_calls": 0,
+  "external_evaluation_used": false,
+  "weight_edits": 0,
+  "new_responses": 96,
+  "fixture_hashes_verified": true,
+  "source_snapshots_verified": true,
+  "comparison_caveats": [
+    "Single seed and 32 pilot questions; exploratory, not multiplicity adjusted.",
+    "24-item sensitivity subset was chosen after baseline review and is not an independent benchmark.",
+    "Gold-evidence input uses annotations and is not deployable. Compared with original thinking, both prompt and context differ.",
+    "Correctness is custom scalar matching against original display labels, not official execution accuracy or proof of correct reasoning."
+  ],
+  "comparisons": {
+    "clean_nonthinking-minus-original_nonthinking": {
+      "all_32": {
+        "n": 32,
+        "difference": 0.09375,
+        "standard_error": 0.09374999999999999,
+        "wrong_to_right": 6,
+        "right_to_wrong": 3,
+        "exact_two_sided_p": 0.5078125,
+        "newly_correct_ids": [
+          "L/2015/page_59.pdf-4",
+          "MMM/2005/page_95.pdf-1",
+          "DVN/2007/page_58.pdf-2",
+          "SPGI/2015/page_57.pdf-1",
+          "PM/2017/page_38.pdf-1",
+          "EW/2017/page_82.pdf-2"
+        ],
+        "newly_wrong_ids": [
+          "GS/2014/page_136.pdf-1",
+          "IPG/2008/page_62.pdf-2",
+          "AOS/2004/page_11.pdf-2"
+        ]
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "difference": 0.08333333333333333,
+        "standard_error": 0.1191252334983594,
+        "wrong_to_right": 5,
+        "right_to_wrong": 3,
+        "exact_two_sided_p": 0.7265625,
+        "newly_correct_ids": [
+          "MMM/2005/page_95.pdf-1",
+          "DVN/2007/page_58.pdf-2",
+          "SPGI/2015/page_57.pdf-1",
+          "PM/2017/page_38.pdf-1",
+          "EW/2017/page_82.pdf-2"
+        ],
+        "newly_wrong_ids": [
+          "GS/2014/page_136.pdf-1",
+          "IPG/2008/page_62.pdf-2",
+          "AOS/2004/page_11.pdf-2"
+        ]
+      }
+    },
+    "clean_thinking-minus-original_thinking": {
+      "all_32": {
+        "n": 32,
+        "difference": -0.28125,
+        "standard_error": 0.08075219711382271,
+        "wrong_to_right": 0,
+        "right_to_wrong": 9,
+        "exact_two_sided_p": 0.00390625,
+        "newly_correct_ids": [],
+        "newly_wrong_ids": [
+          "AAPL/2004/page_36.pdf-2",
+          "AES/2015/page_117.pdf-2",
+          "MMM/2005/page_95.pdf-1",
+          "DVN/2007/page_58.pdf-2",
+          "GIS/2012/page_64.pdf-2",
+          "LLY/2018/page_63.pdf-1",
+          "RSG/2017/page_138.pdf-1",
+          "AOS/2004/page_11.pdf-2",
+          "UNP/2008/page_77.pdf-1"
+        ]
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "difference": -0.375,
+        "standard_error": 0.10094660663590604,
+        "wrong_to_right": 0,
+        "right_to_wrong": 9,
+        "exact_two_sided_p": 0.00390625,
+        "newly_correct_ids": [],
+        "newly_wrong_ids": [
+          "AAPL/2004/page_36.pdf-2",
+          "AES/2015/page_117.pdf-2",
+          "MMM/2005/page_95.pdf-1",
+          "DVN/2007/page_58.pdf-2",
+          "GIS/2012/page_64.pdf-2",
+          "LLY/2018/page_63.pdf-1",
+          "RSG/2017/page_138.pdf-1",
+          "AOS/2004/page_11.pdf-2",
+          "UNP/2008/page_77.pdf-1"
+        ]
+      }
+    },
+    "evidence_thinking-minus-clean_thinking": {
+      "all_32": {
+        "n": 32,
+        "difference": 0.0625,
+        "standard_error": 0.09977292767466629,
+        "wrong_to_right": 6,
+        "right_to_wrong": 4,
+        "exact_two_sided_p": 0.75390625,
+        "newly_correct_ids": [
+          "AES/2015/page_117.pdf-2",
+          "AAPL/2008/page_78.pdf-2",
+          "MMM/2005/page_95.pdf-1",
+          "ADI/2011/page_81.pdf-1",
+          "UNP/2013/page_54.pdf-2",
+          "AOS/2004/page_11.pdf-2"
+        ],
+        "newly_wrong_ids": [
+          "IPG/2008/page_62.pdf-2",
+          "AES/2002/page_46.pdf-4",
+          "SPGI/2015/page_57.pdf-1",
+          "EW/2017/page_82.pdf-2"
+        ]
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "difference": 0.041666666666666664,
+        "standard_error": 0.12739256153441425,
+        "wrong_to_right": 5,
+        "right_to_wrong": 4,
+        "exact_two_sided_p": 1,
+        "newly_correct_ids": [
+          "AES/2015/page_117.pdf-2",
+          "AAPL/2008/page_78.pdf-2",
+          "MMM/2005/page_95.pdf-1",
+          "UNP/2013/page_54.pdf-2",
+          "AOS/2004/page_11.pdf-2"
+        ],
+        "newly_wrong_ids": [
+          "IPG/2008/page_62.pdf-2",
+          "AES/2002/page_46.pdf-4",
+          "SPGI/2015/page_57.pdf-1",
+          "EW/2017/page_82.pdf-2"
+        ]
+      }
+    },
+    "evidence_thinking-minus-original_thinking": {
+      "all_32": {
+        "n": 32,
+        "difference": -0.21875,
+        "standard_error": 0.1075232064224037,
+        "wrong_to_right": 3,
+        "right_to_wrong": 10,
+        "exact_two_sided_p": 0.09228515625,
+        "newly_correct_ids": [
+          "AAPL/2008/page_78.pdf-2",
+          "ADI/2011/page_81.pdf-1",
+          "UNP/2013/page_54.pdf-2"
+        ],
+        "newly_wrong_ids": [
+          "AAPL/2004/page_36.pdf-2",
+          "IPG/2008/page_62.pdf-2",
+          "DVN/2007/page_58.pdf-2",
+          "GIS/2012/page_64.pdf-2",
+          "AES/2002/page_46.pdf-4",
+          "SPGI/2015/page_57.pdf-1",
+          "LLY/2018/page_63.pdf-1",
+          "RSG/2017/page_138.pdf-1",
+          "EW/2017/page_82.pdf-2",
+          "UNP/2008/page_77.pdf-1"
+        ]
+      },
+      "sensitivity_24": {
+        "n": 24,
+        "difference": -0.3333333333333333,
+        "standard_error": 0.13003158293424902,
+        "wrong_to_right": 2,
+        "right_to_wrong": 10,
+        "exact_two_sided_p": 0.03857421875,
+        "newly_correct_ids": [
+          "AAPL/2008/page_78.pdf-2",
+          "UNP/2013/page_54.pdf-2"
+        ],
+        "newly_wrong_ids": [
+          "AAPL/2004/page_36.pdf-2",
+          "IPG/2008/page_62.pdf-2",
+          "DVN/2007/page_58.pdf-2",
+          "GIS/2012/page_64.pdf-2",
+          "AES/2002/page_46.pdf-4",
+          "SPGI/2015/page_57.pdf-1",
+          "LLY/2018/page_63.pdf-1",
+          "RSG/2017/page_138.pdf-1",
+          "EW/2017/page_82.pdf-2",
+          "UNP/2008/page_77.pdf-1"
+        ]
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "HWM/2016/page_40.pdf-2",
+      "question": "considering the year 2016 , what was the percentual increase in the high sale price observed during the first and second quarters?",
+      "reference_status": "valid",
+      "reference_note": "Compares Q2 high with Q1 high in 2016.",
+      "original_thinking_error_category": "question_interpretation",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "212.36",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 147
+        },
+        "original_thinking": {
+          "prediction": "-10.98%, 0%",
+          "correct": false,
+          "parsed": false,
+          "output_tokens": 2353
+        },
+        "clean_nonthinking": {
+          "prediction": "12.86",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 112
+        },
+        "clean_thinking": {
+          "prediction": "12.49",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1686
+        },
+        "evidence_thinking": {
+          "prediction": "-59.8",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 5539
+        }
+      }
+    },
+    {
+      "id": "LMT/2016/page_48.pdf-4",
+      "question": "what were average operating profit for aeronautics in millions between 2014 and 2016?",
+      "reference_status": "valid",
+      "reference_note": "Three year columns, including 2014.",
+      "original_thinking_error_category": "evidence_selection",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "206",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 46
+        },
+        "original_thinking": {
+          "prediction": "1,784",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 390
+        },
+        "clean_nonthinking": {
+          "prediction": "11.1",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 35
+        },
+        "clean_thinking": {
+          "prediction": "1784",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 374
+        },
+        "evidence_thinking": {
+          "prediction": "1768",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 693
+        }
+      }
+    },
+    {
+      "id": "AAPL/2004/page_36.pdf-2",
+      "question": "what was the gross margin decline in fiscal 2004 from 2003?",
+      "reference_status": "valid",
+      "reference_note": "Percentage-point decline, not relative decline.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "27.3\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 71
+        },
+        "original_thinking": {
+          "prediction": "0.2\\%",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 332
+        },
+        "clean_nonthinking": {
+          "prediction": "27.3",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 50
+        },
+        "clean_thinking": {
+          "prediction": "551",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 244
+        },
+        "evidence_thinking": {
+          "prediction": "-0.2",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 300
+        }
+      }
+    },
+    {
+      "id": "MS/2014/page_292.pdf-2",
+      "question": "accrued interest represented how much of the ending balance in uncertain tax benefits as of december 31 , 2014?",
+      "reference_status": "valid",
+      "reference_note": "Accrued interest in prose; ending balance in table.",
+      "original_thinking_error_category": "evidence_and_operation",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "258",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 31
+        },
+        "original_thinking": {
+          "prediction": "299",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1559
+        },
+        "clean_nonthinking": {
+          "prediction": "258",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 50
+        },
+        "clean_thinking": {
+          "prediction": "258",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1042
+        },
+        "evidence_thinking": {
+          "prediction": "11.5",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 997
+        }
+      }
+    },
+    {
+      "id": "AES/2015/page_117.pdf-2",
+      "question": "what was the percentage change in proportional free cash flow between 2014 and 2015?",
+      "reference_status": "valid",
+      "reference_note": "Published whole percentage rounded.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "39.7\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 121
+        },
+        "original_thinking": {
+          "prediction": "39\\%",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 429
+        },
+        "clean_nonthinking": {
+          "prediction": "350",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 8
+        },
+        "clean_thinking": {
+          "prediction": "39.7",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 2908
+        },
+        "evidence_thinking": {
+          "prediction": "39.4",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 441
+        }
+      }
+    },
+    {
+      "id": "AAPL/2008/page_78.pdf-2",
+      "question": "what was the average change in unrealized gains on derivative instruments?",
+      "reference_status": "valid",
+      "reference_note": "Parenthesized values are negative.",
+      "original_thinking_error_category": "table_reading",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "19",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 100
+        },
+        "original_thinking": {
+          "prediction": "19",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 858
+        },
+        "clean_nonthinking": {
+          "prediction": "7.67",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 114
+        },
+        "clean_thinking": {
+          "prediction": "19",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 763
+        },
+        "evidence_thinking": {
+          "prediction": "5",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 450
+        }
+      }
+    },
+    {
+      "id": "ETR/2008/page_355.pdf-2",
+      "question": "what percent of the change between net revenue in 2007 and 2008 was due to rider revenue?",
+      "reference_status": "valid",
+      "reference_note": "Contribution to revenue change.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "17.8\\%",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 138
+        },
+        "original_thinking": {
+          "prediction": "18%",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 440
+        },
+        "clean_nonthinking": {
+          "prediction": "17.9",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 141
+        },
+        "clean_thinking": {
+          "prediction": "18.1",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 662
+        },
+        "evidence_thinking": {
+          "prediction": "17.9",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 376
+        }
+      }
+    },
+    {
+      "id": "SPGI/2018/page_74.pdf-1",
+      "question": "what was the ratio of the pension trust assets for 2017 to 2018",
+      "reference_status": "sensitive",
+      "reference_note": "Question does not identify the UK versus US trust. Both are in source; gold chooses UK.",
+      "original_thinking_error_category": "ambiguous_reference_and_reasoning",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "1.098",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 108
+        },
+        "original_thinking": {
+          "prediction": "1.1",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1855
+        },
+        "clean_nonthinking": {
+          "prediction": "0.8968",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 156
+        },
+        "clean_thinking": {
+          "prediction": "1.115",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1926
+        },
+        "evidence_thinking": {
+          "prediction": "86.46",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1895
+        }
+      }
+    },
+    {
+      "id": "PM/2014/page_67.pdf-2",
+      "question": "what was the total of euro notes issued in 2014 , in millions of dollars approximately?",
+      "reference_status": "sensitive",
+      "reference_note": "Question asks approximately. Prediction 3100 is a reasonable rounded total, although trace asserts a false exact sum.",
+      "original_thinking_error_category": "approximation_or_arithmetic",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "3.10",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 173
+        },
+        "original_thinking": {
+          "prediction": "3100",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 416
+        },
+        "clean_nonthinking": {
+          "prediction": "2401",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 126
+        },
+        "clean_thinking": {
+          "prediction": "3088",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 350
+        },
+        "evidence_thinking": {
+          "prediction": "1.37",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 652
+        }
+      }
+    },
+    {
+      "id": "GS/2014/page_136.pdf-1",
+      "question": "in millions in 2014 , 2013 , and 2012 , what was the greatest amount of hedged borrowings and bank deposits?",
+      "reference_status": "valid",
+      "reference_note": "Maximum, not magnitude.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "6999",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 41
+        },
+        "original_thinking": {
+          "prediction": "6999",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 495
+        },
+        "clean_nonthinking": {
+          "prediction": "(6,999)",
+          "correct": false,
+          "parsed": false,
+          "output_tokens": 10
+        },
+        "clean_thinking": {
+          "prediction": "6999",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 196
+        },
+        "evidence_thinking": {
+          "prediction": "6999",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 526
+        }
+      }
+    },
+    {
+      "id": "L/2015/page_59.pdf-4",
+      "question": "what is the percentage reduction in the loews common stock from 2013 to 2014",
+      "reference_status": "sensitive",
+      "reference_note": "Reduction can be expressed as positive magnitude; gold uses signed change. Model 12.5 also has arithmetic approximation error.",
+      "original_thinking_error_category": "sign_and_arithmetic",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "15.64",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 128
+        },
+        "original_thinking": {
+          "prediction": "12.5\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 749
+        },
+        "clean_nonthinking": {
+          "prediction": "-12.36",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 231
+        },
+        "clean_thinking": {
+          "prediction": "12",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 532
+        },
+        "evidence_thinking": {
+          "prediction": "12.47",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 746
+        }
+      }
+    },
+    {
+      "id": "MMM/2005/page_95.pdf-1",
+      "question": "in 2005 what was the ratio of the breast implant receivables to the breast implant liabilities",
+      "reference_status": "valid",
+      "reference_note": "Ratio rounded to one decimal in display answer.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "",
+          "correct": false,
+          "parsed": false,
+          "output_tokens": 146
+        },
+        "original_thinking": {
+          "prediction": "18.57",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 488
+        },
+        "clean_nonthinking": {
+          "prediction": "18.57",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 101
+        },
+        "clean_thinking": {
+          "prediction": "11.82",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 642
+        },
+        "evidence_thinking": {
+          "prediction": "18.57",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 870
+        }
+      }
+    },
+    {
+      "id": "MRO/2006/page_33.pdf-1",
+      "question": "based on a 365 day year and the average sales price per barrel listed above , what was the total refined product sales revenue for 2006?",
+      "reference_status": "sensitive",
+      "reference_note": "Table is thousands of barrels/day. Gold 40444920 corresponds to thousands of dollars but displays dollars without scale.",
+      "original_thinking_error_category": "units_and_operation",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "21.5",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 9
+        },
+        "original_thinking": {
+          "prediction": "110.81",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1792
+        },
+        "clean_nonthinking": {
+          "prediction": "21.5",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 9
+        },
+        "clean_thinking": {
+          "prediction": "167184000000",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 2242
+        },
+        "evidence_thinking": {
+          "prediction": "110808",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 2016
+        }
+      }
+    },
+    {
+      "id": "IPG/2008/page_62.pdf-2",
+      "question": "what is the change in the balance of liability for all restructuring from 2006 to 2008 , ( in millions ) ?",
+      "reference_status": "valid",
+      "reference_note": "Decrease in total liability.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "-19.0",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 111
+        },
+        "original_thinking": {
+          "prediction": "-19.0",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 884
+        },
+        "clean_nonthinking": {
+          "prediction": "4.1",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 128
+        },
+        "clean_thinking": {
+          "prediction": "-19.0",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 1132
+        },
+        "evidence_thinking": {
+          "prediction": "-6.4",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 4615
+        }
+      }
+    },
+    {
+      "id": "DVN/2007/page_58.pdf-2",
+      "question": "what percentage of the total oil and gas mmboe comes from canada?",
+      "reference_status": "valid",
+      "reference_note": "Program already multiplies by 100; display percent is consistent.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "24.7",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 83
+        },
+        "original_thinking": {
+          "prediction": "24.69",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 2585
+        },
+        "clean_nonthinking": {
+          "prediction": "24.69",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 65
+        },
+        "clean_thinking": {
+          "prediction": "24.7",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 2507
+        },
+        "evidence_thinking": {
+          "prediction": "91.3",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1174
+        }
+      }
+    },
+    {
+      "id": "HII/2014/page_69.pdf-2",
+      "question": "what portion of total backlog is related to newport news segment?",
+      "reference_status": "sensitive",
+      "reference_note": "Question omits year; original table has two years. Gold selects 2013, context emphasizes 2014.",
+      "original_thinking_error_category": "ambiguous_reference_and_table_reading",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "28\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 58
+        },
+        "original_thinking": {
+          "prediction": "54.6%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 538
+        },
+        "clean_nonthinking": {
+          "prediction": "8905",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 40
+        },
+        "clean_thinking": {
+          "prediction": "65.8",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 650
+        },
+        "evidence_thinking": {
+          "prediction": "65.6",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 6927
+        }
+      }
+    },
+    {
+      "id": "NWS/2016/page_61.pdf-1",
+      "question": "what on the net interest reduction of 13 million or 23% ( 23 % ) compared to 2015 what was the interest amount in 2016 in millions",
+      "reference_status": "sensitive",
+      "reference_note": "Text says decreased. Published program adds the decrease and gives 69.5; garbled question also weakens confidence.",
+      "original_thinking_error_category": "reference_and_interpretation",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "13",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 48
+        },
+        "original_thinking": {
+          "prediction": "13",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 818
+        },
+        "clean_nonthinking": {
+          "prediction": "13",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 7
+        },
+        "clean_thinking": {
+          "prediction": "13",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 2328
+        },
+        "evidence_thinking": {
+          "prediction": "13",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1631
+        }
+      }
+    },
+    {
+      "id": "GIS/2012/page_64.pdf-2",
+      "question": "what portion of the total notes payable comes from u.s . commercial paper?",
+      "reference_status": "valid",
+      "reference_note": "Use 2012 column. Published 78.3 is rounded.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "412.0",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 10
+        },
+        "original_thinking": {
+          "prediction": "78.25",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 1055
+        },
+        "clean_nonthinking": {
+          "prediction": "412.0",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 10
+        },
+        "clean_thinking": {
+          "prediction": "78",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 2227
+        },
+        "evidence_thinking": {
+          "prediction": "78.2",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1585
+        }
+      }
+    },
+    {
+      "id": "AES/2002/page_46.pdf-4",
+      "question": "what was the difference in dollars of the high low sale price for the common stock in the fourth quarter of 2002?",
+      "reference_status": "valid",
+      "reference_note": "Fourth quarter 2002 high-low difference.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "32.50",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 67
+        },
+        "original_thinking": {
+          "prediction": "2.62",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 358
+        },
+        "clean_nonthinking": {
+          "prediction": "32.50",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 77
+        },
+        "clean_thinking": {
+          "prediction": "2.62",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 241
+        },
+        "evidence_thinking": {
+          "prediction": "6.20",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 319
+        }
+      }
+    },
+    {
+      "id": "ADI/2011/page_81.pdf-1",
+      "question": "what portion of the total investment is allocated to mutual funds in 2011?",
+      "reference_status": "sensitive",
+      "reference_note": "Question asks mutual funds. Gold/support annotations select money-market funds (17187) instead. Model chooses the correct row, rounds to 35 percent.",
+      "original_thinking_error_category": "reference_error",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "9223",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 51
+        },
+        "original_thinking": {
+          "prediction": "35\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 647
+        },
+        "clean_nonthinking": {
+          "prediction": "9223",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 43
+        },
+        "clean_thinking": {
+          "prediction": "34.8\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 934
+        },
+        "evidence_thinking": {
+          "prediction": "65.08",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 2286
+        }
+      }
+    },
+    {
+      "id": "SPGI/2015/page_57.pdf-1",
+      "question": "what was the net equity in the assets acquired",
+      "reference_status": "valid",
+      "reference_note": "Net assets minus acquired liabilities.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "The net equity in the assets acquired is $2,234 million.",
+          "correct": false,
+          "parsed": false,
+          "output_tokens": 17
+        },
+        "original_thinking": {
+          "prediction": "2234",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 780
+        },
+        "clean_nonthinking": {
+          "prediction": "2,234",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 10
+        },
+        "clean_thinking": {
+          "prediction": "2234",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 352
+        },
+        "evidence_thinking": {
+          "prediction": "2522",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 323
+        }
+      }
+    },
+    {
+      "id": "BLK/2017/page_122.pdf-2",
+      "question": "what percent of the commitments will be due after 2022?",
+      "reference_status": "valid",
+      "reference_note": "After 2022 excludes 2022 itself.",
+      "original_thinking_error_category": "boundary_and_arithmetic",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "72.5\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 110
+        },
+        "original_thinking": {
+          "prediction": "77.7\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 682
+        },
+        "clean_nonthinking": {
+          "prediction": "72.14",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 83
+        },
+        "clean_thinking": {
+          "prediction": "71.6",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 2678
+        },
+        "evidence_thinking": {
+          "prediction": "71.6",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 3148
+        }
+      }
+    },
+    {
+      "id": "PM/2017/page_38.pdf-1",
+      "question": "what was the change in millions of operating income from 2016 to 2017?",
+      "reference_status": "valid",
+      "reference_note": "Change in operating income.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "The change in millions of operating income from 2016 to 2017 is $688 million.",
+          "correct": false,
+          "parsed": false,
+          "output_tokens": 27
+        },
+        "original_thinking": {
+          "prediction": "688",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 246
+        },
+        "clean_nonthinking": {
+          "prediction": "688",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 8
+        },
+        "clean_thinking": {
+          "prediction": "688",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 280
+        },
+        "evidence_thinking": {
+          "prediction": "688",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 371
+        }
+      }
+    },
+    {
+      "id": "UAA/2016/page_52.pdf-1",
+      "question": "what percent of total operating income was asia-pacific in 2015?",
+      "reference_status": "valid",
+      "reference_note": "Published whole percentage rounded.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "0.3575",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 187
+        },
+        "original_thinking": {
+          "prediction": "8.9",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 3177
+        },
+        "clean_nonthinking": {
+          "prediction": "The increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014. The increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.\n\nThe increase in total operating income was driven by the following: 2022 operating income in our Asia-Pacific operating segment increased $14.5 million to $36.4 million in 2015 from $21.9 million in 2014.",
+          "correct": false,
+          "parsed": false,
+          "output_tokens": 768
+        },
+        "clean_thinking": {
+          "prediction": "8.9",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 1247
+        },
+        "evidence_thinking": {
+          "prediction": "8.9",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 642
+        }
+      }
+    },
+    {
+      "id": "LLY/2018/page_63.pdf-1",
+      "question": "what was the percentage change in inventories between 2017 and 2018?",
+      "reference_status": "valid",
+      "reference_note": "Signed percentage change.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "7.23\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 160
+        },
+        "original_thinking": {
+          "prediction": "-7.8",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 950
+        },
+        "clean_nonthinking": {
+          "prediction": "8.45",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 101
+        },
+        "clean_thinking": {
+          "prediction": "14.8",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 888
+        },
+        "evidence_thinking": {
+          "prediction": "8.45",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1284
+        }
+      }
+    },
+    {
+      "id": "UNP/2013/page_54.pdf-2",
+      "question": "in 2013 what was the percent of the total operating revenues from mexico",
+      "reference_status": "valid",
+      "reference_note": "Displayed 9.6 percent is supported. Execution answer .0001 is wrong because billion/million conversion was omitted.",
+      "original_thinking_error_category": "evidence_and_arithmetic",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "96.82",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 109
+        },
+        "original_thinking": {
+          "prediction": "10.3%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 327
+        },
+        "clean_nonthinking": {
+          "prediction": "0.96",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 124
+        },
+        "clean_thinking": {
+          "prediction": "10.3",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 244
+        },
+        "evidence_thinking": {
+          "prediction": "9.56",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 3261
+        }
+      }
+    },
+    {
+      "id": "AON/2009/page_48.pdf-4",
+      "question": "considering the year 2009 , what is the percentage of the segment's operating income among the total operating income?",
+      "reference_status": "sensitive",
+      "reference_note": "Gold 22.55 truncates rather than rounds to two places. Model 22.56 is correctly rounded.",
+      "original_thinking_error_category": "reference_rounding",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "22.57",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 102
+        },
+        "original_thinking": {
+          "prediction": "22.56",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 463
+        },
+        "clean_nonthinking": {
+          "prediction": "6\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 8
+        },
+        "clean_thinking": {
+          "prediction": "22.56",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1495
+        },
+        "evidence_thinking": {
+          "prediction": "22.56",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 3979
+        }
+      }
+    },
+    {
+      "id": "RSG/2017/page_138.pdf-1",
+      "question": "in 2017 what was the debt to equity based on the 2017 actual asset allocation",
+      "reference_status": "valid",
+      "reference_note": "Debt/equity ratio, not percent.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "0.28",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 9
+        },
+        "original_thinking": {
+          "prediction": "2.33",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 769
+        },
+        "clean_nonthinking": {
+          "prediction": "72\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 9
+        },
+        "clean_thinking": {
+          "prediction": "2.57",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 653
+        },
+        "evidence_thinking": {
+          "prediction": "257.14",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 988
+        }
+      }
+    },
+    {
+      "id": "AOS/2004/page_11.pdf-2",
+      "question": "what percentage of total aggregate contractual obligations is due to purchase obligationst?",
+      "reference_status": "valid",
+      "reference_note": "Published whole percentage rounded; custom tolerance can accept approximate answers such as 33.8.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "33.6",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 85
+        },
+        "original_thinking": {
+          "prediction": "33.8\\%",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 341
+        },
+        "clean_nonthinking": {
+          "prediction": "3.4\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 10
+        },
+        "clean_thinking": {
+          "prediction": "100",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 400
+        },
+        "evidence_thinking": {
+          "prediction": "34.14",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 2149
+        }
+      }
+    },
+    {
+      "id": "EW/2017/page_82.pdf-2",
+      "question": "what percentage of the total purchase price net of cash acquired is ipr&d ?",
+      "reference_status": "valid",
+      "reference_note": "Published whole percentage rounded; 29.4 falls within its tolerance.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "22.7\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 133
+        },
+        "original_thinking": {
+          "prediction": "29.4%",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 601
+        },
+        "clean_nonthinking": {
+          "prediction": "29.5",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 97
+        },
+        "clean_thinking": {
+          "prediction": "29.4",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 295
+        },
+        "evidence_thinking": {
+          "prediction": "28.14",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 9528
+        }
+      }
+    },
+    {
+      "id": "UNP/2008/page_77.pdf-1",
+      "question": "as of december 31 , 2008 what was the percent of the total accounts payable and other liabilities that was accrued wages and vacation",
+      "reference_status": "valid",
+      "reference_note": "Accrued wages/vacation share.",
+      "original_thinking_error_category": "accepted_by_original_metric",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "12.5\\%",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 139
+        },
+        "original_thinking": {
+          "prediction": "14.3\\%",
+          "correct": true,
+          "parsed": true,
+          "output_tokens": 439
+        },
+        "clean_nonthinking": {
+          "prediction": "12.6",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 122
+        },
+        "clean_thinking": {
+          "prediction": "14.4",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 410
+        },
+        "evidence_thinking": {
+          "prediction": "12.65",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 1648
+        }
+      }
+    },
+    {
+      "id": "IPG/2015/page_37.pdf-3",
+      "question": "what is the cash flow statement effect of the change in cash used for working capital from 2013 to 2014?",
+      "reference_status": "valid",
+      "reference_note": "Cash-flow effect of increased outflow is negative.",
+      "original_thinking_error_category": "sign",
+      "outcomes": {
+        "original_nonthinking": {
+          "prediction": "121.5",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 52
+        },
+        "original_thinking": {
+          "prediction": "121.5",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 494
+        },
+        "clean_nonthinking": {
+          "prediction": "121.5",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 52
+        },
+        "clean_thinking": {
+          "prediction": "121.5",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 573
+        },
+        "evidence_thinking": {
+          "prediction": "121.5",
+          "correct": false,
+          "parsed": true,
+          "output_tokens": 478
+        }
+      }
+    }
+  ]
+}

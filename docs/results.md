@@ -9,6 +9,7 @@ benchmarks. The scripts are in `scripts/live`.
 | Trained digit classifier, one output row with 5 flipped signs | A coding agent, from the skill alone | 6 passes | `confirmed` | 86.5% | 95.0% (the clean score) | No API cost |
 | Gemma 3 270M, MATH-500 subset | `gpt-6-sol` | 5 passes | `not_significant` | 8.0% | 6.5% | $0.40 |
 | Qwen3.5-0.8B, MATH-500 subset | `gpt-6-astra` | 12 passes | `not_significant` | 4.0% | 10.0% | $2.93 |
+| Qwen3.5-0.8B, 200 MATH-500 problems | `gpt-6-astra` | 50 passes | `not_significant` | 9.5% | 14.0% | Not isolated here |
 
 ## The language model runs
 
@@ -24,6 +25,10 @@ and Astra reported that plainly. The likeliest reading is no reliable effect.
 
 Separately, the authors' released 50-pass edit, rerun on their logged final pass, gave +48.4 +/- 6.3 points against their logged
 +39.1 +/- 6.2. So wsplab reproduces the measurement of that edit. It has not reproduced the discovery of one.
+
+The original 50-pass background run has also finished. Its external gain of
+4.5 +/- 2.27 percentage points did not pass the framework's significance gate.
+See the [final report and protocol limits](experiments/astra50-result.md).
 
 ## The council
 

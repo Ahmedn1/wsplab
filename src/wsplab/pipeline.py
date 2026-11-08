@@ -171,6 +171,17 @@ def edited_builder(job: Job, base: Path, store: WeightStore, keep: int = 2):
 
 
 def run_session(job: Job, base: Path) -> tuple[str | None, object, Path]:
+    if (job.budget and not job.policy.require_all_passes and job.mode != "read"
+            and job.prompt.base and not job.prompt.exact
+            and "HOW THE SESSION RUNS." not in job.prompt.sections):
+        job.prompt.replace_section(
+            "HOW THE SESSION RUNS.",
+            "HOW THE SESSION RUNS. The {{passes}} forward passes are a maximum, not a requirement. "
+            "You may finish early when your evidence supports a final decision, including leaving the starting "
+            "weights unchanged. Replying without a code block ends the session immediately, even with passes remaining. "
+            "To run another step, include its code or forward block; announcing a future step does not run it. "
+            "When finished, describe your final submission and evidence. The tensors in /work/edited at that "
+            "point are submitted.")
     work = job.folder / "work"
     work.mkdir(parents=True, exist_ok=True)
     config = KernelConfig(model=base, work=work, practice=job.practice_dir, mode=job.mode, frozen=job.frozen,

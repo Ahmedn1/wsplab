@@ -1,0 +1,23 @@
+{
+  "status": "completed",
+  "paid_api_calls": 0,
+  "metric": "direct_answer_accuracy_not_official_execution_accuracy",
+  "conditions": {
+    "nonthinking": {
+      "completed": 32,
+      "correct": 3,
+      "accuracy": 0.09375,
+      "truncated": 0,
+      "unparseable": 11
+    },
+    "thinking": {
+      "completed": 32,
+      "correct": 13,
+      "accuracy": 0.40625,
+      "truncated": 0,
+      "unparseable": 8
+    }
+  },
+  "screening_rule": "not_qualified_by_frozen_rule",
+  "fixture_hashes_verified_after_inference": true
+}

@@ -153,8 +153,10 @@ class TorchRunner:
         if missing:
             raise ValueError(f"unknown modules: {missing}")
         got: dict[str, np.ndarray] = {}
+        # CPU numpy arrays share storage with the tensor. Later in-place ReLU
+        # or residual additions must not rewrite an earlier module's snapshot.
         handles = [modules[n].register_forward_hook(
-            lambda _m, _i, o, n=n: got.__setitem__(n, o.detach().cpu().numpy())) for n in names]
+            lambda _m, _i, o, n=n: got.__setitem__(n, o.detach().cpu().numpy().copy())) for n in names]
         try:
             with torch.no_grad():
                 module(torch.as_tensor(np.asarray(inputs), device=self.device))

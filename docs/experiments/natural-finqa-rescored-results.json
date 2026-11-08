@@ -1,0 +1,40 @@
+{
+  "status": "completed",
+  "at": 1793992083.9485397,
+  "paid_api_calls": 0,
+  "correction": "Normalize LaTeX escaped percent/currency and thin-space formatting; no unit rescaling or answer changes.",
+  "metric": "custom direct numeric answer accuracy, not official FinQA execution accuracy",
+  "scorer_sha256": "70b69d47a013804131683e3646b2cce6f293949526b060ef7b3c060325f837ad",
+  "conditions": {
+    "nonthinking": {
+      "completed": 32,
+      "correct": 4,
+      "accuracy": 0.125,
+      "unparseable": 3,
+      "truncated": 0,
+      "original_correct": 3,
+      "changed_correctness_ids": [
+        "ETR/2008/page_355.pdf-2"
+      ]
+    },
+    "thinking": {
+      "completed": 32,
+      "correct": 17,
+      "accuracy": 0.53125,
+      "unparseable": 1,
+      "truncated": 0,
+      "original_correct": 13,
+      "changed_correctness_ids": [
+        "AAPL/2004/page_36.pdf-2",
+        "AES/2015/page_117.pdf-2",
+        "AOS/2004/page_11.pdf-2",
+        "UNP/2008/page_77.pdf-1"
+      ]
+    }
+  },
+  "source_sha256": {
+    "nonthinking": "b7f5d522dce76d90b396a4e1ed49d6460987ea7b5b5d13088c55a44755ffd85a",
+    "thinking": "8ec27e5d657bb47d5618ce8897db992675fbe94ed132eff5f061bdfdd11f6658"
+  },
+  "screening_rule": "not_qualified_by_frozen_rule"
+}

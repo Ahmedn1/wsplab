@@ -607,10 +607,14 @@ def test_a_peer_cannot_put_a_block_in_anothers_reply():
     assert "```" not in b.editor.seen[0][-1]["content"]
 
 
-def test_long_work_is_cut_when_shared():
+def test_long_peer_work_preserves_late_findings_and_results():
     _, (a, b) = peers(["A."], ["B."])
-    in_threads(lambda: a.reply("s", history("TASK", "x" * 9000, "y" * 9000)), lambda: b.reply("s", history("TASK", "B.", "R")))
-    assert len(b.editor.seen[0][-1]["content"]) < 5000
+    code = "x" * 9000 + "\nThe repair is in the last column."
+    result = "y" * 9000 + "\nPaired gain: 0.17"
+    in_threads(lambda: a.reply("s", history("TASK", code, result)), lambda: b.reply("s", history("TASK", "B.", "R")))
+    shared = b.editor.seen[0][-1]["content"]
+    assert code in shared and result in shared
+    assert "[cut]" not in shared
 
 
 def test_peers_in_real_sessions_one_learns_from_the_other_and_the_best_candidate_wins(tmp_path, sandbox):

@@ -1,0 +1,1 @@
+Vendored unchanged from chenyaofo/pytorch-cifar-models revision 786c16252c0fc58ee9adac063f8337cc4a7a497a. The source retains its BSD notice; the upstream project license is included. Only CifarResNet and BasicBlock are instantiated, without downloading or executing torch.hub code.

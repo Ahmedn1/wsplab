@@ -1,0 +1,230 @@
+{
+  "seed": 21,
+  "evaluation_items": 340,
+  "rows": [
+    {
+      "arm": "peers",
+      "editor": "openai:gpt-6.1-terra",
+      "run": 0,
+      "selected": true,
+      "selection_score": 0.8928571428571429,
+      "diagnostic_evaluation_score": 0.9176470588235294,
+      "per_branch": [
+        1.0,
+        0.9705882352941176,
+        1.0,
+        0.7647058823529411,
+        1.0,
+        0.9411764705882353,
+        1.0,
+        0.6470588235294118,
+        0.9117647058823529,
+        0.9411764705882353
+      ],
+      "turns": 31,
+      "python_runs": 17,
+      "passes": 6,
+      "stop": "finished",
+      "changed_entries": 2343,
+      "potential_fit_flags_require_review": [],
+      "replies_mentioning_peers": 4,
+      "folder": "./.wsplab/experiments/peer-pilot-corrected/peers/run/run_0"
+    },
+    {
+      "arm": "peers",
+      "editor": "anthropic:claude-opus-5-5",
+      "run": 1,
+      "selected": false,
+      "selection_score": 0.7142857142857143,
+      "diagnostic_evaluation_score": 0.7588235294117647,
+      "per_branch": [
+        1.0,
+        0.9705882352941176,
+        1.0,
+        0.7647058823529411,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.9117647058823529,
+        0.9411764705882353
+      ],
+      "turns": 14,
+      "python_runs": 12,
+      "passes": 1,
+      "stop": "anthropic has insufficient budget for another bounded response",
+      "changed_entries": 45,
+      "potential_fit_flags_require_review": [],
+      "replies_mentioning_peers": 10,
+      "folder": "./.wsplab/experiments/peer-pilot-corrected/peers/run/run_1"
+    },
+    {
+      "arm": "peers",
+      "editor": "gemini:gemini-4-argon",
+      "run": 2,
+      "selected": false,
+      "selection_score": 0.5428571428571428,
+      "diagnostic_evaluation_score": 0.5352941176470588,
+      "per_branch": [
+        0.0,
+        0.7352941176470589,
+        0.5294117647058824,
+        0.23529411764705882,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.9117647058823529,
+        0.9411764705882353
+      ],
+      "turns": 26,
+      "python_runs": 24,
+      "passes": 1,
+      "stop": "conservative context bound exceeded; full peer text was not silently truncated",
+      "changed_entries": 0,
+      "potential_fit_flags_require_review": [],
+      "replies_mentioning_peers": 11,
+      "folder": "./.wsplab/experiments/peer-pilot-corrected/peers/run/run_2"
+    },
+    {
+      "arm": "independent",
+      "editor": "openai:gpt-6.1-terra",
+      "run": 0,
+      "selected": false,
+      "selection_score": 0.7142857142857143,
+      "diagnostic_evaluation_score": 0.7588235294117647,
+      "per_branch": [
+        1.0,
+        0.9705882352941176,
+        1.0,
+        0.7647058823529411,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.9117647058823529,
+        0.9411764705882353
+      ],
+      "turns": 24,
+      "python_runs": 15,
+      "passes": 6,
+      "stop": "finished",
+      "changed_entries": 45,
+      "potential_fit_flags_require_review": [],
+      "replies_mentioning_peers": 0,
+      "folder": "./.wsplab/experiments/peer-pilot-20261105/independent/run/run_0"
+    },
+    {
+      "arm": "independent",
+      "editor": "anthropic:claude-opus-5-5",
+      "run": 1,
+      "selected": true,
+      "selection_score": 0.7857142857142857,
+      "diagnostic_evaluation_score": 0.7970588235294118,
+      "per_branch": [
+        1.0,
+        0.9705882352941176,
+        1.0,
+        0.9117647058823529,
+        0.5,
+        0.6176470588235294,
+        0.5,
+        0.6176470588235294,
+        0.9117647058823529,
+        0.9411764705882353
+      ],
+      "turns": 22,
+      "python_runs": 19,
+      "passes": 2,
+      "stop": "anthropic request would exceed its reserved $2.00 allowance",
+      "changed_entries": 64,
+      "potential_fit_flags_require_review": [],
+      "replies_mentioning_peers": 0,
+      "folder": "./.wsplab/experiments/peer-pilot-20261105/independent/run/run_1"
+    },
+    {
+      "arm": "independent",
+      "editor": "gemini:gemini-4-argon",
+      "run": 2,
+      "selected": false,
+      "selection_score": 0.5428571428571428,
+      "diagnostic_evaluation_score": 0.5352941176470588,
+      "per_branch": [
+        0.0,
+        0.7352941176470589,
+        0.5294117647058824,
+        0.23529411764705882,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.9117647058823529,
+        0.9411764705882353
+      ],
+      "turns": 22,
+      "python_runs": 19,
+      "passes": 1,
+      "stop": "conservative context bound exceeded; full peer text was not silently truncated",
+      "changed_entries": 0,
+      "potential_fit_flags_require_review": [],
+      "replies_mentioning_peers": 0,
+      "folder": "./.wsplab/experiments/peer-pilot-20261105/independent/run/run_2"
+    }
+  ],
+  "selected_peer_minus_independent": 0.12058823529411765,
+  "paired_standard_error": 0.025687810983342312,
+  "cost_estimate": {
+    "peers": {
+      "openai": 0.46276365,
+      "anthropic": 1.4046774,
+      "gemini": 0.7721321999999999
+    },
+    "independent": {
+      "openai": 0.16226420000000003,
+      "anthropic": 0.9638704,
+      "gemini": 0.8646745
+    }
+  },
+  "note": "Individual candidate evaluation is exploratory; candidates were selected using selection data only.",
+  "peer_vs_each_solo": {
+    "openai:gpt-6.1-terra": {
+      "difference": 0.1588235294117647,
+      "paired_standard_error": 0.024542230848435792,
+      "wrong_to_right": 66,
+      "right_to_wrong": 12
+    },
+    "anthropic:claude-opus-5-5": {
+      "difference": 0.12058823529411765,
+      "paired_standard_error": 0.025687810983342312,
+      "wrong_to_right": 61,
+      "right_to_wrong": 20
+    },
+    "gemini:gemini-4-argon": {
+      "difference": 0.38235294117647056,
+      "paired_standard_error": 0.03257342879504274,
+      "wrong_to_right": 151,
+      "right_to_wrong": 21
+    }
+  },
+  "complete_solo_baselines": [
+    "openai:gpt-6.1-terra"
+  ],
+  "audit_verdict": "not_a_clean_confirmation",
+  "audit_findings": [
+    {
+      "provider": "gemini",
+      "tool_record": 6,
+      "finding": "Computed counterfactual predictions from modified l2 activations and l3 weights in the kernel, bypassing the official forward tool.",
+      "path": ".wsplab/experiments/peer-pilot-corrected/peers/run/run_2/session/tool_calls.jsonl"
+    },
+    {
+      "finding": "Only the terra solo finished normally; Claude and Gemini solo attempts were capped."
+    }
+  ],
+  "pilot_accounting": {
+    "reported_estimate_including_failed_attempt_and_probe": 5.96848865,
+    "gemini_zero_output_calls": 20,
+    "additional_exposure_at_requested_output_limit": 6.5536,
+    "account_billing_verified": false
+  }
+}

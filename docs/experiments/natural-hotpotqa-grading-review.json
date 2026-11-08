@@ -1,0 +1,78 @@
+{
+  "at": 1793990955.808872,
+  "scope": "Initial nonthinking answer-grading review; all 32 full and oracle predictions inspected side by side.",
+  "reviewer": "assistant; exploratory, not independent or blinded",
+  "headline_scores_unchanged": true,
+  "source_sha256": {
+    "full_nonthinking.jsonl": "998fa9b9d1ac5119978d14206fa4b577fd8b837891e310ac61906ce7849c4417",
+    "oracle_nonthinking.jsonl": "6076a298f6c100562013d72b4052e09e1640d680eff7832b2981c2614bfee91f"
+  },
+  "notes": [
+    "Four clearly answer-equivalent full-context predictions miss official EM; do not equate 34.4 percent official EM with exact semantic accuracy.",
+    "Oracle also has wording/format penalties; do not selectively correct one condition.",
+    "Wrong years, wrong comparison directions and wrong requested entity types occur even after distinguishing wording mismatches.",
+    "All official metrics and the frozen qualification rule remain unchanged. No examples removed or gold labels revised."
+  ],
+  "items": [
+    {
+      "id": "5ae0cddc55429945ae959459",
+      "assessment": "clear_answer_equivalent",
+      "note": "35 versus 35 people; question already asks number of people.",
+      "question": "National Firearms Agreement was in response to the Port Arthur massacre that killed how many people?",
+      "gold": "35 people",
+      "prediction": "35",
+      "official_em": 0,
+      "official_f1": 0.6666666666666666
+    },
+    {
+      "id": "5a7d003b55429907fabef0a1",
+      "assessment": "clear_answer_equivalent",
+      "note": "Vladimir Nabokov versus Vladimir Vladimirovich Nabokov; same named person in question.",
+      "question": "Who was born first, Vladimir Nabokov or Harper Lee?",
+      "gold": "Vladimir Vladimirovich Nabokov",
+      "prediction": "Vladimir Nabokov",
+      "official_em": 0,
+      "official_f1": 0.8
+    },
+    {
+      "id": "5a8bc1565542996e8ac88a0c",
+      "assessment": "clear_answer_equivalent",
+      "note": "2016 United States Senate election in Nevada versus the same election without location.",
+      "question": "What election was Senator Harry Reid at in Nevada?",
+      "gold": "The 2016 United States Senate election",
+      "prediction": "2016 United States Senate election in Nevada",
+      "official_em": 0,
+      "official_f1": 0.8333333333333333
+    },
+    {
+      "id": "5ae212c9554299495565d9de",
+      "assessment": "clear_answer_equivalent",
+      "note": "Jacobite rising of 1745 versus unsuccessful Jacobite uprising of 1745; extra explanation lowers official F1.",
+      "question": "Which rebellion did Sir John Wedderburn and Charles Edward Stuart fight for that ended with defeat at the Battle of Culloden?",
+      "gold": "the unsuccessful Jacobite uprising of 1745",
+      "prediction": "The rebellion fought for by Sir John Wedderburn and Charles Edward Stuart was the Jacobite rising of 1745, which ended with the defeat at the Battle of Culloden.",
+      "official_em": 0,
+      "official_f1": 0.20689655172413793
+    },
+    {
+      "id": "5ae356045542990afbd1e10d",
+      "assessment": "reference_question_mismatch",
+      "note": "Gold is an entire biographical sentence, while the question requests a city. Requires dataset-quality review; no corrected gold substituted.",
+      "question": "What city has a football team and had a player from Pago Pago, American Samoa play for it?",
+      "gold": "He is from Pago Pago, American Samoa and played college football at Oregon.",
+      "prediction": "Pago Pago",
+      "official_em": 0,
+      "official_f1": 0.2666666666666667
+    },
+    {
+      "id": "5a8bc0485542995d1e6f143d",
+      "assessment": "incomplete_or_ambiguous",
+      "note": "Neotropical realm does not explicitly answer the requested continents; not credited as a clear equivalent.",
+      "question": "What continents are the Moneuptychia found in?",
+      "gold": "the Americas",
+      "prediction": "The Moneuptychia is found in the Neotropical realm.",
+      "official_em": 0,
+      "official_f1": 0
+    }
+  ]
+}

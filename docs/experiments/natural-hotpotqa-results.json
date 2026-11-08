@@ -1,0 +1,79 @@
+{
+  "status": "completed",
+  "at": 1793991372.6664565,
+  "paid_api_calls": 0,
+  "is_council_result": false,
+  "external_evaluation_used": false,
+  "conditions": {
+    "full_nonthinking": {
+      "responses": 32,
+      "em": 0.34375,
+      "f1": 0.46886631089217295,
+      "truncated": 0,
+      "missing_answer_marker": 11,
+      "unfinished_thinking": 0,
+      "mean_output_tokens": 12.375
+    },
+    "oracle_nonthinking": {
+      "responses": 32,
+      "em": 0.53125,
+      "f1": 0.685818797215856,
+      "truncated": 0,
+      "missing_answer_marker": 6,
+      "unfinished_thinking": 0,
+      "mean_output_tokens": 11.46875
+    },
+    "bm25_nonthinking": {
+      "responses": 32,
+      "em": 0.34375,
+      "f1": 0.4775419061302682,
+      "truncated": 0,
+      "missing_answer_marker": 7,
+      "unfinished_thinking": 0,
+      "mean_output_tokens": 12.5
+    },
+    "full_thinking": {
+      "responses": 32,
+      "em": 0.5,
+      "f1": 0.6567460317460317,
+      "truncated": 0,
+      "missing_answer_marker": 4,
+      "unfinished_thinking": 0,
+      "mean_output_tokens": 421
+    },
+    "oracle_thinking": {
+      "responses": 32,
+      "em": 0.625,
+      "f1": 0.7422438672438673,
+      "truncated": 0,
+      "missing_answer_marker": 8,
+      "unfinished_thinking": 0,
+      "mean_output_tokens": 312.40625
+    },
+    "bm25_thinking": {
+      "responses": 32,
+      "em": 0.5,
+      "f1": 0.602579365079365,
+      "truncated": 0,
+      "missing_answer_marker": 10,
+      "unfinished_thinking": 0,
+      "mean_output_tokens": 514.0625
+    }
+  },
+  "paired_oracle_diagnostic": {
+    "nonthinking": {
+      "oracle_minus_full_em": 0.1875,
+      "standard_error": 0.09458632343338629,
+      "full_wrong_oracle_right": 8,
+      "full_right_oracle_wrong": 2
+    },
+    "thinking": {
+      "oracle_minus_full_em": 0.125,
+      "standard_error": 0.059398870413936426,
+      "full_wrong_oracle_right": 4,
+      "full_right_oracle_wrong": 0
+    }
+  },
+  "screening_rule": "not_qualified_by_frozen_rule",
+  "fixture_hashes_verified_after_inference": true
+}

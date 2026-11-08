@@ -1,0 +1,44 @@
+{
+  "verdict": "not_significant",
+  "reasons": [
+    "edited - original = +0.0450 +/- 0.0227 over 200 items"
+  ],
+  "answer": "Submitted the frozen two-component edit in `/work/edited`; all other weights are unchanged.\n\n### Weight changes\nUsing zero-based indices:\n- **Layer 22, `linear_attn.out_proj.weight`:** doubled columns `256:384`, strengthening recurrent head 2\u2019s contribution.\n- **Layer 23, `mlp.down_proj.weight`:** zeroed columns `22`, `46`, and `94`, removing those three neurons\u2019 output contributions.\n\n### Diagnosis and evidence\nThe initial failures were dominated by repeated reconsideration and near-verbatim loops that exhausted the token budget, motivating a targeted intervention on stalled reasoning rather than global output-distribution changes.\n\nWithin-problem activation comparisons localized candidate components, but causal tests reversed an initial interpretation: removing recurrent head 2 reduced DEV accuracy by **27.35 percentage points**, indicating useful activity rather than a harmful failure signal.\n\nStrength tests from removal through 3\u00d7 amplification favored 2\u00d7, while the three MLP neurons showed increased activity during repetitive continuations; however, individual neuron removals did not help, so their precise joint mechanism remains uncertain.\n\nThe combined edit won the predeclared pooled DEV comparison and was frozen before any HOLDOUT evaluation.\n\n### Independent confirmation\nAll 12 HOLDOUT passes were pooled, including the unfavorable final batch: **128 disjoint MATH practice problems, 12 samples each, 1,536 answers per model**, using the full evaluation protocol.\n\n| Metric | Original | Edited |\n|---|---:|---:|\n| Correct answers | 86 | 132 |\n| Accuracy | 5.60% | 8.59% |\n| Reached token limit | 95.25% | 91.73% |\n\n**Accuracy gain: +2.99 percentage points, standard error 0.83 points** clustered by problem, with an approximate 95% interval of **+1.38 to +4.61 points** and 86 wrong-to-right versus 40 right-to-wrong paired outcomes.\n\nThis supports a modest, partial repair\u2014not strong math performance or a guaranteed MATH-500 gain\u2014and the final tensors were verified against the pre-HOLDOUT frozen backup, with the report saved in `/work/final_report.json`.",
+  "baseline": 0.095,
+  "final": 0.14,
+  "comparison": {
+    "items": 200,
+    "original": 0.095,
+    "edited": 0.14,
+    "difference": 0.045,
+    "standard_error": 0.022747797949643146,
+    "wrong_to_right": 15,
+    "right_to_wrong": 6
+  },
+  "control": {
+    "items": 200,
+    "original": 0.095,
+    "edited": 0.14,
+    "difference": 0.045,
+    "standard_error": 0.021615065470092426,
+    "wrong_to_right": 14,
+    "right_to_wrong": 5
+  },
+  "regressions": {},
+  "patch": "~/.wsplab/live/astra50/result/patch",
+  "changed_entries": 134144,
+  "monitoring_note": "Framework final report copied after the original process exited. Full protocol trace audit not performed in this continuation; internal holdout claims in answer are editor-reported.",
+  "evaluation_configuration": {
+    "benchmark": "MATH-500 subset",
+    "problems": 200,
+    "samples_per_problem": 1,
+    "max_output_tokens": 8192,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "presence_penalty": 1.5,
+    "editing_passes": 50
+  },
+  "source_report": "~/.wsplab/live/astra50/report.json",
+  "source_sha256": "ca861f660b6ee91f89df44baa017083063d85a33fbe4f60b69cca2794486764f"
+}

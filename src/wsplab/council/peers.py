@@ -11,8 +11,6 @@ import threading
 
 from ..editors.base import Editor, Reply
 
-REPLY_CHARS = 2500
-RESULT_CHARS = 1500
 PEER_NOTES = """
 
 WHAT YOUR PEERS DID LAST. Each works independently on their own copy of the network, with their own edits and budget, and sees this too.
@@ -55,9 +53,10 @@ class Board:
             self._close_if_complete()
 
 
-def _cut(text: str, limit: int) -> str:
-    text = text.replace("```", "\'\'\'")
-    return text if len(text) <= limit else text[:limit] + "\n[cut]"
+def _quote(text: str) -> str:
+    # Keep the complete evidence, including code/results at the end of a step.
+    # Fence escaping marks this as quoted peer work, not a new executable block.
+    return text.replace("```", "\'\'\'")
 
 
 class Peer:
@@ -81,6 +80,6 @@ class Peer:
             if others:
                 self.rounds += 1
                 self.notes[len(messages) - 1] = "\n".join(
-                    f"Peer {chr(65 + k)}:\n{_cut(p['reply'], REPLY_CHARS)}\nWhat came back:\n{_cut(p['result'], RESULT_CHARS)}\n"
+                    f"Peer {chr(65 + k)}:\n{_quote(p['reply'])}\nWhat came back:\n{_quote(p['result'])}\n"
                     for k, p in sorted(others.items()))
         return self.editor.reply(system, self._with_notes(messages))

@@ -1,0 +1,134 @@
+{
+  "baseline": {
+    "full_standard_test_accuracy": 0.6883,
+    "published_accuracy": 0.6883,
+    "practice_pool_accuracy": 0.6865,
+    "external_evaluation_accuracy": 0.68875,
+    "external_evaluation_items": 8000,
+    "practice_items": 1000,
+    "selection_items": 1000,
+    "parameters": 278324,
+    "unaltered_public_checkpoint": true,
+    "content_disjoint": true
+  },
+  "manifest": {
+    "model": "cifar100_resnet20",
+    "source_revision": "786c16252c0fc58ee9adac063f8337cc4a7a497a",
+    "checkpoint_sha256": "23dac2f1bc53fd65b9fd0bd30a46f91ab39fa16505430cc7999662237598209d",
+    "dataset_provenance": {
+      "dataset": "uoft-cs/cifar100",
+      "revision": "aadb3af77e9048adbea6b47c21a81e47dd092ae5",
+      "sha256": "98776c529bb146a9c791229df74a5cf076be9b43d82dbbd334b6a7788d73dc68",
+      "test_bin_sha256": "d8b1e6b7b3bee4020055f0699b111f60b1af1e262aeb93a0b659061746f8224a",
+      "names_sha256": "82b0d4f76098fb034222d6a6cb5dffcfcc062b533cce1161583d1f8dc66c4c44"
+    },
+    "seed": 20261106,
+    "mean": [
+      0.5070000290870667,
+      0.48649999499320984,
+      0.4408999979496002
+    ],
+    "std": [
+      0.267300009727478,
+      0.2563999891281128,
+      0.2761000096797943
+    ],
+    "parameters": 278324,
+    "files": {
+      "model.safetensors": "9f46d8545caeb2cfee3264fb5e57179318291dba9e271985cec7d56a72a88549",
+      "inputs.npy": "f5bbcd8bafe9be0b4a36d8c9095363c7ecd69f2ccbbb77045ea78058c2a6f714",
+      "targets.npy": "7827272d0fbeee517a81b235f35fae2128af64393371c2fdde1c8f9a638e4a1a",
+      "indices.json": "36d3eb0b6d8e14e46784f2b1be028695c01391db547ad0a2e16483cecfe639f3",
+      "classes.json": "1c5e3574176b3a100a61195285b1f5749ae325a8321551a6b487b83dd3ff3bb7"
+    }
+  },
+  "budget_preflight": {
+    "at": 1793946506.7110753,
+    "authorized": {
+      "openai": 19.0,
+      "anthropic": 25.0,
+      "gemini": 25.0
+    },
+    "old_ledgers": {
+      "openai": 9.4002047,
+      "anthropic": 14.149659199999993,
+      "gemini": 4.810685700000002
+    },
+    "recent_ledgers": {
+      "openai": 1.21235445,
+      "anthropic": 6.5872624,
+      "gemini": 2.0938594
+    },
+    "paths": [
+      ".wsplab/experiments/peer-pilot-20261105/independent/ledger.json",
+      ".wsplab/experiments/peer-pilot-20261105/peers/ledger.json",
+      ".wsplab/experiments/peer-pilot-corrected/peers/ledger.json",
+      ".wsplab/experiments/peer-confirmation-seed22/independent/ledger.json",
+      ".wsplab/experiments/peer-confirmation-seed22/peers/ledger.json"
+    ],
+    "new_reservation": {
+      "openai": 0.7,
+      "anthropic": 4.0,
+      "gemini": 7.0
+    },
+    "conservative_total_with_astra_working_allocation": {
+      "openai": 18.91235445,
+      "anthropic": 24.736921599999995,
+      "gemini": 20.458265100000006
+    },
+    "historical_gemini_uncertainty": 6.5536,
+    "tiny_gemini_probe": 0.00012,
+    "note": "Astra working ledger has a post-call cap of $17, not a guaranteed hard pre-call ceiling. Keep the remaining $0.0876 margin visible; do not increase this trial allocation."
+  },
+  "activation_capture_verification": {
+    "comparison": "Original inplace ResNet with corrected capture versus equivalent out-of-place reference",
+    "batchnorm_layers_checked": 21,
+    "maximum_capture_error": 0.0,
+    "maximum_logit_error": 0.0,
+    "external_baseline_recheck": 0.68875,
+    "runner_sha256": "bbf4d6fb5119f1e9e8db2a31eddb986ddde51e2bc346771425f0d60941cc4897"
+  },
+  "first_attempt": {
+    "status": "invalidated_harness_activation_aliasing",
+    "accounting": {
+      "reason": "Invalid activation capture; in-flight requests conservatively charged at their full reservations. Actual charges may be lower.",
+      "arms": {
+        "peers": {
+          "spent": {
+            "openai": 0.0930689,
+            "anthropic": 0.45491080000000006,
+            "gemini": 0.22228249999999997
+          },
+          "unknown_inflight_upper": {
+            "openai": 0.0,
+            "anthropic": 0.598775,
+            "gemini": 0.260248
+          },
+          "conservative_total": {
+            "openai": 0.0930689,
+            "anthropic": 1.0536858,
+            "gemini": 0.4825305
+          }
+        },
+        "independent": {
+          "spent": {
+            "openai": 0.11693985000000003,
+            "anthropic": 0.0,
+            "gemini": 0.0
+          },
+          "unknown_inflight_upper": {
+            "openai": 0.107472,
+            "anthropic": 0.0,
+            "gemini": 0.0
+          },
+          "conservative_total": {
+            "openai": 0.22441185000000002,
+            "anthropic": 0.0,
+            "gemini": 0.0
+          }
+        }
+      }
+    },
+    "result": "No valid peer-versus-solo result."
+  }
+}
