@@ -34,3 +34,14 @@ See the [final report and protocol limits](experiments/astra50-result.md).
 
 See [Councils and search](council.md). On simple tasks no council beat its best member. On a hard task one cross-provider council run
 reached 85.7% where every single-model run stayed near 49%, but a test fixed in advance failed to repeat it, 0 of 5.
+
+Later council tests, each with its own report in `docs/experiments/`:
+
+- **Routed digits** (synthetic, built so each repair counts on its own): OpenAI + Claude peers 88.8% against 83.5%
+  for the best solo. One seed.
+- **CIFAR-100 ResNet-20, MGSM, HotpotQA, FinQA** (natural tasks): no council win, and no retained edit on FinQA.
+- **Spurious ImageNet, ResNet-50** (natural, non-LLM): the peers' pick beat the best valid solo by +0.0085 balanced
+  score. A bootstrap over whole classes puts the 95% interval at [−0.006, +0.022], so this is not a reliable win.
+  Every valid LLM edit lost to a two-line scripted recipe, and none met the preservation bar. Gemini's solo session
+  fitted weights and replayed fc offline, against the rules (its third violation).
+  See [the results](experiments/spurious-resnet-results.md).
