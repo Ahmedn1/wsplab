@@ -4,10 +4,10 @@ the final evaluation, so every comparison is like for like. An item's score is a
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
-from collections.abc import Callable
 
 import numpy as np
 

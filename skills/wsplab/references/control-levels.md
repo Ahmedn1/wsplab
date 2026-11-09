@@ -7,7 +7,7 @@ Every level lowers to the one below, so all of them produce the same audit log a
 | 0 Bytes | `wsplab.io`, `wsplab.patch` | Tensors and patches, numpy only, no LLM |
 | 1 Store | `load`, `save_edit`, `drop_edit`, `edited` | The paper's editing surface |
 | 2 Semantic | `M.layers[15].mlp.neuron[11].out` | Named parts of a network |
-| 3 Components | `Editor`, `Council`, `SandboxKernel`, `PassTool`, `PromptBuilder`, scorers | Swapping one part |
+| 3 Components | `Editor`, `SandboxKernel`, `PassTool`, `PromptBuilder`, scorers | Swapping one part |
 | 4 Session | `wsplab.session.Session` | Budgets, handoffs, notices |
 | 5 Run | `wsplab.run`, `wsplab.run_lm` | Just a note and an evaluation |
 

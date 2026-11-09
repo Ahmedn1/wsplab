@@ -43,7 +43,7 @@ def test_wheel_has_no_gpl_or_benchmark_data(tmp_path):
         names = z.namelist()
         assert any(n.endswith("wsplab/__init__.py") for n in names)
         assert "wsplab/prompts/templates/lm_edit.txt" in names and "wsplab/prompts/parts/tools_generic.txt" in names
-        assert not any("examples/" in n or "tests/" in n for n in names)
+        assert not any("experiments/" in n or "tests/" in n for n in names)
         for n in names:
             assert not n.endswith((".jsonl", ".npz", ".safetensors", ".parquet")), n
             data = z.read(n)

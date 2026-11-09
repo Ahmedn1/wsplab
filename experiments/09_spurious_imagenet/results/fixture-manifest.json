@@ -1,0 +1,28 @@
+{
+  "model": "torchvision resnet50 IMAGENET1K_V1",
+  "checkpoint_sha256": "0676ba61b6795bbe1773cffd859882e5e297624d384b6993f7c9e683e722fb8a",
+  "seed": 20261108,
+  "spurious_archive_sha256": "ce3ef1b6bc2099d179931780be84cf0a6c1c63a855e8c54f4a02868b0ebe15f6",
+  "clean_sources": [
+    "ImageNetV2 matched-frequency",
+    "ImageNetV2 threshold0.7",
+    "ImageNetV2 top-images",
+    "ImageNet-1k validation, 100 spurious classes"
+  ],
+  "counts": {
+    "practice": 4850,
+    "evaluation": 28325,
+    "evaluation_copies_dropped_as_seen_in_practice": 8
+  },
+  "files": {
+    "model.safetensors": "df1aad85e18536504a4c8597118364e291ff3a9c4b56dd9b3a4900642e4c3a7c",
+    "classes.json": "0507e07632759ad025d035ba6115d3bbae65dd4d83e01c0b294ad26bffb32979",
+    "split.json": "b40911cbb28f1aa28aea38938c6b2fa17b4f34d2016d130119cd9a4303945d2f",
+    "practice_inputs.npy": "816f57eb086aa319357eaf45ca6f3edaa3dd2c8faf18da7375255750e32ce318",
+    "practice_targets.npy": "628899fa4d5f84a747dce9d60d3bd84e93272002d8853f7bd0888b75def85b10",
+    "practice_sources.json": "f83e610a6922b93bd56eb8b4d89d0e00982ed6a7727238f3b640ddee609730b5",
+    "evaluation_inputs.npy": "7f4f9ba25b5177573d605515cede013c1543746dcaccdff94d1bbbe4e8d6abcf",
+    "evaluation_targets.npy": "939d3a25fb3bc7bb4ee62eb93a8995ba4ad8fe8366419293d2b86fcf61fb54e5",
+    "evaluation_sources.json": "61b633dae5b57417ea80db0efc818cc4e06f88d9f6b78fd68a9345c474177ed5"
+  }
+}

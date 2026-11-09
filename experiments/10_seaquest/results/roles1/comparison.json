@@ -1,0 +1,39 @@
+{
+  "means": {
+    "original": 52.129,
+    "roles/openai": 69.7735,
+    "roles/anthropic": 69.55,
+    "roles/gemini": 69.466,
+    "claude_solo": 75.7385,
+    "plain_council_pick": 74.797
+  },
+  "role_pick": "roles/openai",
+  "role_pick_minus_claude_solo": {
+    "difference": -5.965,
+    "standard_error": 1.0416145486378188,
+    "better": 803,
+    "worse": 975,
+    "sign_test_p": 4.942841883445951e-05
+  },
+  "role_pick_minus_plain_council": {
+    "difference": -5.0235,
+    "standard_error": 1.0725787553686834,
+    "better": 854,
+    "worse": 995,
+    "sign_test_p": 0.0011250698598292475
+  },
+  "role_pick_minus_original": {
+    "difference": 17.6445,
+    "standard_error": 1.234298710413433,
+    "better": 1178,
+    "worse": 690,
+    "sign_test_p": 9.031635547554752e-30
+  },
+  "best_role_candidate_minus_claude_solo": {
+    "difference": -5.965,
+    "standard_error": 1.0416145486378188,
+    "better": 803,
+    "worse": 975,
+    "sign_test_p": 4.942841883445951e-05
+  }
+}

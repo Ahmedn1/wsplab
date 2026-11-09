@@ -1,0 +1,4 @@
+{"all_sessions_valid": true, "auditor": "Claude Code (claude-opus-5-5)",
+ "sessions": {"peers/openai": {"valid": true, "notes": "critic; analysis only"},
+  "peers/anthropic": {"valid": true, "notes": "proposer; stopped by the peer-context bound after 5 passes"},
+  "peers/gemini": {"valid": true, "notes": "analyst; records 7-8 compute logits of the ORIGINAL weights on hand-built states to diagnose it (no candidate scored); stopped by the peer-context bound after 2 passes"}}}

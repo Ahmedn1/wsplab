@@ -38,7 +38,7 @@ the kernel's variables are lost, which the editor is told.
 An editor is anything that writes replies. The protocol is plain text: one fenced block per reply, or none for a final answer.
 No tool calling is needed, so any chat model works.
 
-`anthropic:<model>`, `openai:<model>` (any OpenAI-compatible server), `codex:<model>` (the route the paper used), a council, a
+`anthropic:<model>`, `openai:<model>` (any OpenAI-compatible server), `codex:<model>` (the route the paper used), a
 coding agent through `wsplab session`, or your own object with a `reply` method.
 
 ## The kernel

@@ -1,6 +1,13 @@
 from .apply import apply, edited_tensors, rebuild, verify
-from .diff import (diff_tensor, from_checkpoints, from_submission, import_release, read_submission, write_meta,
-                   write_patch)
+from .diff import (
+                   diff_tensor,
+                   from_checkpoints,
+                   from_submission,
+                   import_release,
+                   read_submission,
+                   write_meta,
+                   write_patch,
+)
 from .format import Patch, PatchError
 from .stack import stack
 

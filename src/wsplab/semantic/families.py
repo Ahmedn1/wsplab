@@ -4,9 +4,9 @@ tensor names always work."""
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from types import SimpleNamespace
-from collections.abc import Callable
 
 from .refs import Parts, Ref
 

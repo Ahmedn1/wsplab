@@ -1,0 +1,358 @@
+{
+ "all_sessions_valid": true,
+ "at": 1794150768.3748732,
+ "plan_sha256": "a35fa9563e8e031e5919a5a9b55ec0916183e5975992be882a4a0c872d92243f",
+ "selections_sha256": "819e47f5dd04a6bf806fb4e1654ffb27a14bb752d3043058d2ce5e016f97a860",
+ "auditor": "Claude Code (claude-opus-5-5), continuing the Codex session",
+ "method": "Read every executed Python block and forward request; regex screen for training, model replay (matmul/einsum/F.linear), fitting and private-data paths, then manual review of each analysis block; SHA256 of every returned safetensors file against the base.",
+ "manual_review_notes": [
+  "Gemini peer weighted recorded MLP activations by down_proj column norms (weight inspection, no replay) and chose 13 neurons from layers 25-27 by a t-statistic over 32 items: a multiple-comparison screen, not a rule violation.",
+  "No teacher-forced or synthetic diagnostic requests; all forward requests are DEV or HOLDOUT generation as the plan allows.",
+  "HOLDOUT was used only for the single frozen confirmation of a DEV winner (OpenAI, Claude peer, Claude solo). Gemini had no positive DEV gain and did not run HOLDOUT."
+ ],
+ "closure": "Both arms returned the unchanged base checkpoint (verified by file hashes), so per the plan the run closes as no_fix_found by weight identity and the 95-question external set stays unused.",
+ "sessions": {
+  "peers/openai": {
+   "valid": true,
+   "verdict": "no_fix_found",
+   "changed_entries": 0,
+   "weights_identical_to_base": true,
+   "save_edit_calls": 2,
+   "interventions_tested": 2,
+   "interventions_required": 2,
+   "candidates": [
+    {
+     "candidate_id": "head_half",
+     "changed_entries": 131072,
+     "gain": 0.0,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": 0.0,
+      "standard_error": 0.0778,
+      "samples_wrong_to_right": 3,
+      "samples_right_to_wrong": 3
+     }
+    },
+    {
+     "candidate_id": "head_zero",
+     "changed_entries": 131072,
+     "gain": 0.0312,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": 0.0312,
+      "standard_error": 0.1143,
+      "samples_wrong_to_right": 7,
+      "samples_right_to_wrong": 6
+     }
+    }
+   ],
+   "holdout_confirmation": {
+    "candidate_id": "head_zero",
+    "gain": -0.0938,
+    "paired": {
+     "items": 32,
+     "accuracy_difference": -0.0938,
+     "standard_error": 0.0938,
+     "samples_wrong_to_right": 3,
+     "samples_right_to_wrong": 6
+    }
+   },
+   "forward_requests": [
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    }
+   ],
+   "passes_used": 3,
+   "python_runs": 5,
+   "flagged_python_runs": [],
+   "stop_reason": "finished"
+  },
+  "peers/anthropic": {
+   "valid": true,
+   "verdict": "no_fix_found",
+   "changed_entries": 0,
+   "weights_identical_to_base": true,
+   "save_edit_calls": 2,
+   "interventions_tested": 2,
+   "interventions_required": 2,
+   "candidates": [
+    {
+     "candidate_id": "C1_wait_neurons_x0.5",
+     "changed_entries": 16384,
+     "gain": -0.0625,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": -0.0625,
+      "standard_error": 0.077,
+      "samples_wrong_to_right": 2,
+      "samples_right_to_wrong": 4
+     }
+    },
+    {
+     "candidate_id": "C2_wait_neurons_x0.0",
+     "changed_entries": 16384,
+     "gain": 0.0625,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": 0.0625,
+      "standard_error": 0.0891,
+      "samples_wrong_to_right": 5,
+      "samples_right_to_wrong": 3
+     }
+    }
+   ],
+   "holdout_confirmation": {
+    "candidate_id": "C2_wait_neurons_x0.0",
+    "gain": 0.0,
+    "paired": {
+     "items": 32,
+     "accuracy_difference": 0.0,
+     "standard_error": 0.0635,
+     "samples_wrong_to_right": 2,
+     "samples_right_to_wrong": 2
+    }
+   },
+   "forward_requests": [
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    }
+   ],
+   "passes_used": 3,
+   "python_runs": 5,
+   "flagged_python_runs": [],
+   "stop_reason": "finished"
+  },
+  "peers/gemini": {
+   "valid": true,
+   "verdict": "no_fix_found",
+   "changed_entries": 0,
+   "weights_identical_to_base": true,
+   "save_edit_calls": 2,
+   "interventions_tested": 2,
+   "interventions_required": 2,
+   "candidates": [
+    {
+     "candidate_id": "err_mlp_zero",
+     "changed_entries": 13312,
+     "gain": 0.0,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": 0.0,
+      "standard_error": 0.0635,
+      "samples_wrong_to_right": 2,
+      "samples_right_to_wrong": 2
+     }
+    },
+    {
+     "candidate_id": "err_mlp_half",
+     "changed_entries": 13312,
+     "gain": 0.0,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": 0.0,
+      "standard_error": 0.0635,
+      "samples_wrong_to_right": 2,
+      "samples_right_to_wrong": 2
+     }
+    }
+   ],
+   "holdout_confirmation": null,
+   "forward_requests": [
+    {
+     "type": "generate",
+     "model": "original",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    }
+   ],
+   "passes_used": 3,
+   "python_runs": 7,
+   "flagged_python_runs": [],
+   "stop_reason": "finished"
+  },
+  "solo/anthropic": {
+   "valid": true,
+   "verdict": "no_fix_found",
+   "changed_entries": 0,
+   "weights_identical_to_base": true,
+   "save_edit_calls": 7,
+   "interventions_tested": 6,
+   "interventions_required": 6,
+   "candidates": [
+    {
+     "candidate_id": "C1",
+     "changed_entries": 16384,
+     "gain": -0.0938,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": -0.0938,
+      "standard_error": 0.069,
+      "samples_wrong_to_right": 1,
+      "samples_right_to_wrong": 4
+     }
+    },
+    {
+     "candidate_id": "C2",
+     "changed_entries": 16384,
+     "gain": -0.0312,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": -0.0312,
+      "standard_error": 0.0838,
+      "samples_wrong_to_right": 3,
+      "samples_right_to_wrong": 4
+     }
+    },
+    {
+     "candidate_id": "C3",
+     "changed_entries": 131072,
+     "gain": 0.0938,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": 0.0938,
+      "standard_error": 0.0823,
+      "samples_wrong_to_right": 5,
+      "samples_right_to_wrong": 2
+     }
+    },
+    {
+     "candidate_id": "C4",
+     "changed_entries": 131072,
+     "gain": -0.0938,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": -0.0938,
+      "standard_error": 0.0938,
+      "samples_wrong_to_right": 3,
+      "samples_right_to_wrong": 6
+     }
+    },
+    {
+     "candidate_id": "C5",
+     "changed_entries": 16384,
+     "gain": 0.0312,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": 0.0312,
+      "standard_error": 0.0838,
+      "samples_wrong_to_right": 4,
+      "samples_right_to_wrong": 3
+     }
+    },
+    {
+     "candidate_id": "C6",
+     "changed_entries": 16384,
+     "gain": 0.0312,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": 0.0312,
+      "standard_error": 0.0838,
+      "samples_wrong_to_right": 4,
+      "samples_right_to_wrong": 3
+     }
+    }
+   ],
+   "holdout_confirmation": {
+    "candidate_id": "C3",
+    "gain": -0.0312,
+    "paired": {
+     "items": 32,
+     "accuracy_difference": -0.0312,
+     "standard_error": 0.0838,
+     "samples_wrong_to_right": 3,
+     "samples_right_to_wrong": 4
+    }
+   },
+   "forward_requests": [
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    },
+    {
+     "type": "generate",
+     "model": "both",
+     "items": 32,
+     "n": 1
+    }
+   ],
+   "passes_used": 7,
+   "python_runs": 10,
+   "flagged_python_runs": [],
+   "stop_reason": "finished"
+  }
+ }
+}

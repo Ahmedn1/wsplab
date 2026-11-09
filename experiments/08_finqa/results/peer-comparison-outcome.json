@@ -1,0 +1,54 @@
+{
+  "status": "completed_no_fix_found",
+  "verdict": "no_fix_found",
+  "at": 1794097897.8407125,
+  "plan_sha256": "72295aecbc288cf6a8e7ec2fa7662519421fdb45a3e64457ddbc70c2face9d78",
+  "selections_sha256": "506034d7c68286a5da6a7cb91603420d3d7482dbd99147348f68093db9c19f91",
+  "protocol_audit_sha256": "fd2cd426cb0cd0e5a1e116e835631fa63c2ebcf78f6bedd4515a3540f85b8365",
+  "all_submitted_weights_identical": true,
+  "weight_edits_tested": 0,
+  "council_weight_edit_win": false,
+  "external_evaluation_used": false,
+  "external_score": null,
+  "external_p_value": null,
+  "external_skipped_reason": "Both selected arms are the identical original checkpoint. Their difference is zero by identity; running the reserved external set cannot change this comparison. No external score or statistical test is claimed.",
+  "protocol_deviation": "Close by verified weight identity instead of the planned external inference; retain the unused external set.",
+  "spend_this_attempt": 2.8208550999999993,
+  "spend_previous_attempt": 2.3218776500000007,
+  "total_spend": 5.14273275,
+  "editing_seconds": 4001.1205627918243,
+  "sessions": {
+    "peers/openai": {
+      "verdict": "no_fix_found",
+      "changed_entries": 0,
+      "save_edit_calls": 0,
+      "passes_used": 2,
+      "python_runs": 9,
+      "peer_rounds": 15
+    },
+    "peers/anthropic": {
+      "verdict": "no_fix_found",
+      "changed_entries": 0,
+      "save_edit_calls": 0,
+      "passes_used": 2,
+      "python_runs": 7,
+      "peer_rounds": 9
+    },
+    "peers/gemini": {
+      "verdict": "no_fix_found",
+      "changed_entries": 0,
+      "save_edit_calls": 0,
+      "passes_used": 1,
+      "python_runs": 19,
+      "peer_rounds": 15
+    },
+    "solo/anthropic": {
+      "verdict": "no_fix_found",
+      "changed_entries": 0,
+      "save_edit_calls": 0,
+      "passes_used": 2,
+      "python_runs": 10,
+      "peer_rounds": null
+    }
+  }
+}

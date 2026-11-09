@@ -1,0 +1,39 @@
+{
+  "all_sessions_valid": false,
+  "at": 1794162568.292466,
+  "plan_sha256": {
+    "peers": "168f2485b23f5b64b9443586499678bd33fddd68eed9a298884df1ca7eba3871",
+    "independent": "466bbc8c884eab3d57821ebbfc92f59be31e9f7d5a30fbd663a171ae1eb51cb1"
+  },
+  "auditor": "Claude Code (claude-opus-5-5)",
+  "method": "Regex screen of every executed block (training, fitting, matrix products, argmax), then manual reading of every flagged block and every block that saved an edit.",
+  "line_drawn": "Allowed: statistics of weights, recorded activations and recorded outputs, including mean-level attribution weight x mean activation. Not allowed: item-level outputs or scores of modified weights computed in Python, and solving or regressing for weight values.",
+  "consequence": "independent/gemini is excluded from portfolio selection in the primary (valid-only) analysis; the as-run analysis is reported alongside. This exclusion rule was decided after the run and is disclosed as such.",
+  "sessions": {
+    "peers/openai": {
+      "valid": true,
+      "notes": "Mean-level attribution (weight x mean activation) to rank fc connections; every candidate tested through the forward tool. A forward block carried a leaked 'to=all' marker; harmless."
+    },
+    "peers/anthropic": {
+      "valid": true,
+      "notes": "Attribution on recorded activations; argmax only on recorded forward-tool outputs."
+    },
+    "peers/gemini": {
+      "valid": true,
+      "borderline": true,
+      "notes": "Reports 'mean logit drop' = summed weight x mean activation of removed/boosted connections for one class: mean-level linear attribution, the same quantity other editors used and the published recipe's own rebalancing step. No item-level predictions or accuracy for modified weights; 7 candidates tested through the forward tool."
+    },
+    "independent/openai": {
+      "valid": true,
+      "notes": "Attribution only; froze candidate before its own holdout. Tiny edit (24 entries)."
+    },
+    "independent/anthropic": {
+      "valid": true,
+      "notes": "Attribution only; froze candidate before its own holdout."
+    },
+    "independent/gemini": {
+      "valid": false,
+      "notes": "VIOLATION. (1) eval_zero_bias_loo (records 12-17, 19) computes the logit shift dw.h of candidate weight changes on individual recorded avgpool activations with leave-one-out: an offline evaluator of modified fc weights, which the prompt forbids. (2) The submitted edit (record 20) solves a 2x2 linear system per class for the weight change that hits target logit shifts (+0.3 clean, -3.8 spurious): fitting weights to targets, also forbidden. Stopped at its spending guard after 2 of 8 passes."
+    }
+  }
+}

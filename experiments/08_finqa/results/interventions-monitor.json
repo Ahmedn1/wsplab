@@ -1,0 +1,376 @@
+{
+ "status": "completed_no_fix_found",
+ "pid": 921158,
+ "returncode": 0,
+ "at": 1794109691.3112137,
+ "sessions": {
+  "peers/openai": {
+   "state": {
+    "turn": 11,
+    "runs": 5,
+    "passes": 3,
+    "done": true,
+    "stop_reason": "finished"
+   },
+   "generation": {
+    "status": "generation_completed",
+    "items": 32,
+    "at": 1794104680.340269
+   },
+   "interventions": {
+    "required": 2,
+    "tested": 2,
+    "diagnostic_passes": 0,
+    "candidates": [
+     {
+      "candidate_id": "head_half",
+      "edit_hash": "00cac127e1",
+      "patch_hash": "e85af642ac37ffa6247144958909f837e23730d9eab8ed2f5eeb4e5e938bdd4f",
+      "changed_entries": 131072,
+      "gain": 0.0,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": 0.0,
+       "standard_error": 0.0778,
+       "samples_wrong_to_right": 3,
+       "samples_right_to_wrong": 3
+      },
+      "request_number": 1
+     },
+     {
+      "candidate_id": "head_zero",
+      "edit_hash": "b8c4016431",
+      "patch_hash": "389e30176bd76669cbbdf84d3db4773486c62bb5f7e5747069b31b5400f48e71",
+      "changed_entries": 131072,
+      "gain": 0.0312,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": 0.0312,
+       "standard_error": 0.1143,
+       "samples_wrong_to_right": 7,
+       "samples_right_to_wrong": 6
+      },
+      "request_number": 2
+     }
+    ],
+    "confirmation": {
+     "candidate_id": "head_zero",
+     "edit_hash": "b8c4016431",
+     "patch_hash": "389e30176bd76669cbbdf84d3db4773486c62bb5f7e5747069b31b5400f48e71",
+     "changed_entries": 131072,
+     "gain": -0.0938,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": -0.0938,
+      "standard_error": 0.0938,
+      "samples_wrong_to_right": 3,
+      "samples_right_to_wrong": 6
+     },
+     "request_number": 3
+    },
+    "complete": true,
+    "at": 1794105142.8317404
+   }
+  },
+  "peers/anthropic": {
+   "state": {
+    "turn": 9,
+    "runs": 5,
+    "passes": 3,
+    "done": true,
+    "stop_reason": "finished"
+   },
+   "generation": {
+    "status": "generation_completed",
+    "items": 32,
+    "at": 1794104117.282078
+   },
+   "interventions": {
+    "required": 2,
+    "tested": 2,
+    "diagnostic_passes": 0,
+    "candidates": [
+     {
+      "candidate_id": "C1_wait_neurons_x0.5",
+      "edit_hash": "14f1843f15",
+      "patch_hash": "455bc96673be12c258848726b778cb02a40a54e18cf2643c721d2acc9f8372de",
+      "changed_entries": 16384,
+      "gain": -0.0625,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": -0.0625,
+       "standard_error": 0.077,
+       "samples_wrong_to_right": 2,
+       "samples_right_to_wrong": 4
+      },
+      "request_number": 1
+     },
+     {
+      "candidate_id": "C2_wait_neurons_x0.0",
+      "edit_hash": "fc835bdb5d",
+      "patch_hash": "f1b1d1638ea68b96e13a96f09b29cc1c30ea577ea615ed1161e06b41640adb8d",
+      "changed_entries": 16384,
+      "gain": 0.0625,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": 0.0625,
+       "standard_error": 0.0891,
+       "samples_wrong_to_right": 5,
+       "samples_right_to_wrong": 3
+      },
+      "request_number": 2
+     }
+    ],
+    "confirmation": {
+     "candidate_id": "C2_wait_neurons_x0.0",
+     "edit_hash": "fc835bdb5d",
+     "patch_hash": "f1b1d1638ea68b96e13a96f09b29cc1c30ea577ea615ed1161e06b41640adb8d",
+     "changed_entries": 16384,
+     "gain": 0.0,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": 0.0,
+      "standard_error": 0.0635,
+      "samples_wrong_to_right": 2,
+      "samples_right_to_wrong": 2
+     },
+     "request_number": 3
+    },
+    "complete": true,
+    "at": 1794104127.5421164
+   }
+  },
+  "peers/gemini": {
+   "state": {
+    "turn": 11,
+    "runs": 7,
+    "passes": 3,
+    "done": true,
+    "stop_reason": "finished"
+   },
+   "generation": {
+    "status": "generation_completed",
+    "items": 32,
+    "at": 1794105128.8456092
+   },
+   "interventions": {
+    "required": 2,
+    "tested": 2,
+    "diagnostic_passes": 1,
+    "candidates": [
+     {
+      "candidate_id": "err_mlp_zero",
+      "edit_hash": "2e3d686ac4",
+      "patch_hash": "b0730587d88cc530829d525a9c3cf5b920be2efaa2140bb3e819c93e724be218",
+      "changed_entries": 13312,
+      "gain": 0.0,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": 0.0,
+       "standard_error": 0.0635,
+       "samples_wrong_to_right": 2,
+       "samples_right_to_wrong": 2
+      },
+      "request_number": 2
+     },
+     {
+      "candidate_id": "err_mlp_half",
+      "edit_hash": "6a5470ac46",
+      "patch_hash": "4a303385bcab426e27c1d8f0b393a0c36f99bda0a36062c235de84a9afb9b251",
+      "changed_entries": 13312,
+      "gain": 0.0,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": 0.0,
+       "standard_error": 0.0635,
+       "samples_wrong_to_right": 2,
+       "samples_right_to_wrong": 2
+      },
+      "request_number": 3
+     }
+    ],
+    "confirmation": null,
+    "complete": true,
+    "at": 1794105145.6254048
+   }
+  },
+  "solo/anthropic": {
+   "state": {
+    "turn": 18,
+    "runs": 10,
+    "passes": 7,
+    "done": true,
+    "stop_reason": "finished"
+   },
+   "generation": {
+    "status": "generation_completed",
+    "items": 32,
+    "at": 1794109656.5393465
+   },
+   "interventions": {
+    "required": 6,
+    "tested": 6,
+    "diagnostic_passes": 0,
+    "candidates": [
+     {
+      "candidate_id": "C1",
+      "edit_hash": "8572c12c0b",
+      "patch_hash": "3b591c7b8e705837427f4c5b70d13e05c50d4be61b6497bb41c9f3d6998f689d",
+      "changed_entries": 16384,
+      "gain": -0.0938,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": -0.0938,
+       "standard_error": 0.069,
+       "samples_wrong_to_right": 1,
+       "samples_right_to_wrong": 4
+      },
+      "request_number": 1
+     },
+     {
+      "candidate_id": "C2",
+      "edit_hash": "488b0827dd",
+      "patch_hash": "dea0f3e437d76eac320b88867103dba04e7bb9ef1468432a7e3e00f9ff993f2b",
+      "changed_entries": 16384,
+      "gain": -0.0312,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": -0.0312,
+       "standard_error": 0.0838,
+       "samples_wrong_to_right": 3,
+       "samples_right_to_wrong": 4
+      },
+      "request_number": 2
+     },
+     {
+      "candidate_id": "C3",
+      "edit_hash": "000d5f96eb",
+      "patch_hash": "5431d20114354f7653cb2d7496d57d5a67df30e2ac6139a43651c50fba25621b",
+      "changed_entries": 131072,
+      "gain": 0.0938,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": 0.0938,
+       "standard_error": 0.0823,
+       "samples_wrong_to_right": 5,
+       "samples_right_to_wrong": 2
+      },
+      "request_number": 3
+     },
+     {
+      "candidate_id": "C4",
+      "edit_hash": "fb2f7807ed",
+      "patch_hash": "1cdf479d5c082cad63948e32d9e3318079ebd83fc2555f95d4c97ece7616deb0",
+      "changed_entries": 131072,
+      "gain": -0.0938,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": -0.0938,
+       "standard_error": 0.0938,
+       "samples_wrong_to_right": 3,
+       "samples_right_to_wrong": 6
+      },
+      "request_number": 4
+     },
+     {
+      "candidate_id": "C5",
+      "edit_hash": "d552715330",
+      "patch_hash": "9bccdbcab8494207c81e689266f5befa58299ccb1ae9035e072c409648f5062a",
+      "changed_entries": 16384,
+      "gain": 0.0312,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": 0.0312,
+       "standard_error": 0.0838,
+       "samples_wrong_to_right": 4,
+       "samples_right_to_wrong": 3
+      },
+      "request_number": 5
+     },
+     {
+      "candidate_id": "C6",
+      "edit_hash": "f5018974c0",
+      "patch_hash": "7bdfd31376b15697f09d051f6e88b6b42cd9dc8a24cc86905048738aeb8dac32",
+      "changed_entries": 16384,
+      "gain": 0.0312,
+      "paired": {
+       "items": 32,
+       "accuracy_difference": 0.0312,
+       "standard_error": 0.0838,
+       "samples_wrong_to_right": 4,
+       "samples_right_to_wrong": 3
+      },
+      "request_number": 6
+     }
+    ],
+    "confirmation": {
+     "candidate_id": "C3",
+     "edit_hash": "000d5f96eb",
+     "patch_hash": "5431d20114354f7653cb2d7496d57d5a67df30e2ac6139a43651c50fba25621b",
+     "changed_entries": 131072,
+     "gain": -0.0312,
+     "paired": {
+      "items": 32,
+      "accuracy_difference": -0.0312,
+      "standard_error": 0.0838,
+      "samples_wrong_to_right": 3,
+      "samples_right_to_wrong": 4
+     },
+     "request_number": 7
+    },
+    "complete": true,
+    "at": 1794109669.0472767
+   }
+  }
+ },
+ "spending": {
+  "peers": {
+   "caps": {
+    "openai": 1.44584635,
+    "anthropic": 4.1377984,
+    "gemini": 1.7039527
+   },
+   "spent": {
+    "openai": 0.15100709999999998,
+    "anthropic": 1.0310458,
+    "gemini": 0.37579719999999994
+   },
+   "reserved": {
+    "openai": 0.0,
+    "anthropic": 0.0,
+    "gemini": 0.0
+   }
+  },
+  "solo": {
+   "caps": {
+    "anthropic": 7.28759745
+   },
+   "spent": {
+    "anthropic": 1.288181
+   },
+   "reserved": {
+    "anthropic": 0.0
+   }
+  }
+ },
+ "external_evaluation_used": false,
+ "previous_attempt_spent": 5.14273275,
+ "startup": {
+  "peers": {
+   "tokenizers_ready": [
+    "openai",
+    "anthropic",
+    "gemini"
+   ],
+   "at": 1794098708.756314
+  },
+  "solo": {
+   "tokenizers_ready": [
+    "anthropic"
+   ],
+   "at": 1794105169.3079455
+  }
+ },
+ "failures": {},
+ "total_spent_including_previous_attempt": 7.988763850000001
+}

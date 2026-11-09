@@ -6,9 +6,9 @@ from __future__ import annotations
 import functools
 import re
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
-from collections.abc import Callable
 
 INSTRUCTION = "Please reason step by step, and put your final answer within \\boxed{}."
 

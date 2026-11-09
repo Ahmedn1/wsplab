@@ -1,0 +1,16 @@
+{
+  "source": "RikiyaT/lm_understand-logs@4d09ba6d exp5_write_from_scratch/networks/seaquest/hand.npz",
+  "hand_sha256": "2625453048e97b678d73dcf199dfb44d7ef659eb9c94e15263c6c33035fb3e7e",
+  "model_sha256": "2d1176219f6091786412de40b42ff6c7670aebffa8b935ccc4841be6071db2e7",
+  "practice_seeds": [
+    0,
+    2000
+  ],
+  "eval_seeds": [
+    1000000,
+    1002000
+  ],
+  "minatar": "1.0.15",
+  "sticky": 0.1,
+  "max_steps": 10000
+}

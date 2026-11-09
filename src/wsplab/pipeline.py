@@ -252,8 +252,8 @@ def execute(job: Job, original: Path) -> RunResult:
     meta = {**job.meta, "editor": job.editor.name, "prompt_fidelity": job.prompt.fidelity,
             "prompt_sha256": job.prompt.sha256(), "harness": HARNESS, "mode": job.mode,
             "tool_free": getattr(job.editor, "tool_free", True)}
-    if hasattr(job.editor, "evidence"):
-        meta["council"] = job.editor.evidence()
+    if hasattr(job.editor, "evidence"):  # an editor may record its own evidence in the patch
+        meta["editor_evidence"] = job.editor.evidence()
     calls = folder / "session" / "tool_calls.jsonl"
     if calls.exists():
         meta["transcript_sha256"] = sha256_file(calls)
@@ -450,27 +450,23 @@ class SearchResult:
 
 
 def search(model, *, editors: list, runs: int | None = None, build, description: str, practice=None, evaluate,
-           selection: str = "metric", spending=None, method: str = "borda", folder=None, z: float = 2.0, seed: int = 0,
-           shared: bool = False, **options) -> SearchResult:
-    """Several independent sessions, then one winner. The practice data is split: editors work on one part and candidates
-    are compared on the other, so only the winner ever meets the evaluation.
+           spending=None, folder=None, z: float = 2.0, seed: int = 0, shared: bool = False, **options) -> SearchResult:
+    """Several sessions, then one winner. The practice data is split: editors work on one part and candidates are compared
+    on the other (the selection set), so only the winner ever meets the evaluation. The winner is the candidate with the
+    best selection score; if none beats the original there, the original is kept. `spending` is required: this runs a
+    whole session per candidate.
 
-    `selection` is "metric" (the best score on the selection set) or "vote" (the editors vote on the finished candidates,
-    the `weights` scope of a council). `spending` is required: this runs a whole session per candidate.
-
-    With `shared`, the sessions run together as peers: after each step every editor sees what the others did and what came back,
-    then decides its own next step. They may finish early, and each still ends with a candidate of its own.
+    With `shared`, the sessions run together as a council of peers: after each step every editor sees what the others did
+    and what came back, then decides its own next step. Each still ends with a candidate of its own.
     """
     from concurrent.futures import ThreadPoolExecutor
 
-    from .council import Board, Peer, vote
+    from .council import Board, Peer
     from .editors.cost import Metered
     from .session.state import State
 
     if spending is None:
         raise ValueError("search runs many sessions: give spending=Spending(max_tokens=... or max_usd=...)")
-    if selection not in ("metric", "vote"):
-        raise ValueError('selection must be "metric" or "vote"')
     folder = Path(folder or tempfile.mkdtemp(prefix="search-", dir=_runs_dir()))
     folder.mkdir(parents=True, exist_ok=True)
     if practice is None:
@@ -521,29 +517,26 @@ def search(model, *, editors: list, runs: int | None = None, build, description:
             if spending_exhausted(spending):
                 break
     success = sum(c["z"] >= z for c in candidates) / len(candidates)
-    usable = [c for c in candidates if c["changed_entries"]]
-    decision: dict = {"method": selection}
-    if not usable:
-        winner = candidates[0]
-    elif selection == "metric":
+    usable = [c for c in candidates if c["changed_entries"] and c["score"] > baseline.mean]
+    decision: dict = {"method": "metric"}
+    if usable:
         winner = max(usable, key=lambda c: c["score"])
-    else:
-        text = [f"Changed entries: {c['changed_entries']:,}\nGain on the selection set: {c['gain']:+.4f} +/- "
-                f"{c['standard_error']:.4f}\n\nThe editor's account:\n{c['answer']}" for c in usable]
-        members = [get_editor(e) for e in editors]
-        decision.update(vote(text, members, system=SYSTEM, spending=spending, method=method, seed=seed,
-                             measured=[c["score"] for c in usable],
-                             messages=[{"role": "user", "content": f"The network: {description}"}]))
-        winner = usable[decision["winner"]]
-    decision["run"] = winner["run"]
+        decision["run"] = winner["run"]
+    else:  # no candidate beats the original on the selection set: keep it
+        winner = next((c for c in candidates if not c["changed_entries"]), None)
+        decision.update(run=winner["run"] if winner else None, kept_original=True)
 
     final_out = folder / "winner"
+    final_out.mkdir(parents=True, exist_ok=True)
+    if winner is None:
+        P.from_submission(Checkpoint(base), {}, final_out / "empty-patch")
+        winner = {"patch": str(final_out / "empty-patch"), "answer": "No candidate beat the original on the selection set."}
     patch = P.Patch.load(winner["patch"])
     model_path = final_out / ("model.safetensors" if Path(base).is_file() else "model")
     final_out.mkdir(parents=True, exist_ok=True)
     shutil.copytree(winner["patch"], final_out / "patch", dirs_exist_ok=True)
     P.apply(patch, Checkpoint(base), model_path)
-    meta = {**patch.meta, "search": {"runs": len(candidates), "success_rate": success, "selection": selection}}
+    meta = {**patch.meta, "search": {"runs": len(candidates), "success_rate": success, "selection": decision}}
     job = Job(weights=base, kind="generic", mode="edit", folder=folder, editor=get_editor(editors[0]),
               prompt=PromptBuilder(template="unused"), practice_dir=None, tools_factory=None,
               evaluation=TorchEvaluation(runner, evaluate), regressions={}, limits=Limits(), frozen=(), names=None, budget=0,

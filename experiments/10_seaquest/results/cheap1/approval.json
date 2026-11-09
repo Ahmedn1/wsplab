@@ -1,0 +1,5 @@
+{"approved_by_user": "One replicate, max $4.30 (Recommended)", "at": "2026-11-08T18:20:34-05:00", "max_total_usd": 4.30,
+ "per_session_caps": {"openai": 0.30, "anthropic": 0.60, "gemini": 1.25},
+ "models": {"openai": "gpt-6-luna", "anthropic": "claude-haiku-5-5", "gemini": "gemini-3.8-flash"},
+ "primary": "cheap council pick vs strong Opus solo on the same 2,000 evaluation episodes; matches if the 95% CI excludes a loss > 3 points",
+ "secondary": "cheap council pick vs cheap portfolio pick; cost per arm"}

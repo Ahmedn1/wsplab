@@ -1,0 +1,17 @@
+{
+  "practice": {
+    "items": 4850,
+    "balanced": 0.6700491228070174,
+    "target_spurious_hit": 0.4768,
+    "target_clean_top1": 0.7946666666666666,
+    "clean_top1": 0.7136111111111111
+  },
+  "evaluation": {
+    "items": 28325,
+    "balanced": 0.6761814591700854,
+    "target_spurious_hit": 0.4599679743795036,
+    "unseen_spurious_hit": 0.4967948717948718,
+    "target_clean_top1": 0.7858445822692448,
+    "clean_top1": 0.7129918942172712
+  }
+}

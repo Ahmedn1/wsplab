@@ -1,0 +1,3 @@
+{"approved_by_user": "Run one replicate (Recommended)", "at": "2026-11-08T12:35:14-05:00", "max_total_usd": 13.5,
+ "per_arm_caps": {"openai": 0.75, "anthropic": 3.0, "gemini": 3.0}, "plan": "docs/experiments/spurious-resnet-plan.md",
+ "plan_commit": "530ed9a"}

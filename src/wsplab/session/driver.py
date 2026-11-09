@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
-from collections.abc import Callable
 
 from ..editors.base import Editor, EditorRefused, Usage
 from ..editors.cost import BudgetExceeded

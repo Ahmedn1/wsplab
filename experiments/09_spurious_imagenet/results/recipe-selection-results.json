@@ -1,0 +1,22 @@
+{
+  "baseline": {
+    "balanced": 0.6822171059385318,
+    "target_spurious_hit": 0.4775641025641026,
+    "target_clean_top1": 0.8275862068965517,
+    "clean_top1": 0.7240421987784564
+  },
+  "s1": {
+    "balanced": 0.7913419316702929,
+    "changed_entries": 3200,
+    "target_spurious_hit": 0.13942307692307693,
+    "target_clean_top1": 0.8196286472148541,
+    "clean_top1": 0.7201554691837868
+  },
+  "s2": {
+    "balanced": 0.8004576921421168,
+    "changed_entries": 5000,
+    "target_spurious_hit": 0.09935897435897435,
+    "target_clean_top1": 0.8090185676392573,
+    "clean_top1": 0.7162687395891172
+  }
+}

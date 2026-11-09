@@ -1,0 +1,237 @@
+{
+  "original": {
+    "mean_return": 52.129,
+    "se": 0.9654147773605772,
+    "mean_length": 1387.6705,
+    "ends": {
+      "timeout": 0,
+      "hit": 1878,
+      "oxygen": 67,
+      "surfaced_empty": 55
+    }
+  },
+  "episodes": 2000,
+  "table": [
+    {
+      "session": "peers/openai",
+      "valid": true,
+      "changed_entries": 32,
+      "selection_score": 71.992,
+      "stop": "finished",
+      "mean_return": 74.797,
+      "se": 0.9077997828391795,
+      "mean_length": 1993.5755,
+      "ends": {
+        "timeout": 0,
+        "hit": 1698,
+        "oxygen": 231,
+        "surfaced_empty": 71
+      },
+      "minus_original": {
+        "difference": 22.668,
+        "standard_error": 1.1855288386680676,
+        "better": 1249,
+        "worse": 653,
+        "sign_test_p": 4.571240071414979e-43
+      }
+    },
+    {
+      "session": "peers/anthropic",
+      "valid": true,
+      "changed_entries": 31,
+      "selection_score": 71.498,
+      "stop": "anthropic has insufficient budget for another bounded response",
+      "mean_return": 74.6635,
+      "se": 0.9170843231147565,
+      "mean_length": 1983.4835,
+      "ends": {
+        "timeout": 0,
+        "hit": 1691,
+        "oxygen": 235,
+        "surfaced_empty": 74
+      },
+      "minus_original": {
+        "difference": 22.5345,
+        "standard_error": 1.1797378079568195,
+        "better": 1252,
+        "worse": 651,
+        "sign_test_p": 9.403209882179082e-44
+      }
+    },
+    {
+      "session": "peers/gemini",
+      "valid": true,
+      "changed_entries": 32,
+      "selection_score": 71.992,
+      "stop": "gemini has insufficient budget for another bounded response",
+      "mean_return": 74.797,
+      "se": 0.9077997828391795,
+      "mean_length": 1993.5755,
+      "ends": {
+        "timeout": 0,
+        "hit": 1698,
+        "oxygen": 231,
+        "surfaced_empty": 71
+      },
+      "minus_original": {
+        "difference": 22.668,
+        "standard_error": 1.1855288386680676,
+        "better": 1249,
+        "worse": 653,
+        "sign_test_p": 4.571240071414979e-43
+      }
+    },
+    {
+      "session": "independent/openai",
+      "valid": true,
+      "changed_entries": 24,
+      "selection_score": 67.336,
+      "stop": "finished",
+      "mean_return": 70.4705,
+      "se": 0.949860085468372,
+      "mean_length": 1850.099,
+      "ends": {
+        "timeout": 0,
+        "hit": 1744,
+        "oxygen": 191,
+        "surfaced_empty": 65
+      },
+      "minus_original": {
+        "difference": 18.3415,
+        "standard_error": 1.1556986019305604,
+        "better": 1167,
+        "worse": 660,
+        "sign_test_p": 9.843431545796937e-33
+      }
+    },
+    {
+      "session": "independent/anthropic",
+      "valid": true,
+      "changed_entries": 32,
+      "selection_score": 74.599,
+      "stop": "finished",
+      "mean_return": 75.7385,
+      "se": 0.9228647780548822,
+      "mean_length": 1991.8645,
+      "ends": {
+        "timeout": 0,
+        "hit": 1717,
+        "oxygen": 214,
+        "surfaced_empty": 69
+      },
+      "minus_original": {
+        "difference": 23.6095,
+        "standard_error": 1.2075152385790833,
+        "better": 1260,
+        "worse": 606,
+        "sign_test_p": 1.0797708763621362e-52
+      }
+    },
+    {
+      "session": "independent/gemini",
+      "valid": true,
+      "changed_entries": 0,
+      "selection_score": 53.945,
+      "stop": "gemini has insufficient budget for another bounded response",
+      "mean_return": 52.129,
+      "se": 0.9654147773605772,
+      "mean_length": 1387.6705,
+      "ends": {
+        "timeout": 0,
+        "hit": 1878,
+        "oxygen": 67,
+        "surfaced_empty": 55
+      },
+      "minus_original": {
+        "difference": 0.0,
+        "standard_error": 0.0,
+        "better": 0,
+        "worse": 0,
+        "sign_test_p": 1.0
+      }
+    }
+  ],
+  "random_controls": {
+    "independent/anthropic": {
+      "mean_return": 0.918,
+      "se": 0.02445274971213344,
+      "mean_length": 252.3045,
+      "ends": {
+        "timeout": 0,
+        "hit": 399,
+        "oxygen": 1599,
+        "surfaced_empty": 2
+      }
+    },
+    "peers/openai": {
+      "mean_return": 0.071,
+      "se": 0.00738286891233268,
+      "mean_length": 202.599,
+      "ends": {
+        "timeout": 0,
+        "hit": 52,
+        "oxygen": 64,
+        "surfaced_empty": 1884
+      }
+    }
+  },
+  "chosen": {
+    "valid_only": {
+      "peers": "peers/openai",
+      "independent": "independent/anthropic"
+    },
+    "as_run": {
+      "peers": "peers/openai",
+      "independent": "independent/anthropic"
+    }
+  },
+  "primary_peers_minus_portfolio_valid_only": {
+    "difference": -0.9415,
+    "standard_error": 0.783563350749203,
+    "better": 746,
+    "worse": 926,
+    "sign_test_p": 1.1782853974771142e-05
+  },
+  "peers_minus_portfolio_as_run": {
+    "difference": -0.9415,
+    "standard_error": 0.783563350749203,
+    "better": 746,
+    "worse": 926,
+    "sign_test_p": 1.1782853974771142e-05
+  },
+  "peers_minus_each_solo": {
+    "independent/openai": {
+      "difference": 4.3265,
+      "standard_error": 0.931073519021947,
+      "better": 892,
+      "worse": 873,
+      "sign_test_p": 0.6683355605726442
+    },
+    "independent/anthropic": {
+      "difference": -0.9415,
+      "standard_error": 0.783563350749203,
+      "better": 746,
+      "worse": 926,
+      "sign_test_p": 1.1782853974771142e-05
+    },
+    "independent/gemini": {
+      "difference": 22.668,
+      "standard_error": 1.1855288386680676,
+      "better": 1249,
+      "worse": 653,
+      "sign_test_p": 4.571240071414979e-43
+    }
+  },
+  "costs": {
+    "peers": {
+      "openai": 0.36330135,
+      "anthropic": 1.8642044000000002,
+      "gemini": 1.6941470000000003
+    },
+    "independent": {
+      "openai": 0.22760154999999999,
+      "anthropic": 1.835944,
+      "gemini": 1.7923658999999998
+    }
+  }
+}

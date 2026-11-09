@@ -41,21 +41,23 @@ Access: `access="kernel"` (default), or `"inline"` for tiny networks: weights in
 
 ## A network with its own way of running
 
-Pass `tools=`, a function returning `{fence: PassTool}`. See `examples/paper/exp6_go.py`, which adds ```games and ```positions.
+Pass `tools=`, a function returning `{fence: PassTool}`. See `experiments/paper/exp6_go.py` in the repository, which adds ```games and ```positions.
 
-## A council or a search
+## A council of peers (optional)
+
+One editor is the default, and the measured results favour it (see FINDINGS.md in the repository). A council runs
+several editors as peers: each edits its own copy and, after every step, sees what the others did and what came back.
+The best candidate on a held-out selection set wins, and the original is kept if none beats it.
 
 ```python
-from wsplab.council import Council
-from wsplab.editors import Spending, get_editor
+from wsplab.editors import Spending
 
-council = Council([get_editor(e) for e in editors], Spending(max_usd=50, prices={...}))
-wsplab.run(net, editor=council, ...)                    # votes on each edit script
-
-wsplab.search(net, editors=editors, spending=Spending(max_tokens=5_000_000), selection="vote", ...)  # votes on finished edits
+found = wsplab.search(net, editors=["anthropic:claude-opus-5-5", "openai:gpt-6.1-terra"], shared=True,
+                      spending=Spending(max_usd=10, prices={...}), build=..., description=..., practice=..., evaluate=...)
+print(found.result.verdict, found.selection, found.candidates)
 ```
 
-Mix providers: members built on one model share its blind spots.
+Without `shared=True`, the same call runs the editors independently and keeps the best (a search). Mix providers.
 
 ## The prompt
 

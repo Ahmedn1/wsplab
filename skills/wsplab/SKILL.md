@@ -21,7 +21,8 @@ wsplab run --model net.safetensors --build model.py:build --description "what th
   --practice practice.npz --eval heldout.npz --editor anthropic:claude-opus-5-5 --budget 25 --out runs/first
 ```
 
-Repeat `--editor` for a council, which also needs `--max-tokens` or `--max-usd`. For a language model, give `--eval math`, or
+Repeat `--editor` for a council of peers (optional; it beat its best member only once, on a synthetic task), which also
+needs `--max-tokens` or `--max-usd`. For a language model, give `--eval math`, or
 `--practice a.jsonl --eval b.jsonl --grader exact`, and no `--build` or `--description`. See
 [references/python-api.md](references/python-api.md) for everything else.
 

@@ -43,7 +43,7 @@ The tests in `tests/conformance` check, against the authors' files:
 
 ## The paper's experiments
 
-`examples/paper` expresses all eight as configuration.
+`experiments/paper` expresses all eight as configuration.
 
 | Experiment | Status |
 |---|---|

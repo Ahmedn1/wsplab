@@ -1,0 +1,103 @@
+{
+  "status": "awaiting_protocol_audit",
+  "rows": [
+    {
+      "arm": "peers",
+      "provider": "openai",
+      "changed_entries": 163840,
+      "selection_score": 0.08333333333333333,
+      "baseline": 0.10083333333333333,
+      "patch": "~/.wsplab/gemma/trial1/peers/openai/run/result/patch",
+      "weights": "~/.wsplab/gemma/trial1/peers/openai/run/result/model",
+      "passes": 8,
+      "runs": 16,
+      "turns": 34,
+      "stop_reason": "finished",
+      "verdict_on_selection": "regressed"
+    },
+    {
+      "arm": "peers",
+      "provider": "anthropic",
+      "changed_entries": 0,
+      "selection_score": 0.10083333333333333,
+      "baseline": 0.10083333333333333,
+      "patch": "~/.wsplab/gemma/trial1/peers/anthropic/run/result/patch",
+      "weights": "~/.wsplab/gemma/trial1/peers/anthropic/run/result/model",
+      "passes": 1,
+      "runs": 13,
+      "turns": 16,
+      "stop_reason": "anthropic has insufficient budget for another bounded response",
+      "verdict_on_selection": "no_fix_found"
+    },
+    {
+      "arm": "peers",
+      "provider": "gemini",
+      "changed_entries": 0,
+      "selection_score": 0.10083333333333333,
+      "baseline": 0.10083333333333333,
+      "patch": "~/.wsplab/gemma/trial1/peers/gemini/run/result/patch",
+      "weights": "~/.wsplab/gemma/trial1/peers/gemini/run/result/model",
+      "passes": 2,
+      "runs": 17,
+      "turns": 22,
+      "stop_reason": "gemini has insufficient budget for another bounded response",
+      "verdict_on_selection": "no_fix_found"
+    },
+    {
+      "arm": "independent",
+      "provider": "openai",
+      "changed_entries": 640,
+      "selection_score": 0.08833333333333333,
+      "baseline": 0.10083333333333333,
+      "patch": "~/.wsplab/gemma/trial1/independent/openai/run/result/patch",
+      "weights": "~/.wsplab/gemma/trial1/independent/openai/run/result/model",
+      "passes": 8,
+      "runs": 14,
+      "turns": 25,
+      "stop_reason": "finished",
+      "verdict_on_selection": "not_significant"
+    },
+    {
+      "arm": "independent",
+      "provider": "anthropic",
+      "changed_entries": 163840,
+      "selection_score": 0.09,
+      "baseline": 0.10083333333333333,
+      "patch": "~/.wsplab/gemma/trial1/independent/anthropic/run/result/patch",
+      "weights": "~/.wsplab/gemma/trial1/independent/anthropic/run/result/model",
+      "passes": 5,
+      "runs": 25,
+      "turns": 33,
+      "stop_reason": "anthropic has insufficient budget for another bounded response",
+      "verdict_on_selection": "not_significant"
+    },
+    {
+      "arm": "independent",
+      "provider": "gemini",
+      "changed_entries": 0,
+      "selection_score": 0.10083333333333333,
+      "baseline": 0.10083333333333333,
+      "patch": "~/.wsplab/gemma/trial1/independent/gemini/run/result/patch",
+      "weights": "~/.wsplab/gemma/trial1/independent/gemini/run/result/model",
+      "passes": 1,
+      "runs": 21,
+      "turns": 24,
+      "stop_reason": "gemini has insufficient budget for another bounded response",
+      "verdict_on_selection": "no_fix_found"
+    }
+  ],
+  "seconds": 9114.390371317975,
+  "spend": {
+    "peers": {
+      "openai": 0.40775910000000004,
+      "anthropic": 2.1372876,
+      "gemini": 1.7153123000000001
+    },
+    "independent": {
+      "openai": 0.1798179,
+      "anthropic": 2.4837448,
+      "gemini": 1.8373405
+    }
+  },
+  "lm_calls": 33
+}

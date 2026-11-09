@@ -1,4 +1,4 @@
-"""An editor is whatever writes the replies: an LLM, a person, a script, or a council of LLMs."""
+"""An editor is whatever writes the replies: an LLM, a person, or a script."""
 
 from __future__ import annotations
 

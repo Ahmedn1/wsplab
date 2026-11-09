@@ -151,20 +151,21 @@ def cmd_run(a) -> int:
         raise ValueError("give --description: what the network is, for the editor")
     evaluate = load_scorer(a.eval, a.metric, "eval")
     practice = load_scorer(a.practice, a.metric)
-    if len(a.editor) > 1:
+    common = dict(build=parse_build(a.build), description=a.description, note=a.note, mode=a.mode, practice=practice,
+                  budget=a.budget, max_runs=a.max_runs, access=a.access, sandbox=a.sandbox, control=not a.no_control,
+                  limits=limits, frozen=tuple(a.frozen or ()))
+    if len(a.editor) > 1:  # a council of peers
         if a.max_tokens is None and a.max_usd is None:
             raise ValueError("a council multiplies LLM calls: set --max-tokens or --max-usd")
-        from .council import Council
-        from .editors import Spending, get_editor
+        if evaluate is None:
+            raise ValueError("a council needs --eval: candidates are chosen on part of the practice data and judged on it")
+        from .editors import Spending
 
-        editor = Council([get_editor(e) for e in a.editor], Spending(max_tokens=a.max_tokens, max_usd=a.max_usd),
-                         method=a.vote)
+        found = wsplab.search(a.model, editors=list(a.editor), shared=True, evaluate=evaluate, folder=a.out,
+                              spending=Spending(max_tokens=a.max_tokens, max_usd=a.max_usd), **common)
+        result = found.result
     else:
-        editor = a.editor[0]
-    result = wsplab.run(a.model, build=parse_build(a.build), description=a.description, note=a.note, mode=a.mode,
-                        practice=practice, evaluate=evaluate, editor=editor, budget=a.budget, max_runs=a.max_runs,
-                        access=a.access, folder=a.out, sandbox=a.sandbox, control=not a.no_control, no_eval=a.no_eval,
-                        limits=limits, frozen=tuple(a.frozen or ()))
+        result = wsplab.run(a.model, evaluate=evaluate, editor=a.editor[0], folder=a.out, no_eval=a.no_eval, **common)
     return _print_result(result)
 
 
@@ -446,8 +447,7 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--revision", help="for a language model: the Hugging Face revision")
     c.add_argument("--metric", default="accuracy", choices=["accuracy", "neg_mse"])
     c.add_argument("--editor", required=True, action="append",
-                   help="anthropic:<model>, openai:<model>, codex:<model> or script:<file.json>; repeat it for a council")
-    c.add_argument("--vote", choices=["borda", "plurality", "approval"], default="borda", help="how a council votes")
+                   help="anthropic:<model>, openai:<model>, codex:<model> or script:<file.json>; repeat it for a council of peers")
     c.add_argument("--max-tokens", type=int, help="stop a council at this many tokens")
     c.add_argument("--max-usd", type=float, help="stop a council at this cost")
     c.add_argument("--budget", type=int, default=25, help="forward passes the editor may spend")

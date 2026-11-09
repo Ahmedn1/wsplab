@@ -13,7 +13,7 @@ from wsplab.passes.edits import apply_edits, last_block
 from wsplab.upstream import fetch
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(ROOT / "examples" / "paper"))
+sys.path.insert(0, str(ROOT / "experiments" / "paper"))
 
 pytestmark = pytest.mark.network
 
@@ -102,6 +102,7 @@ def sandbox_or_skip():
 
 def test_exp7_attention_tool_layout(tmp_path):
     import exp7_sycophancy
+
     from wsplab.passes import PassInvalid
     from wsplab.runners.fake import FakeLM
 
@@ -119,6 +120,7 @@ def test_exp7_attention_tool_layout(tmp_path):
 def test_exp7_prelude_runs_in_the_kernel_on_two_mounted_checkpoints(tmp_path):
     sandbox_or_skip()
     import exp7_sycophancy
+
     import wsplab
     from wsplab.editors import ScriptedEditor
     from wsplab.io import bf16_bits, save
@@ -155,6 +157,7 @@ def test_exp6_plays_real_go_through_the_kernel_and_its_own_tools(tmp_path):
     pytest.importorskip("pgx")
     sandbox_or_skip()
     import exp6_go
+
     import wsplab
     from wsplab.editors import ScriptedEditor
     from wsplab.kernel import Limits
@@ -181,6 +184,7 @@ def test_exp6_plays_real_go_through_the_kernel_and_its_own_tools(tmp_path):
 def test_exp6_says_plainly_that_the_authors_opponents_are_missing(tmp_path):
     pytest.importorskip("pgx")
     import exp6_go
+
     from wsplab.passes import PassFailed
 
     tool = exp6_go.GamesTool(None, tmp_path, lambda: None)

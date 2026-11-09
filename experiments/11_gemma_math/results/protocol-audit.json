@@ -1,0 +1,6 @@
+{"all_sessions_valid": true, "auditor": "Claude Code (claude-opus-5-5)",
+ "closure": "Every submitted edit scored below the original on the held-out selection set (8.3-9.0% vs 10.1%), so both arms keep the original model; closed as no_fix_found by weight identity without running MATH-500, as planned for identical arms.",
+ "sessions": {"peers/openai": {"valid": true}, "peers/anthropic": {"valid": true, "notes": "stopped at the spending guard after 1 pass"},
+  "peers/gemini": {"valid": true, "notes": "stopped at the guard after 2 passes, no edit"},
+  "independent/openai": {"valid": true}, "independent/anthropic": {"valid": true, "notes": "residual-stream attribution only; guard after 5 passes"},
+  "independent/gemini": {"valid": true, "notes": "no edit; guard after 1 pass; mentions rms_norm in analysis of a session with no submission"}}}

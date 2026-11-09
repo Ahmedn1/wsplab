@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use wsplab, please cite it as below, and cite the paper it builds on."
+title: "wsplab: weight-space programming, end to end"
+version: 0.1.0
+date-released: 2026-11-08
+license: MIT
+authors:
+  - family-names: Dawod
+    given-names: Ahmed
+keywords:
+  - weight-space programming
+  - large language models
+  - model editing
+references:
+  - type: article
+    title: "Sparks of Weight-Space Programming: LLMs can natively read & write neural network weights"
+    authors:
+      - family-names: Takehi
+        given-names: Rikiya
+      - family-names: Teoh
+      - family-names: Zhang
+      - family-names: Khattab
+    year: 2026
+    url: "https://rikiyat.github.io/blog/weight-space-programming/"

@@ -1,0 +1,201 @@
+{
+  "all_sessions_valid": true,
+  "at": 1794097897.839981,
+  "plan_sha256": "72295aecbc288cf6a8e7ec2fa7662519421fdb45a3e64457ddbc70c2face9d78",
+  "selections_sha256": "506034d7c68286a5da6a7cb91603420d3d7482dbd99147348f68093db9c19f91",
+  "sessions": {
+    "peers/openai": {
+      "valid": true,
+      "verdict": "no_fix_found",
+      "changed_entries": 0,
+      "save_edit_calls": 0,
+      "weights_identical_to_base": true,
+      "forward_requests": [
+        {
+          "type": "generate",
+          "model": "original",
+          "items": 32,
+          "n": 2
+        },
+        {
+          "type": "teacher_forced",
+          "model": "original",
+          "items": 16,
+          "n": 1
+        }
+      ],
+      "passes_used": 2,
+      "python_runs": 9,
+      "peer_rounds": 15,
+      "artifacts_sha256": {
+        "peers/openai/candidate.json": "4c6dcf8a0ed2f28425c3414725e15f98b7f36ab68a45da81f2c769560973728a",
+        "peers/openai/run/session/tool_calls.jsonl": "b9cfc3a684d350931c57e0958235053067b18f899ef0a0ae1af56f593fbe1923",
+        "peers/openai/run/session/final_answer.md": "25787a489ae6074f4497ce9944efe5660b581add7023cba9d59374698b1bdf34",
+        "peers/openai/run/work/notes.md": "57c33047aaad17091569d20b58612aea852de8f9e44dc50070b502fd1de6fa9d",
+        "peers/openai/submitted-patch/manifest.json": "4109388cf99822e765e5e17a395dc8a529f67cb1ca07060a5b2f52186280f6eb",
+        "peers/openai/submitted-patch/edit.npz": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85",
+        "peers/openai/run/session/turns/t001/answer.md": "48810cd4b958c2b8bd5a7d9872d29a243fdfdf200217dc8b4b6056f86f70eeab",
+        "peers/openai/run/session/turns/t002/answer.md": "99aca0e38580dbf5ba802858ef512b5e56b5ca3e0ac3bd9dd57ac5e47ded6498",
+        "peers/openai/run/session/turns/t003/answer.md": "6ddadfd9f99420b62d008c770b69caaa7a64c4029314935d8cdfeb779fdd76b8",
+        "peers/openai/run/session/turns/t004/answer.md": "45395e958c0a0996c00a1e620be5464fcbb8ca2dfd01a18fe594da3057d0e325",
+        "peers/openai/run/session/turns/t005/answer.md": "87f9cfd39197f6e1a4d64ec92e5497e7bdbdf856d5095484560e6b6f8a5db659",
+        "peers/openai/run/session/turns/t006/answer.md": "b6f0d1f3f0c9e837fc6d385966ea8c7c98483b0b7eac016fe0ad7a8c40652c25",
+        "peers/openai/run/session/turns/t007/answer.md": "1da887cad7da942f2b5ed417c4ba1be1aaea0db67776ae02fa2a486b741b5a1c",
+        "peers/openai/run/session/turns/t008/answer.md": "e69ccc409e31391814920bf12b49fc16d63c71f29061e7ca743fbdcc223a7725",
+        "peers/openai/run/session/turns/t009/answer.md": "3737ae6ad13a0a07001cd902d6f01fa819c446a607f0259ff5b61be2db778dc0",
+        "peers/openai/run/session/turns/t010/answer.md": "21cc339069ffcefdfad624ee7f21cfd984ffc5fe4a2d43f40aac6ec32327f1f1",
+        "peers/openai/run/session/turns/t011/answer.md": "5650e3c83569c83efce908afcab62bc57e6addd31cc3d148ab06170b9666b9d5",
+        "peers/openai/run/session/turns/t012/answer.md": "3c2b556be16a88ae3eb02600baadeb3ad9225f91afa236371b27b426937f581b",
+        "peers/openai/run/session/turns/t013/answer.md": "ada861b0b84b14ee5d1b120a575d748810b9be85484c42c9d3c313800b530e5d",
+        "peers/openai/run/session/turns/t014/answer.md": "4d2c37d69e3d54e77ea89b9d23a5f43e91f9c6d7a8685c9f6253ffa83af435bd",
+        "peers/openai/run/session/turns/t015/answer.md": "c0cf02e986059f18ef54fdb61a9fd2959a77518d1a49d9bd1a99d046b38b0d58",
+        "peers/openai/run/session/turns/t016/answer.md": "25787a489ae6074f4497ce9944efe5660b581add7023cba9d59374698b1bdf34"
+      }
+    },
+    "peers/anthropic": {
+      "valid": true,
+      "verdict": "no_fix_found",
+      "changed_entries": 0,
+      "save_edit_calls": 0,
+      "weights_identical_to_base": true,
+      "forward_requests": [
+        {
+          "type": "generate",
+          "model": "original",
+          "items": 32,
+          "n": 2
+        },
+        {
+          "type": "teacher_forced",
+          "model": "original",
+          "items": 40,
+          "n": 1
+        }
+      ],
+      "passes_used": 2,
+      "python_runs": 7,
+      "peer_rounds": 9,
+      "artifacts_sha256": {
+        "peers/anthropic/candidate.json": "101f2c6bd18b092f532a8bc094c860a65b6941cf9373dca861002b4d03fa7df7",
+        "peers/anthropic/run/session/tool_calls.jsonl": "bef0e6cb36c828edac9cebf2216d22cc96df65643e94613e5d5707387def6548",
+        "peers/anthropic/run/session/final_answer.md": "7c369e6a8b9d6426fd6fe6399885e515ae5aea46ea836fba85b4aa26db7963e3",
+        "peers/anthropic/run/work/notes.md": "f6639ec1e504d61e0be5a2334a2b06990e2ab0262750404bda6228d82833eace",
+        "peers/anthropic/submitted-patch/manifest.json": "4109388cf99822e765e5e17a395dc8a529f67cb1ca07060a5b2f52186280f6eb",
+        "peers/anthropic/submitted-patch/edit.npz": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85",
+        "peers/anthropic/run/session/turns/t001/answer.md": "27fa45d1cffc7042f8028b988499e8900f18b6f6d7087bbbf22a54fef212144d",
+        "peers/anthropic/run/session/turns/t002/answer.md": "898a8096a6919d6db1d1ff4ac0279ba27ebdab5e86cb093293d9b9b484621308",
+        "peers/anthropic/run/session/turns/t003/answer.md": "4747e65d6ab094739f7bd79606faefb00d59ca3511ad033f24285b136604e227",
+        "peers/anthropic/run/session/turns/t004/answer.md": "bf1828d313d2d44a89c89b3d26f0554bcb005501f46077c755b5ef750e518ad5",
+        "peers/anthropic/run/session/turns/t005/answer.md": "0f1256f1e84f601267074eac97a6b5c0e3ed492c64f279a6b4f3dfe1a9b53912",
+        "peers/anthropic/run/session/turns/t006/answer.md": "ce64ff227477da007f62dd62edc6aa5a9392defa87ec8025e77962f993d8d1a5",
+        "peers/anthropic/run/session/turns/t007/answer.md": "3e7b2fd3f2f28cbc8cc4d2faea3cd0c2d8499b9299af8abab28da38cf3bb8620",
+        "peers/anthropic/run/session/turns/t008/answer.md": "12e1f4b81e6903c8ca808416fc0f4d6b90f15f8a6549b4c634fdb0b161a4ee4f",
+        "peers/anthropic/run/session/turns/t009/answer.md": "37bb6bbd124cc1428066cd6546fad5c3c495857104c45dff283221136f8fc058",
+        "peers/anthropic/run/session/turns/t010/answer.md": "7c369e6a8b9d6426fd6fe6399885e515ae5aea46ea836fba85b4aa26db7963e3"
+      }
+    },
+    "peers/gemini": {
+      "valid": true,
+      "verdict": "no_fix_found",
+      "changed_entries": 0,
+      "save_edit_calls": 0,
+      "weights_identical_to_base": true,
+      "forward_requests": [
+        {
+          "type": "generate",
+          "model": "original",
+          "items": 32,
+          "n": 2
+        }
+      ],
+      "passes_used": 1,
+      "python_runs": 19,
+      "peer_rounds": 15,
+      "artifacts_sha256": {
+        "peers/gemini/candidate.json": "ce44936be70a748f778217894272ae1a19d70a3569e6b8b1d565424968506981",
+        "peers/gemini/run/session/tool_calls.jsonl": "72778cb4337a4ae833d58ec8d5f9b5aa743a76883b0a81a406311585046fa24f",
+        "peers/gemini/run/session/final_answer.md": "5faa21fa24baa4a5341744c2ee523d71b12d2138760f216e26525d8f407e726e",
+        "peers/gemini/run/work/notes.md": "6a2c329801caf6e69d79f8dbb298e54ad81638755a1163fccca164256fcf44d0",
+        "peers/gemini/submitted-patch/manifest.json": "4109388cf99822e765e5e17a395dc8a529f67cb1ca07060a5b2f52186280f6eb",
+        "peers/gemini/submitted-patch/edit.npz": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85",
+        "peers/gemini/run/session/turns/t001/answer.md": "9d14961591ab8b4dfc1d3cee2aa735b4567b6e138c3a42e8fff4eac3819bb6f9",
+        "peers/gemini/run/session/turns/t002/answer.md": "88e08486027c2b30e3ae5a0283c93ee1929f442424436ce56e7fa7aaa8bac1c0",
+        "peers/gemini/run/session/turns/t003/answer.md": "854e39a809bf9933e678e0ee0fefbd42a14abcb388f5dbb6525825272407a682",
+        "peers/gemini/run/session/turns/t004/answer.md": "4187c6da6c285ae7c8273982850c05a8f01fdfb1f082c6c2918743d04098fc33",
+        "peers/gemini/run/session/turns/t005/answer.md": "f15887fb7102cb7fcb844ac42f10350d0ce726067a3a5728c01c22015b96576f",
+        "peers/gemini/run/session/turns/t006/answer.md": "3679d14fc5d0f66580c0b8f5317d2aacad9268fd5bfe998115330f5d34b2e6e3",
+        "peers/gemini/run/session/turns/t007/answer.md": "0b249a46d3dc9262a4624e184837d5011fd41a03cb532e645d158d4903e09f61",
+        "peers/gemini/run/session/turns/t008/answer.md": "f1de5b076e16a33ce4d21a88e498cd344b111a0fcfdc643cf8e460749d5a39cf",
+        "peers/gemini/run/session/turns/t009/answer.md": "747b68da774be609fcfb935e6ba3510d38a61f1a76911a642a2fea14890c111b",
+        "peers/gemini/run/session/turns/t010/answer.md": "cb0916bb3a0dad16c40a7654ed27700b66147b1ae8528e94e6336990cd484d40",
+        "peers/gemini/run/session/turns/t011/answer.md": "6954f81055482fee0563ac64e4ca4e7f995a3cbf79e068ba848a5f841bd79b1b",
+        "peers/gemini/run/session/turns/t012/answer.md": "1ddb0a006b86e692fb8d0d808afa9cdfa8c24c86d7f3b732f4aeb4a4ecb54c55",
+        "peers/gemini/run/session/turns/t013/answer.md": "57752989376b3d08c3cd1775c41901bc1416375421b0115777218e36a2707e91",
+        "peers/gemini/run/session/turns/t014/answer.md": "eb6355a750e1b50cf432b839a9faca3725180fadc14d517ec9bcad9f8184fbe5",
+        "peers/gemini/run/session/turns/t015/answer.md": "5e29169828dc9400526e761665b747fa72e5db39ed018b5f603bd204238c3fef",
+        "peers/gemini/run/session/turns/t016/answer.md": "9382e5a1c8f4f7530a0766c43e666d61d56f1a42a378461caead8c88b86a8b17",
+        "peers/gemini/run/session/turns/t017/answer.md": "a2ac558f0115ef181fe03ed06ef49e88ca22b032bcf3150acb034215a69e4f31",
+        "peers/gemini/run/session/turns/t018/answer.md": "f24ad5ecde5ced0402f09ce9a70d811a42a6a11a3f4721c03cb6a03a7b6aeb92",
+        "peers/gemini/run/session/turns/t019/answer.md": "0563247dfe02006805cf035b8bded75c14a4fb63e9923f317a3842d856244030",
+        "peers/gemini/run/session/turns/t020/answer.md": "d3670cafbae4538f1def741ed98c8c89b5f6487f08788fc05800bfec871f88d9",
+        "peers/gemini/run/session/turns/t021/answer.md": "89a36ecd041a899b07c2f63651e113e7d3b2f79a215bb17c83d22edb2d343f70",
+        "peers/gemini/run/session/turns/t022/answer.md": "5faa21fa24baa4a5341744c2ee523d71b12d2138760f216e26525d8f407e726e"
+      }
+    },
+    "solo/anthropic": {
+      "valid": true,
+      "verdict": "no_fix_found",
+      "changed_entries": 0,
+      "save_edit_calls": 0,
+      "weights_identical_to_base": true,
+      "forward_requests": [
+        {
+          "type": "generate",
+          "model": "original",
+          "items": 32,
+          "n": 2
+        },
+        {
+          "type": "generate",
+          "model": "original",
+          "items": 16,
+          "n": 4
+        }
+      ],
+      "passes_used": 2,
+      "python_runs": 10,
+      "peer_rounds": null,
+      "artifacts_sha256": {
+        "solo/anthropic/candidate.json": "46ea9f296913d79fa3d6e1f15273d10af59736d4167b98be7104c8c8ed263e01",
+        "solo/anthropic/run/session/tool_calls.jsonl": "ad408ac009fadeb02c796458773250a0e5039dc8afe6ee92fa18b4926fa7188c",
+        "solo/anthropic/run/session/final_answer.md": "56c7bec2e308480e6b72007b5587f5f9899ad359d25e4f8f9db20eff83aba908",
+        "solo/anthropic/run/work/notes.md": "405a4f724a04d83d31f308d9f9ba72d155c051ec3f2f1770fe27f2516f7db3b3",
+        "solo/anthropic/submitted-patch/manifest.json": "4109388cf99822e765e5e17a395dc8a529f67cb1ca07060a5b2f52186280f6eb",
+        "solo/anthropic/submitted-patch/edit.npz": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85",
+        "solo/anthropic/run/session/turns/t001/answer.md": "a26a8f9406ee325faa994b925b0f5259d88dc6fe8e0f4664e202844f8ce4aead",
+        "solo/anthropic/run/session/turns/t002/answer.md": "e77794d3ccd8be63b0b947b4a0e439ee1486da9730eaf69dcb293ba27a0b2b71",
+        "solo/anthropic/run/session/turns/t003/answer.md": "1d1e1d8b28e34125c4a45305220a16d89a39fe1a42ef2fb36a96a87de9c9b35a",
+        "solo/anthropic/run/session/turns/t004/answer.md": "d70b2df5d1ac35c89c709d73239608dcb106717a1db93368437f3034b149a5b3",
+        "solo/anthropic/run/session/turns/t005/answer.md": "aa21b2e91a6c8eee2ef31bb19a7bcb9dd5aceb1fd716708d23bbdadea5e35f78",
+        "solo/anthropic/run/session/turns/t006/answer.md": "f3551549b3e87c6572298922fa3983099000bdb9cfb9f8d1e4bf97b0987cfd22",
+        "solo/anthropic/run/session/turns/t007/answer.md": "f45a75f569b78ab82d11c99cdc50abc7988b53e3fb5ce1d045e302ed29e9dd02",
+        "solo/anthropic/run/session/turns/t008/answer.md": "52b4d4854984b87e519715fa603caacfec098673cabf338fee694c01731fc6a8",
+        "solo/anthropic/run/session/turns/t009/answer.md": "10e8db3a68d76958a1be2c6fd3f3407ef098a1892aa68ec0bc84d58bfd634d0c",
+        "solo/anthropic/run/session/turns/t010/answer.md": "08bda07e91a14247342aaa96393dfd11f8dfa0708f188c00197a975d3c344dd8",
+        "solo/anthropic/run/session/turns/t011/answer.md": "2f60d779da37e8e8d7c3d5abf52d2534ebdc8bded528133a3b5b37eaeb479428",
+        "solo/anthropic/run/session/turns/t012/answer.md": "99262fca3e9e2aac307eae6598363bd95191024e03d9d50cc98e0767a9e9d4be",
+        "solo/anthropic/run/session/turns/t013/answer.md": "56c7bec2e308480e6b72007b5587f5f9899ad359d25e4f8f9db20eff83aba908"
+      }
+    }
+  },
+  "method": "Manual review of all executed Python, official forward requests, notes and final submissions; structural checks and checkpoint hashes. No training, unauthorized network replay, reference changes or selection/external data access found.",
+  "holdout_used_for_analysis_or_inference": false,
+  "three_providers_participated": true,
+  "limitations": [
+    "Editors loaded the full mounted practice file to obtain split IDs; reported analyses and official generation used DEV only.",
+    "Synthetic teacher-forced probes diagnosed the original model; they were not substituted for FinQA evaluation.",
+    "Editor claims that no repair mechanism exists are stronger than their small observational analyses support.",
+    "No weight edit was attempted, so this does not measure efficacy of candidate weight edits.",
+    "Repeated samples from a question are not independent test questions."
+  ]
+}

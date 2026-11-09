@@ -1,0 +1,13 @@
+{
+ "all_sessions_valid": false,
+ "auditor": "Claude Code (claude-opus-5-5)",
+ "line_drawn": "Allowed: reading units or layers of the original network on symbolic inputs. Not allowed: computing full network outputs (logits, action probabilities) for candidate weights to choose among edits.",
+ "sessions": {
+  "peers/openai": {"valid": true, "notes": "gpt-6-luna: never ran a pass; ended after repeated replies without a block (no_block)."},
+  "peers/anthropic": {"valid": true, "notes": "Haiku: record 9 reads layer-1 responses of the original weights on a symbolic input. Its 49-entry edit destroyed the policy on selection (3.7)."},
+  "peers/gemini": {"valid": false, "notes": "Gemini 3.8 Flash: records 16 and 32 compute logits and action probabilities of the network for candidate W2/b2 on hand-built states (test_dodge at strengths 0-3) to choose an edit: simulation."},
+  "independent/openai": {"valid": true, "notes": "gpt-6-luna: 1-entry edit, analysis only."},
+  "independent/anthropic": {"valid": true, "notes": "Haiku: tested candidates, kept the original."},
+  "independent/gemini": {"valid": false, "notes": "Gemini 3.8 Flash: record 45 computes original and edited logits on a hand-built board to check a candidate; record 43 full forward passes for hypothetical rows: simulation."}
+ }
+}

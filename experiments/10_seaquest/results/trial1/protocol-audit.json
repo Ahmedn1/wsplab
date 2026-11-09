@@ -1,0 +1,13 @@
+{
+ "all_sessions_valid": true,
+ "auditor": "Claude Code (claude-opus-5-5)",
+ "rules": "Paper's rules: no training or iterative fitting; no running or simulating the network or the game with the network in Python; analysis of weights and forward-tool results and directly computed edits allowed. Edit budget 1,024 entries enforced by save_edit.",
+ "sessions": {
+  "peers/openai": {"valid": true, "notes": "Weight and recorded-step analysis only."},
+  "peers/anthropic": {"valid": true, "notes": "Weight and recorded-step analysis only; stopped at the spending guard after 4 of 8 passes."},
+  "peers/gemini": {"valid": true, "notes": "Record 9 propagates a hand-built 'player in row r' input through the original first two layers to read what each unit encodes: circuit reading on symbolic inputs, no recorded data and no candidate scored. Submitted a patch byte-identical to peers/openai's (adopted from the shared findings). Stopped at the spending guard after 2 of 8 passes."},
+  "independent/openai": {"valid": true, "notes": "Uses tanh(3.0) as a constant to size a bias compensation; no simulation."},
+  "independent/anthropic": {"valid": true, "notes": "Record 16 prints a truth table of one hand-designed gate unit on hypothetical +-1 inputs (circuit design check, not network replay or candidate scoring)."},
+  "independent/gemini": {"valid": true, "notes": "Read recorded logits; no edit (stopped at the spending guard after 1 of 8 passes)."}
+ }
+}

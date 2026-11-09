@@ -3,7 +3,16 @@ import json
 import numpy as np
 import pytest
 
-from wsplab.eval import ChoiceGrader, ExactGrader, MathGrader, RegexGrader, extract, get_grader, is_correct, paired
+from wsplab.eval import (
+    ChoiceGrader,
+    ExactGrader,
+    MathGrader,
+    RegexGrader,
+    extract,
+    get_grader,
+    is_correct,
+    paired,
+)
 from wsplab.passes import ForwardLimits, GenerationCache, LMForward, PassFailed, PassInvalid
 from wsplab.runners.fake import FakeLM
 

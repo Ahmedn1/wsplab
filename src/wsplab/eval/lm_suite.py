@@ -4,9 +4,9 @@ settings and a few words for the prompt. Graded the same way for passes and for 
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from collections.abc import Callable
 
 from .graders import INSTRUCTION, Grader, get_grader
 from .suites import Scores

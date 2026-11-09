@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import importlib.util
 import os
-from pathlib import Path
 from collections.abc import Callable
+from pathlib import Path
 
 import numpy as np
 

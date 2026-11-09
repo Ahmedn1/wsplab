@@ -7,7 +7,6 @@ import sys
 import traceback
 from pathlib import Path
 
-
 CLI_NOTE = ("You are working through the wsplab command line, so read this text accordingly. A ```python block is `wsplab session "
             "exec`, a ```forward block is `wsplab session forward`, your explanation is their --why, and replying without a "
             "block is `wsplab session finish`. Unlike the session described above, you may finish with forward passes unused: "
