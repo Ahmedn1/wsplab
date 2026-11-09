@@ -14,4 +14,7 @@ are new code reconstructed from the published prompts and logs; they are not the
 
 wsplab is an independent project and is not affiliated with or endorsed by the authors.
 
+The logo's wordmark (docs/logo/) is drawn from DM Mono, Copyright 2020 The DM Mono Project Authors, licensed under
+the SIL Open Font License 1.1.
+
 No third-party benchmark data and no GPL-licensed material is distributed in the wsplab package.

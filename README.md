@@ -1,4 +1,9 @@
-# wsplab
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-dark.svg">
+    <img alt="wsplab" src="docs/logo/logo-light.svg" height="64">
+  </picture>
+</h1>
 
 [![Version](https://img.shields.io/badge/version-0.1.0-blue)](CHANGELOG.md)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)](pyproject.toml)

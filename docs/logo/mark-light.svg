@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="wsplab">
+  <title>wsplab</title>
+  <rect x="1" y="1" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="14" y="1" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="27" y="1" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="40" y="1" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="53" y="1" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="1" y="14" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="14" y="14" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="27" y="14" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="40" y="14" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="53" y="14" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="1" y="27" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="14" y="27" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="27" y="27" width="10" height="10" rx="2.5" fill="#2563EB"/>
+  <rect x="40" y="27" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="53" y="27" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="1" y="40" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="14" y="40" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="27" y="40" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="40" y="40" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="53" y="40" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="1" y="53" width="10" height="10" rx="2.5" fill="#16181D"/>
+  <rect x="14" y="53" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="27" y="53" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="40" y="53" width="10" height="10" rx="2.5" fill="#16181D" fill-opacity="0.12"/>
+  <rect x="53" y="53" width="10" height="10" rx="2.5" fill="#16181D"/>
+</svg>

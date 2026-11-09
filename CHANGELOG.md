@@ -3,6 +3,11 @@
 All notable changes to wsplab. The project follows [Semantic Versioning](https://semver.org/); before 1.0, minor
 versions may change the API.
 
+## Unreleased
+
+- A logo (`docs/logo/`), shown at the top of the README.
+- Docs: how to use an open-source editor served by vLLM or another OpenAI-compatible server.
+
 ## 0.1.0 (2026-11-08)
 
 First release.
