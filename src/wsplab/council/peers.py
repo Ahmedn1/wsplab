@@ -83,3 +83,19 @@ class Peer:
                     f"Peer {chr(65 + k)}:\n{_quote(p['reply'])}\nWhat came back:\n{_quote(p['result'])}\n"
                     for k, p in sorted(others.items()))
         return self.editor.reply(system, self._with_notes(messages))
+
+
+class Role:
+    """Gives one member a job of its own in a council: `text` is appended to the first user message, so the member
+    reads its role (and, if the text says so, its teammates' roles) under the same task as everyone else."""
+
+    def __init__(self, editor: Editor, text: str):
+        self.editor = editor
+        self.text = text
+        self.name = editor.name
+
+    def reply(self, system: str, messages: list[dict]) -> Reply:
+        if messages:
+            messages = [{**messages[0], "content": messages[0]["content"] + "\n\nYOUR ROLE ON THE TEAM. " + self.text},
+                        *messages[1:]]
+        return self.editor.reply(system, messages)

@@ -35,6 +35,26 @@ def use_tier(tier):
         PRICES.update(CHEAP_PRICES)
 
 
+TEAM = ("The team: Peer A is the CRITIC (OpenAI), Peer B is the PROPOSER (Claude), Peer C is the ANALYST (Gemini). "
+        "Everyone keeps their own weights and sees the others' steps and results. Only one edit can win, chosen on "
+        "fresh episodes, and it will usually be the proposer's, so help it be as good as possible. ")
+ROLES = {
+    "openai": TEAM + "You are the CRITIC. Whenever a teammate tests a candidate edit, rebuild it in your own weights from "
+              "the code they showed and look for where it fails: episodes and situations where it does worse than the "
+              "original, new or more frequent ways to die (for example running out of oxygen), and actions it now "
+              "takes wrongly. Report concrete failure cases with numbers. Then propose and test a patch that keeps the "
+              "candidate's gains and fixes a failure you found. Do not start your own unrelated line of edits.",
+    "anthropic": TEAM + "You are the PROPOSER. Design, test and refine the best edit you can, and submit it. Read the "
+                 "analyst's diagnoses before choosing what to change, and treat the critic's failure reports as tests "
+                 "your edit must pass: fold their working patches into your candidate when the evidence supports it.",
+    "gemini": TEAM + "You are the ANALYST. Do not edit early. Diagnose the original policy: from recorded episodes "
+              "(steps, actions, logits, activations) and the weights, find exactly how and when it fails (which units, "
+              "which situations, how often), and report short, precise, testable hypotheses the proposer can act on. "
+              "Keep each reply short; spend passes on diagnostic episodes rather than on long analysis. Later, check "
+              "whether the proposer's candidate fixes the failure modes you found.",
+}
+
+
 SEED = 20261108
 PASSES, MAX_RUNS, MAX_TURNS = 8, 40, 60
 MAX_CHANGED = 1024   # 5% of the 20,486 parameters
@@ -55,7 +75,7 @@ NOTE = (
 )
 
 
-def run(arm, fixture, out, caps, tier="strong"):
+def run(arm, fixture, out, caps, tier="strong", roles=False):
     use_tier(tier)
     fixture, out = Path(fixture).resolve(), Path(out).resolve()
     if set(caps) != set(MODELS):
@@ -67,7 +87,7 @@ def run(arm, fixture, out, caps, tier="strong"):
     runner = TorchRunner(task.build, "cpu")
     description = task.description()
     out.mkdir(parents=True, exist_ok=False)
-    plan = {"arm": arm, "tier": tier, "fixture": str(fixture), "manifest": json.loads((fixture / "manifest.json").read_text()),
+    plan = {"arm": arm, "tier": tier, "roles": ROLES if roles else None, "fixture": str(fixture), "manifest": json.loads((fixture / "manifest.json").read_text()),
             "task_sha256": task.digest(Path(task.__file__)), "trial_sha256": task.digest(Path(__file__)),
             "models": MODELS, "caps": caps, "prices": PRICES, "effort": "high", "max_output_tokens": 16384,
             "passes": PASSES, "require_all_passes": True, "max_runs": MAX_RUNS, "max_turns": MAX_TURNS,
@@ -77,6 +97,10 @@ def run(arm, fixture, out, caps, tier="strong"):
     (out / "plan.json").write_text(json.dumps(plan, indent=2) + "\n")
     ledger = Ledger(out / "ledger.json", caps)
     editors = [Guarded(editor(p), p, ledger, max_output=16384) for p in MODELS]
+    if roles:
+        from wsplab.council import Role
+
+        editors = [Role(e, ROLES[p]) for e, p in zip(editors, MODELS)]
     started = time.monotonic()
     try:
         result = wsplab.search(
@@ -104,7 +128,8 @@ if __name__ == "__main__":
     parser.add_argument("--fixture", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--tier", choices=["strong", "cheap"], default="strong")
+    parser.add_argument("--roles", action="store_true", help="give the peers different jobs (proposer, critic, analyst)")
     for provider in MODELS:
         parser.add_argument(f"--{provider}-cap", type=float, required=True)
     args = parser.parse_args()
-    run(args.arm, args.fixture, args.out, {p: getattr(args, f"{p}_cap") for p in MODELS}, args.tier)
+    run(args.arm, args.fixture, args.out, {p: getattr(args, f"{p}_cap") for p in MODELS}, args.tier, args.roles)

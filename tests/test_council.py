@@ -648,3 +648,23 @@ def test_peers_in_real_sessions_one_learns_from_the_other_and_the_best_candidate
 
 def test_parse_recognises_edits_blocks():
     assert parse("x\n```edits\nW[0] = 1\n```", {"edits"}).blocks[0].kind == "edits"
+
+
+def test_role_is_appended_to_the_first_message_only():
+    from wsplab.council import Role
+
+    seen = []
+
+    class Echo:
+        name = "echo"
+
+        def reply(self, system, messages):
+            seen.append(messages)
+            from wsplab.editors.base import Reply, Usage
+            return Reply("ok", Usage())
+
+    r = Role(Echo(), "You are the critic.")
+    msgs = [{"role": "user", "content": "task"}, {"role": "assistant", "content": "a"}, {"role": "user", "content": "b"}]
+    r.reply("sys", msgs)
+    assert seen[0][0]["content"].endswith("YOUR ROLE ON THE TEAM. You are the critic.")
+    assert seen[0][1:] == msgs[1:] and msgs[0]["content"] == "task"

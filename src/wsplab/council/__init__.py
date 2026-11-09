@@ -19,10 +19,10 @@ from pathlib import Path
 from ..editors.base import Editor, Reply, Usage
 from ..editors.cost import BudgetExceeded, Metered, Spending
 from ..session.protocol import parse
-from .peers import Board, Peer
+from .peers import Board, Peer, Role
 from .tally import METHODS, Ballot, read_ballot, score, winners
 
-__all__ = ["BALLOT", "Ballot", "Board", "Council", "METHODS", "Peer", "Team", "edits_weights", "read_ballot", "score", "vote", "winners"]
+__all__ = ["BALLOT", "Ballot", "Board", "Council", "METHODS", "Peer", "Role", "Team", "edits_weights", "read_ballot", "score", "vote", "winners"]
 
 EDIT_CALLS = {"save_edit", "drop_edit"}
 EDIT_VERBS = {"write", "scale", "zero", "add", "project_out"}
