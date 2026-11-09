@@ -145,7 +145,10 @@ def load_suite(a):
     return None
 
 
-def _print_result(result) -> int:
+def _print_result(result, quiet: bool = False) -> int:
+    """The result on stdout, for scripts. In a terminal the progress messages have shown it already."""
+    if not quiet and sys.stdout.isatty():
+        return 0
     print(f"verdict: {result.verdict}")
     for reason in result.reasons:
         print(f"  {reason}")
@@ -168,7 +171,7 @@ def cmd_run(a) -> int:
         return _print_result(wsplab.run(a.model, eval=suite, editor=a.editor[0], note=a.note, description=a.description,
                                         mode=a.mode, budget=a.budget, max_runs=a.max_runs, folder=a.out, sandbox=a.sandbox,
                                         control=not a.no_control, limits=limits, thinking=a.thinking, revision=a.revision,
-                                        max_changed=a.max_changed))
+                                        max_changed=a.max_changed), a.quiet)
     if a.description is None:
         raise ValueError("give --description: what the network is, for the editor")
     evaluate = load_scorer(a.eval, a.metric, "eval")
@@ -193,7 +196,7 @@ def cmd_run(a) -> int:
         result = found.result
     else:
         result = wsplab.run(a.model, evaluate=evaluate, editor=a.editor[0], folder=a.out, no_eval=a.no_eval, **common)
-    return _print_result(result)
+    return _print_result(result, a.quiet)
 
 
 def cmd_infer(a) -> int:
@@ -228,6 +231,8 @@ def cmd_infer(a) -> int:
 def cmd_eval(a) -> int:
     import tempfile
 
+    from . import log
+
     a.device = a.device or ("cuda" if a.suite else "cpu")
     if a.suite is not None:
         a.model = str(resolve_model(a.model, a.revision))
@@ -242,7 +247,8 @@ def cmd_eval(a) -> int:
 
             suite = (math_suite(samples=a.samples, limit=a.limit) if a.suite == "math"
                      else custom_suite(a.suite, a.suite, grader=a.grader, samples=a.samples, check_overlap=False))
-            scores = LMEvaluation(LM(a.model, thinking=a.thinking, device=a.device), suite).evaluate(weights)
+            with log.activity("evaluation"):
+                scores = LMEvaluation(LM(a.model, thinking=a.thinking, device=a.device), suite).evaluate(weights)
             print(f"{suite.benchmark}: {scores.mean:.6f} over {len(scores.per_item)} items")
             return 0
         if a.build is None or a.data is None:
@@ -353,6 +359,9 @@ def cmd_patch_pull(a) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="wsplab", description=__doc__)
     parser.add_argument("--version", action="version", version=__version__)
+    noise = parser.add_mutually_exclusive_group()
+    noise.add_argument("-q", "--quiet", action="store_true", help="print only warnings and errors (run.log still has everything)")
+    noise.add_argument("-v", "--verbose", action="store_true", help="also print details, such as short generations")
     top = parser.add_subparsers(dest="command", required=True)
 
     patch = top.add_parser("patch", help="create, apply and check weight patches").add_subparsers(dest="sub", required=True)
@@ -530,6 +539,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    import logging
+
+    from . import log
+
+    log.configure(logging.WARNING if args.quiet else logging.DEBUG if args.verbose else logging.INFO)
     try:
         return args.fn(args)
     except (P.PatchError, FileNotFoundError, ValueError) as e:

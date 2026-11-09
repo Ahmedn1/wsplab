@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import functools
 import json
 import os
 import shutil
 import tempfile
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
 
+from . import log
 from . import patch as P
 from .editors import Editor, get_editor
 from .eval.gate import UNMEASURED, Gate, decide, random_control, write_report
@@ -73,6 +76,54 @@ class TorchEvaluation:
 
     def describe(self) -> str:
         return f"the network is run on held-out items and scored with {getattr(self.scorer, 'metric_name', 'the scorer')}"
+
+
+def _logged(prefix: str, resumable: bool = True):
+    """Give a run its folder, log it to run.log there (and to the console), and say clearly how it ended."""
+
+    def wrap(fn):
+        @functools.wraps(fn)
+        def logged(*args, folder=None, quiet: bool = False, **kwargs):
+            folder = Path(folder or tempfile.mkdtemp(prefix=prefix, dir=_runs_dir()))
+            folder.mkdir(parents=True, exist_ok=True)
+            with log.run_log(folder, quiet):
+                try:
+                    return fn(*args, folder=folder, quiet=quiet, **kwargs)
+                except BaseException as e:
+                    if not getattr(e, "_wsplab_logged", False):  # say it once, not once per nested run
+                        if isinstance(e, KeyboardInterrupt):
+                            hint = f": run again with folder={str(folder)!r} and resume=True to continue" if resumable else ""
+                            log.warning(f"interrupted{hint}")
+                        elif isinstance(e, Exception):
+                            log.error(f"the run failed: {type(e).__name__}: {e} (log: {folder / 'run.log'})")
+                        try:
+                            e._wsplab_logged = True
+                        except AttributeError:
+                            pass
+                    raise
+
+        return logged
+
+    return wrap
+
+
+def _eval_size(evaluation) -> str:
+    """How much an evaluation scores, in counts only: nothing from the data itself."""
+    rows = getattr(evaluation, "rows", None)
+    if rows is not None:
+        samples = getattr(evaluation, "samples", 1) or 1
+        return f"{len(rows):,} held-out items" + (f" x {samples} answers" if samples > 1 else "")
+    scorer = getattr(evaluation, "scorer", None)
+    if scorer is not None and hasattr(scorer, "ids"):
+        return f"{len(scorer.ids()):,} held-out items"
+    return "the held-out data"
+
+
+def _timed_evaluation(evaluation, weights: Path, what: str) -> tuple[Scores, float]:
+    t0 = time.time()
+    with log.activity(what):
+        scores = evaluation.evaluate(weights)
+    return scores, time.time() - t0
 
 
 @dataclass
@@ -235,20 +286,41 @@ def execute(job: Job, original: Path) -> RunResult:
     those zeros too, so the score says how far the written network got."""
     folder = job.folder
     measured = job.evaluation is not None
+    log.info(f"run folder: {folder}")
+    plan = [f"editor {job.editor.name}", f"mode {job.mode}",
+            "inline access: one reply" if job.access == "inline" else f"up to {log.plural(job.budget, 'forward pass', 'forward passes')}"]
+    if job.max_changed is not None:
+        plan.append(f"edit budget {job.max_changed:,} entries")
+    log.info(", ".join(plan))
     saved = folder / "baseline.json"
     if job.resume and measured and saved.exists():
         data = json.loads(saved.read_text())
         baseline = Scores(data["baseline"]["per_item"])
         regress_base = {k: Scores(v["per_item"]) for k, v in data["regressions"].items()}
+        log.info(f"baseline: {baseline.mean:.4f}, kept from the earlier attempt")
+    elif measured:
+        log.info(f"baseline: scoring the original model on {_eval_size(job.evaluation)}")
+        baseline, seconds = _timed_evaluation(job.evaluation, original, "baseline evaluation")
+        regress_base = {}
+        for k, e in job.regressions.items():
+            regress_base[k], took = _timed_evaluation(e, original, f"regression check {k}")
+            seconds += took
+        saved.write_text(json.dumps({"baseline": _scores_json(baseline),
+                                     "regressions": {k: _scores_json(v) for k, v in regress_base.items()}}) + "\n")
+        log.info(f"baseline: {baseline.mean:.4f} ({log.duration(seconds)})")
+        if seconds >= 60 and job.mode == "edit":
+            later = "the edited model's evaluation" + (" and the random-edit control" if job.control else "")
+            log.info(f"after the session, {later} will take about as long{' each' if job.control else ''}")
     else:
-        baseline = job.evaluation.evaluate(original) if measured else None
-        regress_base = {k: e.evaluate(original) for k, e in job.regressions.items()} if measured else {}
-        if baseline is not None:
-            saved.write_text(json.dumps({"baseline": _scores_json(baseline),
-                                         "regressions": {k: _scores_json(v) for k, v in regress_base.items()}}) + "\n")
+        baseline, regress_base = None, {}
+        (log.debug if log.in_member() else log.info)("no evaluation: the verdict will be unmeasured")
 
-    start = run_inline if job.access == "inline" else run_session
-    answer, state, edited_dir = start(job, original)
+    if job.access == "inline":
+        log.info("asking the editor for its edits in one reply")
+        answer, state, edited_dir = run_inline(job, original)
+    else:
+        log.info(f"editing session: starting; every turn is recorded in {folder / 'session'}")
+        answer, state, edited_dir = run_session(job, original)
     meta = {**job.meta, "editor": job.editor.name, "prompt_fidelity": job.prompt.fidelity,
             "prompt_sha256": job.prompt.sha256(), "harness": HARNESS, "mode": job.mode,
             "tool_free": getattr(job.editor, "tool_free", True)}
@@ -265,6 +337,11 @@ def execute(job: Job, original: Path) -> RunResult:
 
     final_out = folder / "result"
     patch, model = build_edit(job, original, edited_dir, final_out, meta=meta)
+    changed = patch.manifest["changed_entries_total"]
+    if changed:
+        log.info(f"the edit changes {log.plural(changed, 'weight entry', 'weight entries')} in {log.plural(len(patch.tensors), 'tensor')}")
+    else:
+        log.info("the edit changes nothing")
     return judge(job, original, baseline, regress_base, patch, model, final_out, meta, answer, state)
 
 
@@ -277,15 +354,31 @@ def judge(job: Job, original: Path, baseline, regress_base: dict, patch: P.Patch
     comparison = None
     changed = patch.manifest["changed_entries_total"]
     if measured and changed:
-        final = job.evaluation.evaluate(model)
+        log.info(f"scoring the edited model on {_eval_size(job.evaluation)}")
+        final, seconds = _timed_evaluation(job.evaluation, model, "evaluation of the edited model")
         comparison = _paired(baseline, final)
+        log.info(f"edited model: {final.mean:.4f} against {baseline.mean:.4f} before, a difference of "
+                 f"{comparison.difference:+.4f} ± {comparison.standard_error:.4f} ({log.duration(seconds)})")
         for k, e in job.regressions.items():
-            regress[k] = _paired(regress_base[k], e.evaluate(model))
+            scores, _ = _timed_evaluation(e, model, f"regression check {k}")
+            regress[k] = _paired(regress_base[k], scores)
+            log.info(f"regression check {k}: {regress[k].difference:+.4f} ± {regress[k].standard_error:.4f}")
         if job.control:
+            log.info("random-edit control: scoring a random edit of the same size")
             control = measure_control(job, original, model, patch, final)
+            if control is not None:
+                log.info(f"random-edit control: the edit beats a random one of the same size by "
+                         f"{control.difference:+.4f} ± {control.standard_error:.4f}")
     elif measured:
         comparison = None
+        log.info("nothing to evaluate: the edit changes no weights")
     gate: Gate = decide(comparison, changed_entries=changed, control=control, regressions=regress, z=job.z)
+    say = log.debug if log.in_member() and not measured else log.info  # a member's unmeasured candidate: no verdict to show
+    say(f"verdict: {gate.verdict}")
+    for reason in gate.reasons:
+        say(f"  {reason}")
+    say(f"patch: {final_out / 'patch'}")
+    say(f"report: {job.folder / 'report.md'}")
     report = {"verdict": gate.verdict, "reasons": gate.reasons, "answer": answer,
               "baseline": baseline.mean if baseline else None, "final": final.mean if final else None,
               "comparison": comparison.as_dict() if comparison else None,
@@ -305,7 +398,7 @@ def measure_control(job: Job, original: Path, model: Path, patch: P.Patch, final
         noise = random_control(base, patch, Checkpoint(model))
         random_patch = P.from_submission(base, noise, tmp / "patch")
         target = tmp / ("model.safetensors" if Path(original).is_file() else "model")
-        scores = job.evaluation.evaluate(P.apply(random_patch, base, target))
+        scores, _ = _timed_evaluation(job.evaluation, P.apply(random_patch, base, target), "random-edit control")
     return _paired(scores, final)
 
 
@@ -340,13 +433,15 @@ def _make_builder(prompt, base: str, slots: dict, note, passes: bool) -> PromptB
     return PromptBuilder(base, slots=slots, note=note, passes=passes)
 
 
+@_logged("run-")
 def run(model, *, build=None, description: str | None = None, note: str | None = None, mode: str = "edit", practice=None,
         evaluate=None, eval=None,
         editor=None, budget: int = 25, max_runs: int = 300, access: str = "kernel", folder=None, frozen=(), prompt=None,
         task_sentence: str | None = None, regressions: dict | None = None, control: bool = True, limits: Limits | None = None,
         sandbox: str = "bwrap", policy: Policy | None = None, device: str = "cpu", z: float = 2.0, prelude: str = "",
         messages: Messages = V5, no_eval: bool = False, semantic: bool = False, tools=None, binds: dict | None = None,
-        weights_names: list | None = None, resume: bool = False, max_changed: int | None = None, **lm_options) -> RunResult:
+        weights_names: list | None = None, resume: bool = False, max_changed: int | None = None, quiet: bool = False,
+        **lm_options) -> RunResult:
     """Run the whole job on any PyTorch network.
 
     `build` says how to run the weights: a function returning an nn.Module, "path/model.py:function", or
@@ -359,6 +454,8 @@ def run(model, *, build=None, description: str | None = None, note: str | None =
 
     `tools` replaces the forward tool: a function (work folder, base weights, store, edited model builder) -> {fence: PassTool},
     for networks that need passes of their own, such as playing games. `binds` adds read-only {host path: path in the sandbox}.
+
+    Progress is printed as the run goes and written to run.log in its folder; `quiet=True` only writes the file.
     """
     if eval is not None:
         return run_lm(model, eval=eval, editor=editor, note=note, mode=mode, budget=budget, max_runs=max_runs,
@@ -449,8 +546,10 @@ class SearchResult:
     selection: dict
 
 
+@_logged("search-", resumable=False)
 def search(model, *, editors: list, runs: int | None = None, build, description: str, practice=None, evaluate,
-           spending=None, folder=None, z: float = 2.0, seed: int = 0, shared: bool = False, **options) -> SearchResult:
+           spending=None, folder=None, z: float = 2.0, seed: int = 0, shared: bool = False, quiet: bool = False,
+           **options) -> SearchResult:
     """Several sessions, then one winner. The practice data is split: editors work on one part and candidates are compared
     on the other (the selection set), so only the winner ever meets the evaluation. The winner is the candidate with the
     best selection score; if none beats the original there, the original is kept. `spending` is required: this runs a
@@ -480,9 +579,15 @@ def search(model, *, editors: list, runs: int | None = None, build, description:
     baseline = selector.evaluate(base)
     count = runs or len(editors)
     board = Board(count) if shared else None
+    log.info(f"{'council of peers' if shared else 'search'}: {log.plural(count, 'session')}; candidates are compared on "
+             f"{_eval_size(selector)} of practice data, where the original scores {baseline.mean:.4f}")
 
     def session(k: int) -> dict:
         editor = get_editor(editors[k % len(editors)])
+        with log.labelled(f"{k}: {editor.name}"):
+            return _candidate(k, editor)
+
+    def _candidate(k: int, editor) -> dict:
         metered = Metered(editor, spending)
         settings = dict(options)
         if shared:
@@ -490,7 +595,7 @@ def search(model, *, editors: list, runs: int | None = None, build, description:
             settings.setdefault("policy", Policy(handoff_every=10**9, require_all_passes=False))
         try:
             one = run(base, build=build, description=description, practice=work_set, evaluate=None, no_eval=True,
-                      editor=metered, folder=folder / f"run_{k}", **settings)
+                      editor=metered, folder=folder / f"run_{k}", quiet=quiet, **settings)
         finally:
             if board is not None:
                 board.leave(k)
@@ -505,12 +610,15 @@ def search(model, *, editors: list, runs: int | None = None, build, description:
                        z=comparison.z())
         else:
             row.update(score=baseline.mean, gain=0.0, standard_error=0.0, z=0.0)
+        log.info(f"candidate: {log.plural(changed, 'entry', 'entries')} changed, selection score {row['score']:.4f} "
+                 f"({row['gain']:+.4f} ± {row['standard_error']:.4f})")
         return row
 
     candidates = []
     if shared:
+        parent = log.run_context()  # so each member's messages reach this run's log too
         with ThreadPoolExecutor(count) as pool:
-            candidates = list(pool.map(session, range(count)))
+            candidates = list(pool.map(lambda k: parent.copy().run(session, k), range(count)))
     else:
         for k in range(count):
             candidates.append(session(k))
@@ -522,9 +630,11 @@ def search(model, *, editors: list, runs: int | None = None, build, description:
     if usable:
         winner = max(usable, key=lambda c: c["score"])
         decision["run"] = winner["run"]
+        log.info(f"chosen: the candidate of {winner['run']}: {winner['editor']}")
     else:  # no candidate beats the original on the selection set: keep it
         winner = next((c for c in candidates if not c["changed_entries"]), None)
         decision.update(run=winner["run"] if winner else None, kept_original=True)
+        log.info("no candidate beat the original on the selection set: keeping the original")
 
     final_out = folder / "winner"
     final_out.mkdir(parents=True, exist_ok=True)
@@ -570,14 +680,16 @@ def resolve_model(model: str, revision: str | None = None) -> Path:
         "*.safetensors", "*.safetensors.index.json", "*.json", "*.txt", "*.jinja", "*.model"]))
 
 
+@_logged("run-")
 def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "edit", budget: int = 25, max_runs: int = 300,
            description: str | None = None, name: str | None = None, thinking: bool = False, revision: str | None = None,
            generator: str = "vllm", device: str = "cuda", folder=None, frozen=None, prompt=None, task_sentence: str | None = None,
            regressions: dict | None = None, control: bool = True, limits: Limits | None = None, sandbox: str = "bwrap",
            policy: Policy | None = None, z: float = 2.0, prelude: str = "", messages: Messages = V5, semantic: bool = False,
            runner=None, forward_limits=None, pass_time: str = "several minutes", full_attention=None,
-           resume: bool = False, cache_answers: bool = True, max_changed: int | None = None) -> RunResult:
-    """Run the whole job on a language model. `eval` is a suite: "math", or an LMSuite of your own data."""
+           resume: bool = False, cache_answers: bool = True, max_changed: int | None = None, quiet: bool = False) -> RunResult:
+    """Run the whole job on a language model. `eval` is a suite: "math", or an LMSuite of your own data. Progress is
+    printed as the run goes and written to run.log in its folder; `quiet=True` only writes the file."""
     from .arch_text import default_frozen, describe, text_tensors
     from .eval.lm_suite import LMEvaluation, LMSuite, math_suite
     from .passes import ForwardLimits, GenerationCache, LMForward
@@ -589,6 +701,7 @@ def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "ed
     limits = limits or Limits()
     if limits.memory_gb is None:
         limits.memory_gb = available_memory_gb()
+    log.info(f"model: {model}{f' at revision {revision}' if revision else ''}")
     weights = resolve_model(model, revision)
     checkpoint = Checkpoint(weights)
     config = checkpoint.config
@@ -605,6 +718,14 @@ def run_lm(model: str, *, eval, editor, note: str | None = None, mode: str = "ed
     practice_dir = folder / "practice"
     suite.export(practice_dir)
     rows = {r["id"]: r for r in suite.practice}
+    evaluations = ["baseline"] + (["edited model"] if mode != "read" else []) + (["random-edit control"]
+                                                                               if control and mode == "edit" else [])
+    answers = len(suite.evaluation) * suite.samples
+    log.info(f"{suite.benchmark}: {len(suite.evaluation):,} held-out items x {suite.samples} answers, up to "
+             f"{suite.sampling['max_tokens']:,} new tokens each{' with thinking' if thinking else ''}; "
+             f"{len(suite.practice):,} practice items for the editor")
+    log.info(f"each evaluation generates up to {log.tokens(answers * suite.sampling['max_tokens'])} tokens; this run has "
+             f"up to {len(evaluations)} ({', '.join(evaluations)}), plus up to {log.plural(budget, 'forward pass', 'forward passes')}")
 
     slots = {"network": description or describe(name or str(model).rsplit("/", 1)[-1], config), "benchmark": suite.benchmark,
              "protocol": suite.describe_protocol(thinking), "practice": suite.describe_practice(),

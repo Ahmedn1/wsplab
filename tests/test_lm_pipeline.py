@@ -233,3 +233,30 @@ def test_checkpoints_on_disk_stay_bounded(tmp_path):
         assert Checkpoint(build()).float(name)[0, i] == 7.0
     assert len(list((job.folder / "checkpoints").iterdir())) <= 2
     del Job
+
+
+def test_run_log_follows_the_run_and_never_shows_the_evaluation(tmp_path):
+    try:
+        sandbox_python()
+    except KernelError:
+        pytest.skip("no sandbox environment")
+    practice = [{"id": f"p{i}", "problem": f"p {i}", "answer": "1", "source": "math"} for i in range(6)]
+    hidden = [{"id": f"e{i}", "problem": f"HIDDEN-PROBLEM-{i}", "answer": "1", "source": "bench"}
+              for i in range(20)]
+    secret = LMSuite(practice, hidden, MathGrader(), {"temperature": 0.6, "max_tokens": 16}, benchmark="the bench", samples=2)
+    fix = ("w = load('model.layers.0.mlp.down_proj.weight'); w[:, 0] = 0; "
+           "print(save_edit('model.layers.0.mlp.down_proj.weight', w))")
+    request = json.dumps({"type": "generate", "model": "both", "problems": ["p0", "p1"], "n": 1})
+    replies = [block("python", fix), block("forward", request), "I removed a neuron."]
+    r = wsplab.run_lm(str(lm_folder(tmp_path)), eval=secret, editor=ScriptedEditor(replies), runner=FakeLM(correct=fixed_once_edited),
+                      budget=1, folder=tmp_path / "run", limits=Limits(seconds=60, memory_gb=4), quiet=True,
+                      forward_limits=ForwardLimits(n_layers=1, full_attention=(0,), gen_max=8, max_tokens=16))
+    text = (r.folder / "run.log").read_text()
+    for needle in ("the bench: 20 held-out items x 2 answers, up to 16 new tokens each; 6 practice items",
+                   "baseline: scoring the original model on 20 held-out items x 2 answers", "baseline: 0.0000",
+                   "turn 1: Python run 1", "turn 2: forward pass 1/1: model both", "turn 3: final answer",
+                   "editing session over after 3 turns (finished)", "the editor's answer begins: I removed a neuron.",
+                   "the edit changes", "edited model: 1.0000 against 0.0000 before", "random-edit control:",
+                   "verdict: confirmed", "report: "):
+        assert needle in text, needle
+    assert "HIDDEN" not in text  # no evaluation problem; the scores above are the only trace of it

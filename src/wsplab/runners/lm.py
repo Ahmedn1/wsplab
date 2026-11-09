@@ -16,10 +16,12 @@ import pickle
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import numpy as np
 
+from .. import log
 from ..upstream import home
 from .base import Generation, Prompt
 
@@ -27,6 +29,7 @@ MAX_RESULT_BYTES = 6 << 30
 TOKENS_PER_BATCH = 8192
 LOGIT_CHUNK = 1024
 STARTUP_RETRIES = 3
+POLL_SECONDS = 2.0
 
 
 def _frees_gpu(method):
@@ -45,6 +48,31 @@ def _frees_gpu(method):
                 torch.cuda.empty_cache()
 
     return wrapper
+
+
+def _run_worker(command: list[str], env: dict, progress_file: str, total: int, log_file: str) -> tuple[int, str]:
+    """Run a generation worker and report its progress while it works. Its output goes to a file, not a pipe, so a
+    chatty engine cannot fill the pipe and stall. Returns the exit code and the output."""
+    progress = log.Progress(log.current_activity(), total)
+    with open(log_file, "w") as out:
+        worker = subprocess.Popen(command, stdout=out, stderr=subprocess.STDOUT, env=env, text=True)
+        try:
+            while worker.poll() is None:
+                time.sleep(POLL_SECONDS)
+                try:
+                    with open(progress_file) as f:
+                        row = json.load(f)
+                except (OSError, ValueError):
+                    continue  # not written yet, or caught mid-write
+                progress.update(row["done"], row.get("out_tokens_per_s"))
+        except BaseException:
+            worker.kill()
+            worker.wait()
+            raise
+    if worker.returncode == 0:
+        progress.finish()
+    with open(log_file) as f:
+        return worker.returncode, f.read()
 
 
 def _root_cause(stderr: str) -> str:
@@ -107,18 +135,21 @@ class LM:
                        "seeds": [p.seed for p in prompts], "n": n, "sampling": {k: v for k, v in sampling.items() if k != "seed"},
                        "gpu_memory": self.gpu_memory, "max_model_len": self.max_model_len, "engine": self._engine(weights),
                        "enforce_eager": self.enforce_eager, "out": os.path.join(tmp, "out.jsonl")}
+            request["progress"] = os.path.join(tmp, "progress.json")
             path = os.path.join(tmp, "request.json")
             with open(path, "w") as f:
                 json.dump(request, f)
             error = ""
             # FlashInfer's sampler compiles a kernel, which needs nvcc; vLLM's own gives the same distribution without it.
             env = {**os.environ, "VLLM_USE_FLASHINFER_SAMPLER": "0"}
-            for _ in range(STARTUP_RETRIES):
-                done = subprocess.run([sys.executable, "-m", "wsplab.runners.vllm_worker", path], capture_output=True, text=True,
-                                      env=env)
-                if done.returncode == 0:
+            command = [sys.executable, "-m", "wsplab.runners.vllm_worker", path]
+            for attempt in range(STARTUP_RETRIES):
+                code, output = _run_worker(command, env, request["progress"], len(prompts) * n, os.path.join(tmp, "worker.log"))
+                if code == 0:
                     break
-                error = _root_cause(done.stderr)
+                error = _root_cause(output)
+                log.warning(f"the generation worker failed (attempt {attempt + 1} of {STARTUP_RETRIES}): {error.splitlines()[-1]}")
+                log.debug(f"generation worker output:\n{output[-4000:]}")
             else:
                 raise RuntimeError(f"generation worker failed: {error}")
             rows = [json.loads(line) for line in open(request["out"])]
@@ -151,8 +182,10 @@ class LM:
 
         model = self._load(weights)
         out: list[list[Generation]] = []
+        progress = log.Progress(log.current_activity(), len(prompts) * n)
         with torch.no_grad():
-            for p in prompts:
+            for k, p in enumerate(prompts):
+                progress.update(k * n)
                 torch.manual_seed(p.seed)
                 ids = self.tok(p.text, add_special_tokens=False, return_tensors="pt").input_ids.to(self.device)
                 processors = LogitsProcessorList()
@@ -174,6 +207,7 @@ class LM:
                     rows.append(Generation(self.tok.decode(kept, skip_special_tokens=True),
                                            "length" if stop is None else "stop", kept))
                 out.append(rows)
+        progress.finish()
         return out
 
     # Reading activations ---------------------------------------------------------------------------------------------

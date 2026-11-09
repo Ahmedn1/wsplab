@@ -258,6 +258,26 @@ For limits on local models, which have no prices, use `--max-tokens` or `Spendin
 end with a vLLM-served Qwen3.5-0.8B: the session ran, but a model that small couldn't do the job. Expect to need a
 strong open model.
 
+## Progress and logs
+
+A run says what it is doing as it goes: which step it is on, how far generation has got and how long is left, and one
+line per editor turn. The same lines go to `run.log` in the run's folder, so a run in the background can be followed
+with `tail -f`:
+
+```text
+09:12:03  MATH-500: 500 held-out items x 4 answers, up to 32,768 new tokens each with thinking; 14,744 practice items
+09:12:03  each evaluation generates up to 65.5M tokens; this run has up to 3 (baseline, edited model, random-edit control)
+09:41:17  baseline evaluation: 160/2,000 answers (8%), 1,310 tokens/s, about 5h 36m left
+...
+15:02:44  turn 7: forward pass 2/25: model both, items 64, original 0.172, edited 0.25, difference +0.078 ± 0.03, 9m 12s | ...
+```
+
+- **Quieter:** `quiet=True` in Python, or `wsplab -q run ...`, keeps only `run.log`. `wsplab -v` prints more detail.
+- **Your own logging:** messages go to the `wsplab` logger. If you have set up logging, they go to your handlers
+  instead of being printed.
+- **Nothing from the evaluation** goes into a message: only counts, scores and timings.
+- **Interrupted?** The last line says how to resume.
+
 ## A council of peers (optional)
 
 ```python
