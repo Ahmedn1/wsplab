@@ -69,3 +69,31 @@ fully funded council couldn't find a gain. But OpenAI used all 8 passes in both 
 
 The consistent finding is that **sharing raises the weakest member toward the strongest, but it hasn't produced an
 edit better than the strongest member's own.** A cheap council can't substitute for a strong editor.
+
+## 3. A council with roles (Seaquest, strong models)
+
+**Setup.**
+- **Roles:**
+  - Claude Opus 5.5: **proposer**. Designs and submits the edit.
+  - gpt-6.1-terra: **critic**. Rebuilds each candidate and hunts for its failures, then patches them.
+  - gemini-4-argon: **analyst**. Diagnoses the original policy without editing early.
+- **Delivery:** the roles were appended to each member's first message with the new `wsplab.council.Role` wrapper.
+  Everything else was as in [seaquest-results.md](seaquest-results.md).
+- **Caps:** Claude $3.50, so the proposer could finish; OpenAI $0.75; Gemini $2.00.
+- **Spend:** $4.39 of the approved $6.25.
+
+| On the same 2,000 evaluation episodes | Return | vs Claude solo |
+|---|---:|---:|
+| Original | 52.13 | |
+| Role council: critic's edit (its pick on selection) | 69.77 | **−5.96 ± 1.04** |
+| Role council: proposer's edit | 69.55 | −6.2 |
+| Role council: analyst's edit | 69.47 | −6.3 |
+| Plain council's pick (earlier) | 74.80 | −0.94 |
+| Claude Opus solo (earlier) | 75.74 | — |
+
+**Answer: roles made it worse.** The role council's pick is 6.0 ± 1.0 points below Claude alone and 5.0 ± 1.1 below
+the plain council. Its three members converged on one weaker edit (all around 69.5). The proposer, the same Claude
+that scored 75.7 alone, stopped after 5 of 8 passes. The cause was the harness's peer-context bound, not the budget:
+the critic's and analyst's long reports filled its context. Structure added reading load without adding a better
+idea. All three sessions are valid; the analyst computed logits of the original weights on hand-built states only to
+diagnose them.
