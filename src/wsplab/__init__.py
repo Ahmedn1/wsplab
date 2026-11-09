@@ -1,6 +1,6 @@
 """wsplab: weight-space programming, end to end."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = ["RunResult", "SearchResult", "run", "run_lm", "search"]
 
 

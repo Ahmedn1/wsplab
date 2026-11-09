@@ -1,17 +1,17 @@
 <h1>
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-dark.svg">
-    <img alt="wsplab" src="docs/logo/logo-light.svg" height="64">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Ahmedn1/wsplab/main/docs/logo/logo-dark.svg">
+    <img alt="wsplab" src="https://raw.githubusercontent.com/Ahmedn1/wsplab/main/docs/logo/logo-light.svg" height="64">
   </picture>
 </h1>
 
 [![CI](https://github.com/Ahmedn1/wsplab/actions/workflows/ci.yml/badge.svg)](https://github.com/Ahmedn1/wsplab/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](CHANGELOG.md)
-[![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)](pyproject.toml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Status: alpha](https://img.shields.io/badge/status-alpha-orange)](CHANGELOG.md)
+[![PyPI](https://img.shields.io/pypi/v/wsplab)](https://pypi.org/project/wsplab/)
+[![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)](https://github.com/Ahmedn1/wsplab/blob/main/pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/Ahmedn1/wsplab/blob/main/LICENSE)
+[![Status: alpha](https://img.shields.io/badge/status-alpha-orange)](https://github.com/Ahmedn1/wsplab/blob/main/CHANGELOG.md)
 [![Lint: ruff](https://img.shields.io/badge/lint-ruff-261230)](https://github.com/astral-sh/ruff)
-[![Findings](https://img.shields.io/badge/findings-11%20experiments-8a2be2)](FINDINGS.md)
+[![Findings](https://img.shields.io/badge/findings-11%20experiments-8a2be2)](https://github.com/Ahmedn1/wsplab/blob/main/FINDINGS.md)
 
 Weight-space programming, end to end. An LLM reads a neural network's weights and edits them directly: no gradient
 descent, no training pipeline. wsplab runs the whole job, from the baseline to a verdict, and packages the edit as a
@@ -57,7 +57,7 @@ Teoh, Zhang and Khattab. wsplab is independent and is not affiliated with or end
   base. Patches can be verified, stacked and shared on the Hugging Face Hub.
 - **Lets you go as low as you want.** From one call down to raw tensors, including replacing the whole prompt.
 - **One editor by default; a council of peers is optional.** Several LLMs can edit side by side and see each other's
-  work. The [findings](FINDINGS.md) say when that helps (rarely).
+  work. The [findings](https://github.com/Ahmedn1/wsplab/blob/main/FINDINGS.md) say when that helps (rarely).
 
 ## Install
 
@@ -290,7 +290,7 @@ found = wsplab.search(net, build=build_net, description="a small image classifie
 
 Each peer edits its own copy and sees the others' work after every step. The best candidate on a held-out selection
 set wins, and the original is kept if none beats it. On the command line, repeat `--editor`. See
-[docs/council.md](docs/council.md).
+[docs/council.md](https://github.com/Ahmedn1/wsplab/blob/main/docs/council.md).
 
 ## Patches
 
@@ -310,7 +310,7 @@ hold.
 
 ## Findings
 
-We ran 11 experiments with real editors on one laptop. **[Read the findings](FINDINGS.md)**, with charts:
+We ran 11 experiments with real editors on one laptop. **[Read the findings](https://github.com/Ahmedn1/wsplab/blob/main/FINDINGS.md)**, with charts:
 
 - **wsplab reproduces the paper's measurements:** the released patches rebuild bit for bit and the prompts replay
   byte for byte.
@@ -321,12 +321,12 @@ We ran 11 experiments with real editors on one laptop. **[Read the findings](FIN
   roles did worse.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/seaquest-dark.png">
-  <img alt="Seaquest mean return for each editor and council" src="docs/figures/seaquest-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Ahmedn1/wsplab/main/docs/figures/seaquest-dark.png">
+  <img alt="Seaquest mean return for each editor and council" src="https://raw.githubusercontent.com/Ahmedn1/wsplab/main/docs/figures/seaquest-light.png">
 </picture>
 
 Everything needed to reproduce them, including code, plans, result files and commands, is in
-[`experiments/`](experiments/).
+[`experiments/`](https://github.com/Ahmedn1/wsplab/tree/main/experiments).
 
 ## How wsplab compares
 
@@ -354,17 +354,17 @@ agents ([mfaseehuddin/wsp](https://github.com/mfaseehuddin/wsp)) and a browser v
 
 ## Read more
 
-- [Concepts](docs/concepts.md): kinds, modes, access and control levels.
-- [Patches](docs/patches.md): the format and how to share one.
-- [Councils of peers](docs/council.md).
-- [Fidelity to the paper](docs/fidelity.md): what is the authors' work, what is reconstructed, and what differs.
-- [Findings](FINDINGS.md) and [experiments](experiments/).
-- [Changelog](CHANGELOG.md).
+- [Concepts](https://github.com/Ahmedn1/wsplab/blob/main/docs/concepts.md): kinds, modes, access and control levels.
+- [Patches](https://github.com/Ahmedn1/wsplab/blob/main/docs/patches.md): the format and how to share one.
+- [Councils of peers](https://github.com/Ahmedn1/wsplab/blob/main/docs/council.md).
+- [Fidelity to the paper](https://github.com/Ahmedn1/wsplab/blob/main/docs/fidelity.md): what is the authors' work, what is reconstructed, and what differs.
+- [Findings](https://github.com/Ahmedn1/wsplab/blob/main/FINDINGS.md) and [experiments](https://github.com/Ahmedn1/wsplab/tree/main/experiments).
+- [Changelog](https://github.com/Ahmedn1/wsplab/blob/main/CHANGELOG.md).
 
 ## Citing
 
-See [CITATION.cff](CITATION.cff). Please also cite the paper.
+See [CITATION.cff](https://github.com/Ahmedn1/wsplab/blob/main/CITATION.cff). Please also cite the paper.
 
 ## License
 
-MIT. Prompt text derives from the authors' release under CC BY 4.0: see [NOTICE](NOTICE).
+MIT. Prompt text derives from the authors' release under CC BY 4.0: see [NOTICE](https://github.com/Ahmedn1/wsplab/blob/main/NOTICE).

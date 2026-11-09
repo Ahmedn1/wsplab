@@ -3,7 +3,9 @@
 All notable changes to wsplab. The project follows [Semantic Versioning](https://semver.org/); before 1.0, minor
 versions may change the API.
 
-## Unreleased
+## 0.2.0 (2026-11-09)
+
+First release on PyPI.
 
 ### Added
 
