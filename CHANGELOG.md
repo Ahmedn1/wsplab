@@ -16,6 +16,7 @@ First release on PyPI.
 - README: a command-line section with examples for every command, and how to use an open-source editor served by
   vLLM or another OpenAI-compatible server.
 - README: where each editor finds its API key.
+- An example patch on the Hugging Face Hub: `Ahmedn1/wsplab-patch-minatar-seaquest` (Seaquest, 52.1 -> 75.7).
 - Progress and logs: a run reports each step, generation progress with time left, and one line per editor turn, and
   writes the same to `run.log` in its folder. `quiet=True` in Python, `wsplab -q` and `wsplab -v` on the command line.
   The vLLM worker reports progress to the run instead of having its output discarded.

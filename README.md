@@ -294,11 +294,18 @@ set wins, and the original is kept if none beats it. On the command line, repeat
 
 ## Patches
 
+A patch is the edit alone: a few small files that rebuild the edited model bit for bit from the public base.
+
 ```sh
-wsplab patch apply patch/ --base Qwen3.5-0.8B/ --out edited/
-wsplab patch verify patch/ --base Qwen3.5-0.8B/
-wsplab patch pull user/some-patch --out patch/
+wsplab patch pull user/some-patch --out patch/                 # from the Hugging Face Hub
+wsplab patch verify patch/ --base Qwen3.5-0.8B/                # does it fit this base?
+wsplab patch apply patch/ --base Qwen3.5-0.8B/ --out edited/   # the edited model
+wsplab patch push patch/ --repo you/your-patch                 # share one
 ```
+
+For a real one, try [`Ahmedn1/wsplab-patch-minatar-seaquest`](https://huggingface.co/Ahmedn1/wsplab-patch-minatar-seaquest).
+Claude Opus 5.5 changed 32 weights of the paper's Seaquest policy, and mean return rose from 52.1 to 75.7 over 2,000
+held-out episodes. The repo includes the base network and the full session transcript.
 
 A patch's hashes prove what it is and that it fits the base model. They don't prove it is safe or that its claims
 hold.
