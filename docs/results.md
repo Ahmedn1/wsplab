@@ -45,7 +45,7 @@ Later council tests, each with its own report in `docs/experiments/`:
   Every valid LLM edit lost to a two-line scripted recipe, and none met the preservation bar. Gemini's solo session
   fitted weights and replayed fc offline, against the rules (its third violation).
   See [the results](experiments/spurious-resnet-results.md).
-- **Seaquest, ResNet-free policy from the paper** (non-LLM): every strong editor raised Astra's network from 52 to
+- **Seaquest, the policy network Astra wrote in the paper** (non-LLM): every strong editor raised Astra's network from 52 to
   70–76 with 24–32 weights changed. The council tied the best solo (−0.9 ± 0.8). A council of cheap models (Luna,
   Haiku, Gemini Flash) found nothing and fell 23.6 points short of Opus alone. See
   [Seaquest](experiments/seaquest-results.md) and [cheap council and Gemma](experiments/cheap-council-and-gemma-results.md).
