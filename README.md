@@ -81,6 +81,24 @@ wsplab run --model net.safetensors --build model.py:build --description "a small
   --editor anthropic:claude-opus-5-5 --budget 10
 ```
 
+## An open-source editor
+
+Any model behind an OpenAI-compatible chat server can be the editor. The protocol is plain text, so no tool calling
+is needed:
+
+```sh
+vllm serve Qwen/Qwen3-32B --max-model-len 65536      # sessions need long context
+export OPENAI_BASE_URL=http://localhost:8000/v1 OPENAI_API_KEY=local
+```
+
+```python
+run = wsplab.run(net, ..., editor="openai-chat:Qwen/Qwen3-32B")
+# or, to mix servers in one council: ChatEditor("Qwen/Qwen3-32B", base_url="http://host:8000/v1", api_key="local")
+```
+
+Use `Spending(max_tokens=...)` for limits on local models. Tested end to end with a vLLM-served Qwen3.5-0.8B: the
+session ran, but a model that small couldn't do the job. Expect to need a strong open model.
+
 ## A council of peers (optional)
 
 ```python
