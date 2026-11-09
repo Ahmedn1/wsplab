@@ -5,6 +5,7 @@
   </picture>
 </h1>
 
+[![CI](https://github.com/Ahmedn1/wsplab/actions/workflows/ci.yml/badge.svg)](https://github.com/Ahmedn1/wsplab/actions/workflows/ci.yml)
 [![Version](https://img.shields.io/badge/version-0.1.0-blue)](CHANGELOG.md)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)

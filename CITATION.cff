@@ -4,6 +4,8 @@ title: "wsplab: weight-space programming, end to end"
 version: 0.1.0
 date-released: 2026-11-08
 license: MIT
+repository-code: "https://github.com/Ahmedn1/wsplab"
+url: "https://github.com/Ahmedn1/wsplab"
 authors:
   - family-names: Dawod
     given-names: Ahmed

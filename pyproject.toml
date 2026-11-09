@@ -38,6 +38,13 @@ all = ["wsplab[torch,kernel,lm,eval,hub,openai,anthropic]"]
 dev = ["pytest>=8", "ruff>=0.11", "build"]
 experiments = ["matplotlib>=3.9", "scikit-learn", "datasets", "pyarrow", "pillow", "torchvision"]
 
+[project.urls]
+Homepage = "https://github.com/Ahmedn1/wsplab"
+Repository = "https://github.com/Ahmedn1/wsplab"
+Issues = "https://github.com/Ahmedn1/wsplab/issues"
+Changelog = "https://github.com/Ahmedn1/wsplab/blob/main/CHANGELOG.md"
+Findings = "https://github.com/Ahmedn1/wsplab/blob/main/FINDINGS.md"
+
 [project.scripts]
 wsplab = "wsplab.cli:main"
 

@@ -6,6 +6,7 @@ versions may change the API.
 ## Unreleased
 
 - A logo (`docs/logo/`), shown at the top of the README.
+- The project is on GitHub: https://github.com/Ahmedn1/wsplab. Project URLs, citation and a CI badge point to it.
 - Docs: how to use an open-source editor served by vLLM or another OpenAI-compatible server.
 
 ## 0.1.0 (2026-11-08)
