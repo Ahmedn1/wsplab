@@ -73,3 +73,50 @@ def test_setup_commands_use_a_cpu_only_environment_without_model_runtimes(tmp_pa
 def test_user_errors_are_clean(tmp_path, capsys):
     assert main(["patch", "inspect", str(tmp_path / "missing")]) == 1
     assert "error:" in capsys.readouterr().err
+
+
+def test_the_edit_budget_reaches_both_kinds_of_run(files, monkeypatch):
+    """--max-changed on the command line, and max_changed through run() to the language model path."""
+    import wsplab
+    from wsplab import pipeline
+
+    seen = {}
+
+    class Done:
+        verdict, reasons, patch, folder = "unmeasured", [], None, files
+
+    def fake_run(model, **kw):
+        seen["cli"] = kw.get("max_changed")
+        return Done()
+
+    monkeypatch.setattr(wsplab, "run", fake_run)
+    assert main(["run", "--model", str(files / "m.safetensors"), "--build", "mlp:2,2:relu", "--description", "a net",
+                 "--editor", "script:x.json", "--max-changed", "7", "--no-eval"]) == 0
+    assert seen["cli"] == 7
+
+    monkeypatch.setattr(pipeline, "run_lm", lambda model, **kw: seen.setdefault("lm", kw.get("max_changed")))
+    pipeline.run("some/model", eval="math", editor="script:x.json", max_changed=11)
+    assert seen["lm"] == 11
+
+
+def test_a_dollar_limit_needs_a_price_for_every_editor(files, capsys):
+    from wsplab.cli import parse_prices
+
+    assert parse_prices(["anthropic:claude-opus-5-5=5,25", "openai:x=1.25,10,0.125"]) == {
+        "anthropic:claude-opus-5-5": (5.0, 25.0), "openai:x": (1.25, 10.0, 0.125)}
+    with pytest.raises(ValueError):
+        parse_prices(["anthropic:claude-opus-5-5=5"])
+    common = ["run", "--model", str(files / "m.safetensors"), "--build", "mlp:2,2:relu", "--description", "a net",
+              "--eval", str(files / "held.npz"), "--editor", "script:a.json", "--editor", "script:b.json", "--max-usd", "1"]
+    assert main([*common, "--price", "script:a.json=1,2"]) == 1
+    assert "add --price for: script:b.json" in capsys.readouterr().err
+
+
+def test_language_model_commands_accept_a_hugging_face_id(monkeypatch, tmp_path):
+    from wsplab import cli
+
+    asked = []
+    monkeypatch.setattr(cli, "resolve_model", lambda model, revision=None: asked.append((model, revision)) or tmp_path)
+    with pytest.raises(Exception):  # stops later, at loading an empty folder: the id was already resolved
+        cli.cmd_infer(cli.build_parser().parse_args(["infer", "--model", "org/model", "--revision", "abc", "--prompt", "hi"]))
+    assert asked == [("org/model", "abc")]

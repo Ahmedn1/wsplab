@@ -5,9 +5,20 @@ versions may change the API.
 
 ## Unreleased
 
-- A logo (`docs/logo/`), shown at the top of the README.
+### Added
+
 - The project is on GitHub: https://github.com/Ahmedn1/wsplab. Project URLs, citation and a CI badge point to it.
-- Docs: how to use an open-source editor served by vLLM or another OpenAI-compatible server.
+- A logo (`docs/logo/`), shown at the top of the README.
+- Command line: `run --max-changed` (the edit budget) and `run --price EDITOR=IN,OUT`, so `--max-usd` works for a
+  council. `eval` and `infer` accept a Hugging Face id for a language model, and a `--revision`.
+- README: a command-line section with examples for every command, and how to use an open-source editor served by
+  vLLM or another OpenAI-compatible server.
+- README: where each editor finds its API key.
+
+### Fixed
+
+- `wsplab.run(..., eval=..., max_changed=N)` ignored `max_changed` for language models.
+- `wsplab run --max-usd` failed on the first call: there was no way to give prices from the command line.
 
 ## 0.1.0 (2026-11-08)
 

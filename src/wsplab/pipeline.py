@@ -364,7 +364,7 @@ def run(model, *, build=None, description: str | None = None, note: str | None =
         return run_lm(model, eval=eval, editor=editor, note=note, mode=mode, budget=budget, max_runs=max_runs,
                       description=description, folder=folder, frozen=frozen or None, prompt=prompt, task_sentence=task_sentence,
                       regressions=regressions, control=control, limits=limits, sandbox=sandbox, policy=policy, z=z, prelude=prelude,
-                      messages=messages, semantic=semantic, resume=resume, **lm_options)
+                      messages=messages, semantic=semantic, resume=resume, max_changed=max_changed, **lm_options)
     if lm_options:
         raise TypeError(f"unknown options for this network: {sorted(lm_options)}; language model options need `eval`")
     if description is None:

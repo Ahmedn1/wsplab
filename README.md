@@ -32,6 +32,13 @@ print(run.verdict, run.patch)
 print(run.generate("What is 17 * 23?"))
 ```
 
+Or the same job from the command line:
+
+```sh
+wsplab run --model Qwen/Qwen3.5-0.8B --note "This model really sucks at math" --eval math \
+  --editor anthropic:claude-opus-5-5 --thinking --budget 25
+```
+
 Based on [*Sparks of Weight-Space Programming*](https://rikiyat.github.io/blog/weight-space-programming/) by Takehi,
 Teoh, Zhang and Khattab. wsplab is independent and is not affiliated with or endorsed by the authors.
 
@@ -67,6 +74,43 @@ wsplab doctor                             # says what this machine can run
 - **Sandbox:** editing sessions run in [bubblewrap](https://github.com/containers/bubblewrap) on Linux.
 - **Python:** 3.12 or later.
 
+## Editor API keys
+
+The editor is an LLM you call with your own account. wsplab reads the provider's usual environment variable:
+
+| `--editor` / `editor=` | Key |
+|---|---|
+| `anthropic:<model>` | `ANTHROPIC_API_KEY` |
+| `openai:<model>` | `OPENAI_API_KEY` |
+| `openai-chat:<model>` | `OPENAI_API_KEY`, sent to the server at `OPENAI_BASE_URL` |
+| `codex:<model>` | None: the [Codex CLI](https://github.com/openai/codex)'s own login (`codex login`) |
+
+```sh
+export ANTHROPIC_API_KEY=sk-ant-...
+wsplab run ... --editor anthropic:claude-opus-5-5
+```
+
+Any OpenAI-compatible provider works through `openai-chat:`. For Gemini, for example:
+
+```sh
+export OPENAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/ OPENAI_API_KEY=<your Gemini key>
+wsplab run ... --editor openai-chat:gemini-4-argon
+```
+
+In Python, pass keys directly instead, which also lets one council mix providers that would otherwise share
+`OPENAI_API_KEY`:
+
+```python
+from wsplab.editors import AnthropicEditor, ChatEditor, OpenAIEditor
+
+editors = [AnthropicEditor("claude-opus-5-5", api_key=...),
+           OpenAIEditor("gpt-6.1-terra", api_key=...),
+           ChatEditor("gemini-4-argon", api_key=..., base_url="https://generativelanguage.googleapis.com/v1beta/openai/")]
+```
+
+Keys stay on the host. The sandbox the editor's code runs in starts with an empty environment and no network, so that
+code can't read or send them. This holds for the default sandbox, not for `--sandbox none`.
+
 ## A network of your own
 
 ```python
@@ -78,14 +122,118 @@ run = wsplab.run(net, build=build_net, description="a small image classifier",
 print(run.verdict, run.infer(new_images))
 ```
 
-`max_changed` is an optional edit budget: `save_edit` refuses edits that would change more entries than that. The
-command line covers the same ground, plus `wsplab infer` and `wsplab eval`:
+`max_changed` is an optional edit budget: `save_edit` refuses edits that would change more entries than that.
+
+## Command line
+
+Every step has a command, and `wsplab <command> --help` lists all its options.
+
+| Command | What it does |
+|---|---|
+| `wsplab run` | The whole job: baseline, editing session, final evaluation, verdict and patch |
+| `wsplab eval` | Score a network, with or without a patch |
+| `wsplab infer` | Run a network, with or without a patch |
+| `wsplab patch ...` | Create, apply, verify, inspect, stack and share patches |
+| `wsplab session ...` | Be the editor yourself, step by step (for coding agents) |
+| `wsplab setup`, `wsplab doctor` | Build the sandbox once; check what this machine can run |
+
+### Edit a language model
+
+`--eval math` is the paper's task: the editor practises on the paper's released problems, and the verdict comes from
+MATH-500, which the editor never sees.
+
+```sh
+wsplab run --model Qwen/Qwen3.5-0.8B --note "This model really sucks at math" \
+  --eval math --samples 4 --limit 200 --thinking \
+  --editor anthropic:claude-opus-5-5 --budget 25 --out runs/qwen-math
+```
+
+It ends by printing the verdict and where everything went:
+
+```text
+verdict: confirmed            # or not_significant, regressed, no_fix_found, unmeasured
+  ...                         # the reasons for the verdict
+patch: runs/qwen-math/result/patch
+report: runs/qwen-math/report.md
+```
+
+For a task of your own, give a practice set and a held-out set as `.jsonl` files, one
+`{"id": ..., "problem": ..., "answer": ...}` per line. `--grader` is `exact`, `math`, `choice` or `regex:<pattern>`:
+
+```sh
+wsplab run --model Qwen/Qwen3.5-0.8B --practice practice.jsonl --eval heldout.jsonl --grader exact \
+  --note "It answers in English when asked in French" --editor openai:gpt-6.1-terra --budget 15
+```
+
+### Edit any PyTorch network
+
+Give the weights, a way to build the network, and `.npz` files holding arrays named `inputs` and `targets`:
 
 ```sh
 wsplab run --model net.safetensors --build model.py:build --description "a small image classifier" \
   --note "It confuses cats and dogs" --practice practice.npz --eval heldout.npz \
-  --editor anthropic:claude-opus-5-5 --budget 10
+  --editor anthropic:claude-opus-5-5 --budget 10 --max-changed 5000 --out runs/cats
 ```
+
+- **`--build`:** `path/model.py:function`, where the function returns the `nn.Module`. A plain MLP can be written
+  inline instead, such as `mlp:784,128,10:relu`.
+- **`--description`:** completes the sentence "You are given the weights of ...".
+- **Limits:** `--max-changed` caps how many weight entries the edit may change, and `--frozen <tensor>` (repeatable)
+  keeps a tensor unchanged.
+- **Scoring:** `--metric accuracy` (the default) or `neg_mse` for regression.
+- **No held-out set:** `--no-eval` accepts an `unmeasured` verdict.
+
+### Check the result yourself
+
+`eval` and `infer` run the base model, or the base model with a patch applied:
+
+```sh
+# any network
+wsplab eval  --model net.safetensors --build model.py:build --data heldout.npz
+wsplab eval  --model net.safetensors --build model.py:build --data heldout.npz --patch runs/cats/result/patch
+wsplab infer --model net.safetensors --build model.py:build --patch runs/cats/result/patch \
+  --input batch.npy --out predictions.npy
+
+# a language model
+wsplab eval  --model Qwen/Qwen3.5-0.8B --suite math --limit 200 --patch runs/qwen-math/result/patch
+wsplab infer --model Qwen/Qwen3.5-0.8B --patch runs/qwen-math/result/patch --prompt "What is 17 * 23?"
+```
+
+### Choose the editor
+
+`--editor` takes `anthropic:<model>`, `openai:<model>`, `codex:<model>`, or `openai-chat:<model>` for any
+OpenAI-compatible server (see [An open-source editor](#an-open-source-editor)). [Editor API keys](#editor-api-keys)
+says where each one finds its key.
+
+Repeat `--editor` for a council of peers. A council needs a spending limit, `--max-tokens` or `--max-usd`. A dollar
+limit needs a price for each editor, in dollars per million input and output tokens. The prices below are examples;
+use your provider's:
+
+```sh
+wsplab run --model net.safetensors --build model.py:build --description "a small image classifier" \
+  --practice practice.npz --eval heldout.npz --budget 8 \
+  --editor anthropic:claude-opus-5-5 --editor openai:gpt-6.1-terra \
+  --max-usd 10 --price anthropic:claude-opus-5-5=5,20 --price openai:gpt-6.1-terra=1,5
+```
+
+From the command line, councils work on PyTorch networks. Use the Python API for a council on a language model.
+
+### Be the editor
+
+A coding agent, or you, can do the editor's job one step at a time. Each step is checked against the same rules and
+budget as an LLM editor:
+
+```sh
+wsplab session start --folder s1 --model net.safetensors --build mlp:2,4,2:relu \
+  --description "a two-class classifier" --note "It answers backwards" \
+  --practice practice.npz --eval heldout.npz --budget 10
+wsplab session exec s1 --file inspect.py --why "first, look at the weights"
+wsplab session forward s1 '{"model": "both"}' --why "measure the edit"
+wsplab session finish s1 "What I changed, the evidence, and why it should help."
+```
+
+`finish` prints the verdict. `wsplab session brief s1` prints the latest message, and `/work` in the kernel is
+`s1/run/work` on the host.
 
 ## An open-source editor
 
@@ -97,13 +245,18 @@ vllm serve Qwen/Qwen3-32B --max-model-len 65536      # sessions need long contex
 export OPENAI_BASE_URL=http://localhost:8000/v1 OPENAI_API_KEY=local
 ```
 
+```sh
+wsplab run --model net.safetensors ... --editor openai-chat:Qwen/Qwen3-32B
+```
+
 ```python
 run = wsplab.run(net, ..., editor="openai-chat:Qwen/Qwen3-32B")
 # or, to mix servers in one council: ChatEditor("Qwen/Qwen3-32B", base_url="http://host:8000/v1", api_key="local")
 ```
 
-Use `Spending(max_tokens=...)` for limits on local models. Tested end to end with a vLLM-served Qwen3.5-0.8B: the
-session ran, but a model that small couldn't do the job. Expect to need a strong open model.
+For limits on local models, which have no prices, use `--max-tokens` or `Spending(max_tokens=...)`. Tested end to
+end with a vLLM-served Qwen3.5-0.8B: the session ran, but a model that small couldn't do the job. Expect to need a
+strong open model.
 
 ## A council of peers (optional)
 

@@ -75,6 +75,21 @@ def parse_build(spec: str | None):
     return spec
 
 
+def parse_prices(specs: list[str] | None) -> dict[str, tuple[float, ...]]:
+    """--price anthropic:claude-opus-5-5=5,25[,0.5] -> {"anthropic:claude-opus-5-5": (5.0, 25.0[, 0.5])}"""
+    prices = {}
+    for spec in specs or ():
+        editor, sep, numbers = spec.rpartition("=")
+        try:
+            values = tuple(float(v) for v in numbers.split(","))
+        except ValueError:
+            values = ()
+        if not sep or not editor or len(values) not in (2, 3):
+            raise ValueError(f"--price {spec!r}: write EDITOR=IN,OUT or EDITOR=IN,OUT,CACHED, in dollars per million tokens")
+        prices[editor] = values
+    return prices
+
+
 def load_scorer(path: str | None, metric: str, prefix: str = "item"):
     if path is None:
         return None
@@ -84,6 +99,12 @@ def load_scorer(path: str | None, metric: str, prefix: str = "item"):
 
     with np.load(path, allow_pickle=False) as z:
         return ArrayScorer(z["inputs"], z["targets"], metric, name=Path(path).stem, prefix=prefix)
+
+
+def resolve_model(model: str, revision: str | None = None) -> Path:
+    from .pipeline import resolve_model as resolve
+
+    return resolve(model, revision)
 
 
 def patched_weights(model: str, patch: str | None, folder: Path) -> Path:
@@ -146,14 +167,15 @@ def cmd_run(a) -> int:
             raise ValueError("a council from the command line works on generic networks; use the Python API for language models")
         return _print_result(wsplab.run(a.model, eval=suite, editor=a.editor[0], note=a.note, description=a.description,
                                         mode=a.mode, budget=a.budget, max_runs=a.max_runs, folder=a.out, sandbox=a.sandbox,
-                                        control=not a.no_control, limits=limits, thinking=a.thinking, revision=a.revision))
+                                        control=not a.no_control, limits=limits, thinking=a.thinking, revision=a.revision,
+                                        max_changed=a.max_changed))
     if a.description is None:
         raise ValueError("give --description: what the network is, for the editor")
     evaluate = load_scorer(a.eval, a.metric, "eval")
     practice = load_scorer(a.practice, a.metric)
     common = dict(build=parse_build(a.build), description=a.description, note=a.note, mode=a.mode, practice=practice,
                   budget=a.budget, max_runs=a.max_runs, access=a.access, sandbox=a.sandbox, control=not a.no_control,
-                  limits=limits, frozen=tuple(a.frozen or ()))
+                  limits=limits, frozen=tuple(a.frozen or ()), max_changed=a.max_changed)
     if len(a.editor) > 1:  # a council of peers
         if a.max_tokens is None and a.max_usd is None:
             raise ValueError("a council multiplies LLM calls: set --max-tokens or --max-usd")
@@ -161,8 +183,13 @@ def cmd_run(a) -> int:
             raise ValueError("a council needs --eval: candidates are chosen on part of the practice data and judged on it")
         from .editors import Spending
 
+        prices = parse_prices(a.price)
+        if a.max_usd is not None:
+            missing = [e for e in a.editor if e not in prices]
+            if missing:
+                raise ValueError(f"--max-usd needs a price for every editor; add --price for: {', '.join(missing)}")
         found = wsplab.search(a.model, editors=list(a.editor), shared=True, evaluate=evaluate, folder=a.out,
-                              spending=Spending(max_tokens=a.max_tokens, max_usd=a.max_usd), **common)
+                              spending=Spending(max_tokens=a.max_tokens, max_usd=a.max_usd, prices=prices), **common)
         result = found.result
     else:
         result = wsplab.run(a.model, evaluate=evaluate, editor=a.editor[0], folder=a.out, no_eval=a.no_eval, **common)
@@ -175,6 +202,8 @@ def cmd_infer(a) -> int:
     import numpy as np
 
     a.device = a.device or ("cuda" if a.prompt is not None else "cpu")
+    if a.prompt is not None:
+        a.model = str(resolve_model(a.model, a.revision))
 
     from .runners.torch import TorchRunner
 
@@ -200,6 +229,8 @@ def cmd_eval(a) -> int:
     import tempfile
 
     a.device = a.device or ("cuda" if a.suite else "cpu")
+    if a.suite is not None:
+        a.model = str(resolve_model(a.model, a.revision))
 
     from .runners.torch import TorchRunner
 
@@ -447,9 +478,12 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--revision", help="for a language model: the Hugging Face revision")
     c.add_argument("--metric", default="accuracy", choices=["accuracy", "neg_mse"])
     c.add_argument("--editor", required=True, action="append",
-                   help="anthropic:<model>, openai:<model>, codex:<model> or script:<file.json>; repeat it for a council of peers")
+                   help="anthropic:<model>, openai:<model>, openai-chat:<model> (any OpenAI-compatible server, at $OPENAI_BASE_URL), codex:<model> or script:<file.json>; repeat it for a council of peers")
     c.add_argument("--max-tokens", type=int, help="stop a council at this many tokens")
-    c.add_argument("--max-usd", type=float, help="stop a council at this cost")
+    c.add_argument("--max-usd", type=float, help="stop a council at this cost; needs --price for every editor")
+    c.add_argument("--price", action="append", metavar="EDITOR=IN,OUT",
+                   help="dollars per million input and output tokens (and optionally cached input) for one editor, "
+                        "such as anthropic:claude-opus-5-5=5,25 (repeatable)")
     c.add_argument("--budget", type=int, default=25, help="forward passes the editor may spend")
     c.add_argument("--max-runs", type=int, default=300)
     c.add_argument("--access", choices=["kernel", "inline"], default="kernel")
@@ -458,6 +492,7 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--run-seconds", type=int, default=900)
     c.add_argument("--memory-gb", type=float)
     c.add_argument("--frozen", action="append", help="a tensor the editor may not change (repeatable)")
+    c.add_argument("--max-changed", type=int, help="the most weight entries the edit may change in total")
     c.add_argument("--no-control", action="store_true", help="skip the random-edit control")
     c.add_argument("--no-eval", action="store_true", help="accept an unmeasured verdict")
     c.set_defaults(fn=cmd_run)
@@ -470,6 +505,7 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--out")
     c.add_argument("--prompt", help="ask a language model something")
     c.add_argument("--thinking", action="store_true")
+    c.add_argument("--revision", help="for a language model given as a Hugging Face id: the revision")
     c.add_argument("--generator", choices=["vllm", "hf"], default="hf")
     c.add_argument("--max-tokens", type=int, default=512)
     c.add_argument("--device", default=None)
@@ -486,6 +522,7 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--samples", type=int, default=1)
     c.add_argument("--limit", type=int)
     c.add_argument("--thinking", action="store_true")
+    c.add_argument("--revision", help="for a language model given as a Hugging Face id: the revision")
     c.add_argument("--device", default=None)
     c.set_defaults(fn=cmd_eval)
     return parser
